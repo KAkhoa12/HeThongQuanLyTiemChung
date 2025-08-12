@@ -1,0 +1,9 @@
+Tuần 2:
+Xác định tác nhân: 3 ( Bác Sĩ - Quản lý - Bệnh nhân)
+- Nghiệp vụ Bênh nhân đăng ký tiêm hẹn lịch
+- Nghiệp vụ Bác sĩ xác nhận đơn đăng ký 
+- nghiệp vụ Bệnh nhân là dời lịch tiêm 
+- Nghiệp vụ quản lý hóa đơn người dùng
+- Nghiệp vụ quản lý Nhà cung cấp tiêm chủng
+- Đăng ký tiêm chủng đơn lẻ và combo -> đăng ký dịch vụ
+- Nghiệp vụ quản lý chi tiết dịch vụ 
