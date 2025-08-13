@@ -101,8 +101,8 @@ CREATE TABLE NguoiDungQuyen (
 -- 6. PhienDangNhap
 CREATE TABLE PhienDangNhap (
     maPhien VARCHAR(100) PRIMARY KEY,
-    accessToken NVARCHAR(255) NOT NULL,
-    refreshToken NVARCHAR(255) NOT NULL,
+    accessToken NVARCHAR(2000) NOT NULL,
+    refreshToken NVARCHAR(2000) NOT NULL,
     thoiHan DATETIME NOT NULL,
     thoiHanRefresh DATETIME NOT NULL,
     maNguoiDung VARCHAR(100) NOT NULL,
