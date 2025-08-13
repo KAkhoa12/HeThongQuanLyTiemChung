@@ -7,6 +7,7 @@ public partial class PhienDangNhap
 {
     public string MaPhien { get; set; } = null!;
 
+    [Column(TypeName = "nvarchar(2500)")] 
     public string AccessToken { get; set; } = null!;
 
     public string RefreshToken { get; set; } = null!;

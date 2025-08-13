@@ -28,10 +28,4 @@ public partial class VaccineVM
     public DateTime? NgayCapNhat { get; set; }
 
 
-
-    public virtual ICollection<LichTiemChuan> LichTiemChuans { get; set; } = new List<LichTiemChuan>();
-
-    public virtual ICollection<LoVaccine> LoVaccines { get; set; } = new List<LoVaccine>();
-
-    public virtual ICollection<PhieuTiem> PhieuTiems { get; set; } = new List<PhieuTiem>();
 }
