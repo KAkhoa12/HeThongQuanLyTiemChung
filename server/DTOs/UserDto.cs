@@ -9,4 +9,13 @@ namespace server.DTOs.NguoiDung
         string DiaChi,
         string MaVaiTro
     );
+    public record UserInfoDto(
+    string Id,
+    string Name,
+    string Email,
+    string? Phone,
+    DateOnly? Dob,
+    string? Address,
+    string Role,
+    DateTime RegisteredAt);
 }

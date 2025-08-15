@@ -8,10 +8,10 @@ using server.Models;
 using server.ModelViews;
 using BCrypt.Net;
 using server.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using server.DTOs.Auth;
 using server.DTOs.NguoiDung;
 using Microsoft.EntityFrameworkCore;
-
 namespace server.Controllers
 {
     [Controller]
@@ -21,7 +21,6 @@ namespace server.Controllers
         private readonly ILogger<AuthController> _logger;
         private readonly HeThongQuanLyTiemChungContext _context;
         private readonly IConfiguration _config;
-        private readonly string _secretKey = "QuanLyTiemChungSuperSecretKey2023!@";
 
         public AuthController(ILogger<AuthController> logger, HeThongQuanLyTiemChungContext context, IConfiguration config)
         {
@@ -142,20 +141,63 @@ namespace server.Controllers
                 return ApiResponse.Error("Đã xảy ra lỗi hệ thống", 500);
             }
         }
-        #region private helpers
+        /// <summary>
+        /// Lấy thông tin người dùng đang đăng nhập
+        /// </summary>
+        [Authorize]                       // yêu cầu Bearer token
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentUser(CancellationToken ct)
+        {
+            // 1. Trích xuất sub/ID từ token
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return ApiResponse.Error("Token không hợp lệ", 401);
+
+            // 2. Query kèm role & nhãn ảnh nếu cần
+            var user = await _context.NguoiDungs
+                .Include(u => u.MaVaiTroNavigation)
+                .FirstOrDefaultAsync(u => u.MaNguoiDung == userId &&
+                                          u.IsActive == true &&
+                                          u.IsDelete == false, ct);
+
+            if (user == null)
+                return ApiResponse.Error("Không tìm thấy người dùng", 404);
+
+            // 3. Map sang DTO
+            var dto = new UserInfoDto(
+                user.MaNguoiDung,
+                user.Ten,
+                user.Email,
+                user.SoDienThoai,
+                user.NgaySinh,
+                user.DiaChi,
+                user.MaVaiTroNavigation?.TenVaiTro ?? "USER",
+                user.NgayTao!.Value
+            );
+
+            return ApiResponse.Success("Lấy thông tin thành công", dto);
+        }
+
         private async Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(NguoiDung user, CancellationToken ct)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
+            // Lấy danh sách quyền của user
+            var userPermissions = await _context.VaiTroQuyens
+                .Where(vq => vq.MaVaiTro == user.MaVaiTro && vq.IsActive == true && vq.IsDelete == false)
+                .Select(vq => vq.MaQuyen)
+                .ToListAsync(ct);
+            var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.MaNguoiDung),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.NameIdentifier, user.MaNguoiDung),
                 new Claim(ClaimTypes.Role, user.MaVaiTro)
             };
-
+            foreach (var permission in userPermissions)
+            {
+                claims.Add(new Claim("Permission", permission));
+            }
             var accessTokenExpiry = DateTime.UtcNow.AddMinutes(GetAccessTokenExpiryInMinutes());
             var jwt = new JwtSecurityToken(
                 issuer: _config["Jwt:Issuer"],
@@ -194,5 +236,5 @@ namespace server.Controllers
         private int GetRefreshTokenExpiryInDays() =>
             int.Parse(_config["Jwt:RefreshTokenExpiryDays"] ?? "7");
         #endregion
-    }   
+    }
 }
