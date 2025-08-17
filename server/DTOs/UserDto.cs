@@ -10,12 +10,31 @@ namespace server.DTOs.NguoiDung
         string MaVaiTro
     );
     public record UserInfoDto(
-    string Id,
-    string Name,
+    string MaNguoiDung,
+    string Ten,
     string Email,
-    string? Phone,
-    DateOnly? Dob,
-    string? Address,
+    string? SoDienThoai,
+    DateOnly? NgaySinh,
+    string? DiaChi,
     string Role,
-    DateTime RegisteredAt);
+    DateTime RegisteredAt
+    );
+
+
+    public record UserCreateDto(
+        string Ten,
+        string Email,
+        string MatKhau,
+        string? SoDienThoai,
+        DateOnly? NgaySinh,
+        string? DiaChi);
+
+    public record UserUpdateDto(
+        string MaNguoiDung,
+        string? Ten,
+        string? SoDienThoai,
+        DateOnly? NgaySinh,
+        string? DiaChi);
 }
+
+

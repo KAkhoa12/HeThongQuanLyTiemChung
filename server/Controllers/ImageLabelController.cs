@@ -86,7 +86,7 @@ public class ImageLabelController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(
     string id,
-    [FromBody] ImageLabelUpdateDto dto,
+    [FromBody] ImageLabelUpdateDto  dto,
     CancellationToken ct)
     {
         var label = await _ctx.NhanAnhs

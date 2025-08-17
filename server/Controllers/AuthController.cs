@@ -235,6 +235,5 @@ namespace server.Controllers
 
         private int GetRefreshTokenExpiryInDays() =>
             int.Parse(_config["Jwt:RefreshTokenExpiryDays"] ?? "7");
-        #endregion
     }
 }
