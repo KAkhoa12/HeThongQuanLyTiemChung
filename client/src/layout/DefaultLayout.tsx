@@ -1,8 +1,13 @@
 import React, { useState, ReactNode } from 'react';
-import Header from '../components/Header/index';
+import { Outlet } from 'react-router-dom';
+import Header from '../components/Header/Dashboard/index';
 import Sidebar from '../components/Sidebar/index';
 
-const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
+interface DefaultLayoutProps {
+  children?: ReactNode;
+}
+
+const DefaultLayout: React.FC<DefaultLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -22,7 +27,7 @@ const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
           {/* <!-- ===== Main Content Start ===== --> */}
           <main>
             <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
-              {children}
+              {children || <Outlet />}
             </div>
           </main>
           {/* <!-- ===== Main Content End ===== --> */}
