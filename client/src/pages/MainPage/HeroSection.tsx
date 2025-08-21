@@ -65,9 +65,9 @@ const HeroSection = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
                   </svg>
                 </div>
-                <h4 className="text-lg font-semibold text-gray-800 mb-2">Kho vaccine đa dạng</h4>
+                <h4 className="text-lg font-semibold text-gray-800 mb-2">Nguồn cung vaccine đa dạng</h4>
                 <p className="text-gray-600">
-                  Chúng tôi cung cấp nhiều loại vaccine từ các cơ sở y tế uy tín, phù hợp cho mọi lứa tuổi.
+                  Chúng tôi cung cấp nhiều loại vaccine từ các cơ sở y tế uy tín, phù hợp cho mọi lứa tuổi tiêm phòng.
                 </p>
               </div>
 

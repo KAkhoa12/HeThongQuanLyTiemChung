@@ -14,7 +14,7 @@ const StatsSection = () => {
             </div>
             <div className="text-center">
               <span className="text-4xl font-bold text-gray-800 block mb-1" data-count="85">85</span>
-              <p className="text-lg text-gray-600">Doctors</p>
+              <p className="text-lg text-gray-600">Bác sĩ chuyên nghiệp</p>
             </div>
           </div>
 
@@ -27,7 +27,7 @@ const StatsSection = () => {
             </div>
             <div className="text-center">
               <span className="text-4xl font-bold text-gray-800 block mb-1" data-count="18">18</span>
-              <p className="text-lg text-gray-600">Departments</p>
+              <p className="text-lg text-gray-600">Cơ sở y tế tốt nhất</p>
             </div>
           </div>
 
@@ -40,7 +40,7 @@ const StatsSection = () => {
             </div>
             <div className="text-center">
               <span className="text-4xl font-bold text-gray-800 block mb-1" data-count="12">12</span>
-              <p className="text-lg text-gray-600">Research Labs</p>
+              <p className="text-lg text-gray-600">Phòng thí nghiệm tạo vaccine đạt chuẩn y học</p>
             </div>
           </div>
 
@@ -53,7 +53,7 @@ const StatsSection = () => {
             </div>
             <div className="text-center">
               <span className="text-4xl font-bold text-gray-800 block mb-1" data-count="150">150</span>
-              <p className="text-lg text-gray-600">Awards</p>
+              <p className="text-lg text-gray-600">Thành tựu y học</p>
             </div>
           </div>
         </div>

@@ -29,10 +29,8 @@ const AboutSection = () => {
           <div className="content" data-aos="fade-up" data-aos-delay="100">
             <h3 className="text-3xl font-bold text-gray-800 mb-6">About Us</h3>
             <p className="text-gray-600 mb-8">
-              Dolor iure expedita id fuga asperiores qui sunt consequatur
-              minima. Quidem voluptas deleniti. Sit quia molestiae quia quas
-              qui magnam itaque veritatis dolores. Corrupti totam ut eius
-              incidunt reiciendis veritatis asperiores placeat.
+              HUITKIT là hệ thống tiêm chủng hiện đại, giúp bạn quản lý lịch tiêm và tra cứu thông tin dễ dàng.
+              Chúng tôi cam kết mang đến dịch vụ an toàn, chuyên nghiệp và tận tâm, đồng hành cùng bạn trong việc bảo vệ sức khỏe cho gia đình và cộng đồng.
             </p>
 
             <ul className="space-y-8">
@@ -44,10 +42,9 @@ const AboutSection = () => {
                   </svg>
                 </div>
                 <div>
-                  <h5 className="text-xl font-semibold text-gray-800 mb-2">Ullamco laboris nisi ut aliquip consequat</h5>
+                  <h5 className="text-xl font-semibold text-gray-800 mb-2">Tiêm chủng đảm bảo an toàn</h5>
                   <p className="text-gray-600">
-                    Magni facilis facilis repellendus cum excepturi quaerat
-                    praesentium libre trade
+                    Được thực hiện bởi đội ngũ bác sĩ có chuyên môn cao, tuân thủ các quy trình nghiêm ngặt để đảm bảo an toàn tuyệt đối cho khách hàng.
                   </p>
                 </div>
               </li>
@@ -60,10 +57,9 @@ const AboutSection = () => {
                   </svg>
                 </div>
                 <div>
-                  <h5 className="text-xl font-semibold text-gray-800 mb-2">Magnam soluta odio exercitationem reprehenderi</h5>
+                  <h5 className="text-xl font-semibold text-gray-800 mb-2">Nguồn cung vaccine đa dạng, có nguồn gốc rõ ràng</h5>
                   <p className="text-gray-600">
-                    Quo totam dolorum at pariatur aut distinctio dolorum
-                    laudantium illo direna pasata redi
+                    Cung cấp nhiều loại vaccine từ các cơ sở y tế uy tín, được bảo quản đúng tiêu chuẩn và kiểm định an toàn sức khỏe chặt chẽ.
                   </p>
                 </div>
               </li>
@@ -76,10 +72,9 @@ const AboutSection = () => {
                   </svg>
                 </div>
                 <div>
-                  <h5 className="text-xl font-semibold text-gray-800 mb-2">Voluptatem et qui exercitationem</h5>
+                  <h5 className="text-xl font-semibold text-gray-800 mb-2">Chăm sóc tận tâm, đặt nền móng sức khỏe lên hàng đầu</h5>
                   <p className="text-gray-600">
-                    Et velit et eos maiores est tempora et quos dolorem autem
-                    tempora incidunt maxime veniam
+                    Hỗ trợ tư vấn trước, trong và sau khi tiêm, theo dõi sức khỏe và nhắc lịch tiêm chủng để bảo vệ sức khỏe gia đình bạn tốt nhất.
                   </p>
                 </div>
               </li>
