@@ -12,9 +12,9 @@ const DepartmentsSection = () => {
       <div className="container mx-auto px-4">
         {/* Section Title */}
         <div className="text-center mb-16" data-aos="fade-up">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Chuyên khoa tiêm chủng</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Hệ thống các cơ sở tiêm chủng</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Tìm hiểu các chuyên khoa tiêm chủng tại HUITKIT, cung cấp dịch vụ tiêm phòng toàn diện và an toàn cho mọi lứa tuổi.
+            HUITKIT hiện có nhiều cơ sở tiêm chủng hiện đại, thuận tiện và an toàn trên toàn quốc.
           </p>
         </div>
 
@@ -31,7 +31,7 @@ const DepartmentsSection = () => {
                   }`}
                   onClick={() => handleTabClick('departments-tab-1')}
                 >
-                  Tiêm chủng tim mạch
+                  Cơ sở Quận 1
                 </button>
               </li>
               <li className="mb-2">
@@ -43,7 +43,7 @@ const DepartmentsSection = () => {
                   }`}
                   onClick={() => handleTabClick('departments-tab-2')}
                 >
-                  Tiêm chủng thần kinh
+                  Cơ sở quận Tân Bình
                 </button>
               </li>
               <li className="mb-2">
@@ -55,7 +55,7 @@ const DepartmentsSection = () => {
                   }`}
                   onClick={() => handleTabClick('departments-tab-3')}
                 >
-                  Tiêm chủng gan mật
+                  Cơ sở Quận Bình Thạnh
                 </button>
               </li>
               <li className="mb-2">
@@ -67,7 +67,7 @@ const DepartmentsSection = () => {
                   }`}
                   onClick={() => handleTabClick('departments-tab-4')}
                 >
-                  Tiêm chủng nhi khoa
+                  Cơ sở Cầu Giấy, Hà Nội
                 </button>
               </li>
               <li className="mb-2">
@@ -79,7 +79,7 @@ const DepartmentsSection = () => {
                   }`}
                   onClick={() => handleTabClick('departments-tab-5')}
                 >
-                  Tiêm chủng mắt & phòng bệnh thị giác
+                  Cơ Sở Đà Nẵng
                 </button>
               </li>
             </ul>
@@ -91,12 +91,12 @@ const DepartmentsSection = () => {
             <div className={`${activeTab === 'departments-tab-1' ? 'block' : 'hidden'}`}>
               <div className="flex flex-col lg:flex-row items-start">
                 <div className="w-full lg:w-2/3 lg:pr-8 order-2 lg:order-1">
-                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">Tiêm chủng bảo vệ tim mạch</h3>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">Cơ sở Quận 1</h3>
                   <p className="text-gray-600 italic mb-4">
-                    Bảo vệ sức khỏe tim mạch của bạn và gia đình với các loại vaccine được khuyến cáo.
+                    Nằm tại trung tâm TP.HCM, cung cấp đầy đủ dịch vụ tiêm chủng cho trẻ em và người lớn.
                   </p>
                   <p className="text-gray-600">
-                    Đội ngũ bác sĩ chuyên khoa sẽ tư vấn và tiêm chủng các loại vaccine giúp phòng ngừa những bệnh có thể gây ảnh hưởng nghiêm trọng đến hệ tim mạch. Đảm bảo quy trình an toàn và theo dõi sau tiêm.
+                    Được trang bị cơ sở vật chất hiện đại, phòng tiêm đạt chuẩn Bộ Y tế và đội ngũ bác sĩ giàu kinh nghiệm, mang đến trải nghiệm an toàn và thuận tiện.
                   </p>
                 </div>
                 <div className="w-full lg:w-1/3 mb-6 lg:mb-0 order-1 lg:order-2">
@@ -113,12 +113,12 @@ const DepartmentsSection = () => {
             <div className={`${activeTab === 'departments-tab-2' ? 'block' : 'hidden'}`}>
               <div className="flex flex-col lg:flex-row items-start">
                 <div className="w-full lg:w-2/3 lg:pr-8 order-2 lg:order-1">
-                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">Tiêm chủng bảo vệ hệ thần kinh</h3>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">Cơ sở Quận Tân Bình</h3>
                   <p className="text-gray-600 italic mb-4">
-                    Ngăn ngừa các bệnh lây nhiễm có nguy cơ ảnh hưởng đến hệ thần kinh.
+                    Cơ sở thuận tiện, gần sân bay Tân Sơn Nhất, dễ dàng di chuyển từ các quận lân cận.
                   </p>
                   <p className="text-gray-600">
-                    Các loại vaccine phòng bệnh viêm màng não, viêm não Nhật Bản, bại liệt… được thực hiện theo đúng phác đồ chuẩn. Đảm bảo an toàn tiêm chủng và hỗ trợ chăm sóc sau tiêm.
+                    Dịch vụ tiêm chủng đa dạng, hỗ trợ đặt lịch online nhanh chóng, phòng chờ thoải mái và hệ thống bảo quản vaccine đạt tiêu chuẩn.
                   </p>
                 </div>
                 <div className="w-full lg:w-1/3 mb-6 lg:mb-0 order-1 lg:order-2">
@@ -135,12 +135,12 @@ const DepartmentsSection = () => {
             <div className={`${activeTab === 'departments-tab-3' ? 'block' : 'hidden'}`}>
               <div className="flex flex-col lg:flex-row items-start">
                 <div className="w-full lg:w-2/3 lg:pr-8 order-2 lg:order-1">
-                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">Tiêm phòng các bệnh lý gan</h3>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">Cơ sở Bình Thạnh</h3>
                   <p className="text-gray-600 italic mb-4">
-                    Bảo vệ gan của bạn bằng các loại vaccine phòng bệnh viêm gan phổ biến.
+                    Phục vụ khu vực Bình Thạnh và các quận lân cận với hệ thống phòng tiêm hiện đại.
                   </p>
                   <p className="text-gray-600">
-                    Cung cấp dịch vụ tiêm chủng vaccine viêm gan A, B và các bệnh lý liên quan đến gan, giúp bảo vệ sức khỏe và giảm thiểu nguy cơ mắc bệnh.
+                    Đội ngũ bác sĩ chuyên khoa tư vấn tận tình, vaccine nhập khẩu chính hãng, quy trình tiêm chủng khép kín, đảm bảo an toàn tuyệt đối.
                   </p>
                 </div>
                 <div className="w-full lg:w-1/3 mb-6 lg:mb-0 order-1 lg:order-2">
@@ -157,12 +157,12 @@ const DepartmentsSection = () => {
             <div className={`${activeTab === 'departments-tab-4' ? 'block' : 'hidden'}`}>
               <div className="flex flex-col lg:flex-row items-start">
                 <div className="w-full lg:w-2/3 lg:pr-8 order-2 lg:order-1">
-                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">Tiêm phòng cho trẻ em</h3>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">Cơ sở Cầu Giấy, Hà Nội</h3>
                   <p className="text-gray-600 italic mb-4">
-                    Chăm sóc sức khỏe trẻ em với các gói vaccine đầy đủ, phù hợp từng giai đoạn phát triển.
+                    Trung tâm tiêm chủng lớn nhất miền Bắc, đa dạng vaccine, dịch vụ chuyên nghiệp.
                   </p>
                   <p className="text-gray-600">
-                    Đội ngũ bác sĩ nhi khoa tư vấn và xây dựng phác đồ tiêm chủng riêng cho từng độ tuổi. Đảm bảo an toàn và theo dõi sát sao tình trạng sức khỏe của trẻ sau tiêm.
+                    Cơ sở rộng rãi, tiện nghi, áp dụng quy trình tiêm chủng thông minh, quản lý hồ sơ tiêm online và hỗ trợ nhắc lịch tái tiêm tự động.
                   </p>
                 </div>
                 <div className="w-full lg:w-1/3 mb-6 lg:mb-0 order-1 lg:order-2">
@@ -179,12 +179,12 @@ const DepartmentsSection = () => {
             <div className={`${activeTab === 'departments-tab-5' ? 'block' : 'hidden'}`}>
               <div className="flex flex-col lg:flex-row items-start">
                 <div className="w-full lg:w-2/3 lg:pr-8 order-2 lg:order-1">
-                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">Bảo vệ sức khỏe thị giác</h3>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-4">Cơ sở Đà Nẵng</h3>
                   <p className="text-gray-600 italic mb-4">
-                    Phòng ngừa các bệnh nhiễm trùng mắt bằng các loại vaccine chuyên biệt.
+                    Địa điểm lý tưởng cho khách hàng thuộc Thành Phố Đà Nẵng với đầy đủ dịch vụ tiêm chủng và tư vấn sức khỏe.
                   </p>
                   <p className="text-gray-600">
-                    Cung cấp các loại vaccine giúp giảm nguy cơ mắc bệnh về mắt do virus, vi khuẩn. Được tư vấn bởi đội ngũ chuyên gia nhãn khoa giàu kinh nghiệm.
+                    Hệ thống bảo quản vaccine đạt tiêu chuẩn GSP, dịch vụ thân thiện và đội ngũ y bác sĩ chuyên môn cao, mang đến sự yên tâm tối đa cho khách hàng.
                   </p>
                 </div>
                 <div className="w-full lg:w-1/3 mb-6 lg:mb-0 order-1 lg:order-2">
