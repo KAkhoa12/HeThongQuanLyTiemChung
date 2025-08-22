@@ -27,6 +27,7 @@ export interface AuthState {
   fetchCurrentUser: () => Promise<void>;
   clearError: () => void;
   setUser: (user: UserInfo) => void;
+  checkAuthStatus: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -37,6 +38,19 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+
+      // Check authentication status using authService
+      checkAuthStatus: () => {
+        const isAuth = authService.isAuthenticated();
+        console.log('useAuthStore - checkAuthStatus:', isAuth);
+        
+        // Update local state if it's different
+        if (isAuth !== get().isAuthenticated) {
+          set({ isAuthenticated: isAuth });
+        }
+        
+        return isAuth;
+      },
 
       // Login action
       login: async (email: string, password: string) => {
@@ -95,9 +109,24 @@ export const useAuthStore = create<AuthState>()(
       // Fetch current user from /me API
       fetchCurrentUser: async () => {
         try {
+          console.log('useAuthStore - fetchCurrentUser: Starting...');
+          
+          // First check if we have a valid token
+          if (!authService.isAuthenticated()) {
+            console.log('useAuthStore - fetchCurrentUser: No valid token found');
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+              error: null
+            });
+            return;
+          }
+          
           set({ isLoading: true, error: null });
           
           const userInfo = await authService.getCurrentUser();
+          console.log('useAuthStore - fetchCurrentUser: Success:', userInfo);
           
           set({
             user: userInfo,
@@ -106,7 +135,7 @@ export const useAuthStore = create<AuthState>()(
             error: null
           });
         } catch (error) {
-          console.error('Fetch user error:', error);
+          console.error('useAuthStore - fetchCurrentUser: Error:', error);
           // If fetching user fails, user might not be authenticated
           set({
             user: null,
