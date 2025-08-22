@@ -20,6 +20,7 @@ const HomePage = () => {
       <ServicesSection />
       <AppointmentSectison />
       <DepartmentsSection />
+      
       <DocterSection />
       <FaqSection />
       <TestimonialsSection />

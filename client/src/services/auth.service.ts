@@ -175,12 +175,47 @@ class AuthService {
   }
 
   /**
-   * Logout user and clear cookies
+   * Logout user by calling backend API and clearing cookies
+   */
+  async logoutFromServer(): Promise<boolean> {
+    try {
+      const token = this.getToken();
+      
+      if (!token) {
+        // If no token, just clear local data
+        this.clearLocalData();
+        return true;
+      }
+      
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.AUTH.LOGOUT}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Always clear local data regardless of response
+      this.clearLocalData();
+      
+      if (response.ok) {
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if API call fails, clear local data
+      this.clearLocalData();
+      return false;
+    }
+  }
+
+  /**
+   * Logout user and clear cookies (legacy method, now calls logoutFromServer)
    */
   logout(): void {
-    Cookies.remove(TOKEN_COOKIE_NAME);
-    Cookies.remove(REFRESH_TOKEN_COOKIE_NAME);
-    Cookies.remove(USER_ID_COOKIE_NAME);
+    this.logoutFromServer();
   }
 
   /**
@@ -218,6 +253,15 @@ class AuthService {
     Cookies.set(TOKEN_COOKIE_NAME, authData.accessToken, { expires: ACCESS_TOKEN_EXPIRY, secure: true, sameSite: 'strict' });
     Cookies.set(REFRESH_TOKEN_COOKIE_NAME, authData.refreshToken, { expires: REFRESH_TOKEN_EXPIRY, secure: true, sameSite: 'strict' });
     Cookies.set(USER_ID_COOKIE_NAME, authData.userId, { expires: REFRESH_TOKEN_EXPIRY, secure: true, sameSite: 'strict' });
+  }
+
+  /**
+   * Clear all local authentication data
+   */
+  private clearLocalData(): void {
+    Cookies.remove(TOKEN_COOKIE_NAME);
+    Cookies.remove(REFRESH_TOKEN_COOKIE_NAME);
+    Cookies.remove(USER_ID_COOKIE_NAME);
   }
 }
 

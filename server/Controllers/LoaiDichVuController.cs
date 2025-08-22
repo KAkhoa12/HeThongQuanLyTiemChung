@@ -42,7 +42,7 @@ public class LoaiDichVuController : ControllerBase
                 paged.TotalPages,
                 data));
     }
-    [HttpGet]
+    [HttpGet("print")]
     public async Task<IActionResult> PrintAws()
     {
         return ApiResponse.Success(

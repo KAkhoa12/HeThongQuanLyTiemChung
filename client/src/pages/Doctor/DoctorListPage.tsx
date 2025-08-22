@@ -4,7 +4,7 @@ import { getAllDoctors, deleteDoctor, searchDoctors } from '../../services/docto
 import { Doctor } from '../../types/doctor.types';
 import { PagedResponse } from '../../types/staff.types';
 import DefaultLayout from '../../layout/DefaultLayout';
-import Breadcrumb from '../../components/Breadcrumb';
+import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { toast } from 'react-toastify';
 
 const DoctorListPage = () => {

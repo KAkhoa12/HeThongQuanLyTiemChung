@@ -1,44 +1,49 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Logo from '../../images/icon/logo.png';
 import HumanLogo from '../../images/user/human.png';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuthStore } from '../../store/useAuthStore';
+import { useToast } from '../../hooks/useToast';
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState<string>('admin1@example.com');
   const [password, setPassword] = useState<string>('nguyenvana');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
   
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const location = useLocation();
+  const { login, isLoading, error, clearError, isAuthenticated } = useAuthStore();
+  const { showSuccess, showError } = useToast();
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!email || !password) {
-      setErrorMessage('Vui lòng nhập email và mật khẩu');
+      showError('Lỗi', 'Vui lòng nhập email và mật khẩu');
       return;
     }
     
     try {
-      setIsSubmitting(true);
-      setErrorMessage('');
+      clearError();
       
-      const success = await login({
-        email,
-        matKhau: password
-      });
+      const success = await login(email, password);
       
       if (success) {
-        navigate('/');
+        showSuccess('Thành công', 'Đăng nhập thành công!');
+        const from = location.state?.from?.pathname || '/';
+        navigate(from, { replace: true });
+      } else {
+        // Error is already set in the store
+        if (error) {
+          showError('Lỗi đăng nhập', error);
+        }
       }
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Đăng nhập thất bại');
-    } finally {
-      setIsSubmitting(false);
+      const errorMessage = error instanceof Error ? error.message : 'Đăng nhập thất bại';
+      showError('Lỗi đăng nhập', errorMessage);
     }
   };
+
 
   return (
     <>
@@ -68,12 +73,6 @@ const SignIn: React.FC = () => {
                 Đăng nhập vào Huit KIT
               </h2>
 
-              {errorMessage && (
-                <div className="mb-5 rounded-md bg-red-50 p-4 text-sm text-red-500 dark:bg-red-500/10">
-                  {errorMessage}
-                </div>
-              )}
-
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
@@ -86,7 +85,7 @@ const SignIn: React.FC = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Nhập email"
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-                      disabled={isSubmitting}
+                      disabled={isLoading}
                     />
 
                     <span className="absolute right-4 top-4">
@@ -106,7 +105,7 @@ const SignIn: React.FC = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Nhập mật khẩu"
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-                      disabled={isSubmitting}
+                      disabled={isLoading}
                     />
 
                     <span className="absolute right-4 top-4">
@@ -118,10 +117,10 @@ const SignIn: React.FC = () => {
                 <div className="mb-5">
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isLoading}
                     className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90 disabled:bg-opacity-70 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                    {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                   </button>
                 </div>
 

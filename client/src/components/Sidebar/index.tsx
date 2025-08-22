@@ -187,7 +187,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Calendar --> */}
               <li>
                 <NavLink
-                  to="/calendar"
+                  to="/dashboard/calendar"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes('calendar') &&
                     'bg-graydark dark:bg-meta-4'
@@ -214,7 +214,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Profile --> */}
               <li>
                 <NavLink
-                  to="/profile"
+                  to="/dashboard/profile"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes('profile') && 'bg-graydark dark:bg-meta-4'
                   }`}
@@ -405,6 +405,70 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 }}
               </SidebarLinkGroup>
               {/* <!-- Menu Item Services Management --> */}
+
+              {/* <!-- Menu Item Image Management --> */}
+              <li>
+                <NavLink
+                  to="/image-management"
+                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    pathname.includes('image-management') && 'bg-graydark dark:bg-meta-4'
+                  }`}
+                >
+                  <svg
+                    className="fill-current"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15.75 0.5625H2.25C1.035 0.5625 0.0625 1.535 0.0625 2.75V15.25C0.0625 16.465 1.035 17.4375 2.25 17.4375H15.75C16.965 17.4375 17.9375 16.465 17.9375 15.25V2.75C17.9375 1.535 16.965 0.5625 15.75 0.5625ZM15.75 15.25H2.25V2.75H15.75V15.25Z"
+                      fill=""
+                    />
+                    <path
+                      d="M5.625 6.1875C6.38043 6.1875 7.125 5.44293 7.125 4.6875C7.125 3.93207 6.38043 3.1875 5.625 3.1875C4.86957 3.1875 4.125 3.93207 4.125 4.6875C4.125 5.44293 4.86957 6.1875 5.625 6.1875Z"
+                      fill=""
+                    />
+                    <path
+                      d="M2.25 8.4375H15.75L11.25 13.5L8.25 10.5L5.25 13.5L2.25 8.4375Z"
+                      fill=""
+                    />
+                  </svg>
+                  Quản lý Ảnh
+                </NavLink>
+              </li>
+              {/* <!-- Menu Item Image Management --> */}
+
+              {/* <!-- Menu Item Doctor Schedule --> */}
+              <li>
+                <NavLink
+                  to="/dashboard/doctor-schedule"
+                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    pathname.includes('doctor-schedule') && 'bg-graydark dark:bg-meta-4'
+                  }`}
+                >
+                  <svg
+                    className="fill-current"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M9 0.75C4.17157 0.75 0.25 4.67157 0.25 9C0.25 13.3284 4.17157 17.25 9 17.25C13.3284 17.25 17.25 13.3284 17.25 9C17.25 4.67157 13.3284 0.75 9 0.75ZM9 15.75C5.13401 15.75 2.25 12.866 2.25 9C2.25 5.13401 5.13401 2.25 9 2.25C12.866 2.25 15.75 5.13401 15.75 9C15.75 12.866 12.866 15.75 9 15.75Z"
+                      fill=""
+                    />
+                    <path
+                      d="M9 4.5C9.41421 4.5 9.75 4.83579 9.75 5.25V8.25L12.75 8.25C13.1642 8.25 13.5 8.58579 13.5 9C13.5 9.41421 13.1642 9.75 12.75 9.75L9.75 9.75V12.75C9.75 13.1642 9.41421 13.5 9 13.5C8.58579 13.5 8.25 13.1642 8.25 12.75V9.75L5.25 9.75C4.83579 9.75 4.5 9.41421 4.5 9C4.5 8.58579 4.83579 8.25 5.25 8.25L8.25 8.25V5.25C8.25 4.83579 8.58579 4.5 9 4.5Z"
+                      fill=""
+                    />
+                  </svg>
+                  Lịch Bác Sĩ
+                </NavLink>
+              </li>
+              {/* <!-- Menu Item Doctor Schedule --> */}
 
               {/* <!-- Menu Item Forms --> */}
               <SidebarLinkGroup

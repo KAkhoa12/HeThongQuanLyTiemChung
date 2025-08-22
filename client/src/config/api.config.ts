@@ -12,6 +12,7 @@ export const API_CONFIG = {
     REGISTER: '/api/Auth/register',
     REFRESH: '/api/Auth/refresh',
     ME: '/api/Auth/me',
+    LOGOUT: '/api/Auth/logout',
   },
   
   // Other API endpoints can be added here
@@ -24,7 +25,12 @@ export const API_CONFIG = {
   },
   
   IMAGE: {
-    BASE: '/api/Image',
+    BASE: '/api/images',
+  },
+
+  // Image label management endpoints
+  IMAGE_LABELS: {
+    BASE: '/api/image_labels',
   },
 
   // Staff management endpoints
@@ -36,6 +42,16 @@ export const API_CONFIG = {
   DOCTOR: {
     BASE: '/api/doctors',
     SCHEDULES: '/api/doctors/{id}/schedules',
+  },
+
+  // Doctor schedule management endpoints
+  DOCTOR_SCHEDULE: {
+    BASE: '/api/doctor-schedules',
+  },
+
+  // Appointment management endpoints
+  APPOINTMENT: {
+    BASE: '/api/appointments',
   },
 
   // Work schedule management endpoints

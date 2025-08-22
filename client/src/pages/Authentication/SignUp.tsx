@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../../images/icon/logo.png';
 import HumanLogo from '../../images/user/human.png';
-import { useAuth } from '../../hooks/useAuth';
+import authService from '../../services/auth.service';
+import { useToast } from '../../hooks/useToast';
 
 const SignUp: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -10,12 +11,14 @@ const SignUp: React.FC = () => {
     email: '',
     matKhau: '',
     xacNhanMatKhau: '',
+    soDienThoai: '',
+    ngaySinh: '',
+    diaChi: '',
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
   
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { showSuccess, showError } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -29,36 +32,54 @@ const SignUp: React.FC = () => {
     e.preventDefault();
     
     // Validate form
-    if (!formData.ten || !formData.email || !formData.matKhau || !formData.xacNhanMatKhau) {
-      setErrorMessage('Vui lòng điền đầy đủ thông tin');
+    if (!formData.ten || !formData.email || !formData.matKhau || !formData.xacNhanMatKhau || !formData.soDienThoai || !formData.ngaySinh) {
+      showError('Lỗi', 'Vui lòng điền đầy đủ thông tin bắt buộc');
       return;
     }
 
     if (formData.matKhau !== formData.xacNhanMatKhau) {
-      setErrorMessage('Mật khẩu không khớp');
+      showError('Lỗi', 'Mật khẩu không khớp');
       return;
     }
 
     if (formData.matKhau.length < 6) {
-      setErrorMessage('Mật khẩu phải có ít nhất 6 ký tự');
+      showError('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự');
+      return;
+    }
+
+    // Validate phone number format (Vietnamese format)
+    const phoneRegex = /^(0|\+84)[0-9]{9}$/;
+    if (!phoneRegex.test(formData.soDienThoai)) {
+      showError('Lỗi', 'Số điện thoại không đúng định dạng');
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      showError('Lỗi', 'Email không đúng định dạng');
       return;
     }
     
     try {
       setIsSubmitting(true);
-      setErrorMessage('');
       
-      const success = await register({
+      const success = await authService.register({
         ten: formData.ten,
         email: formData.email,
-        matKhau: formData.matKhau
+        matKhau: formData.matKhau,
+        soDienThoai: formData.soDienThoai,
+        ngaySinh: formData.ngaySinh,
+        diaChi: formData.diaChi || ''
       });
       
       if (success) {
+        showSuccess('Thành công', 'Đăng ký thành công! Vui lòng đăng nhập.');
         navigate('/auth/signin', { state: { message: 'Đăng ký thành công! Vui lòng đăng nhập.' } });
       }
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Đăng ký thất bại');
+      const errorMessage = error instanceof Error ? error.message : 'Đăng ký thất bại';
+      showError('Lỗi đăng ký', errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -91,16 +112,10 @@ const SignUp: React.FC = () => {
                 Đăng ký vào Huit KIT
               </h2>
 
-              {errorMessage && (
-                <div className="mb-5 rounded-md bg-red-50 p-4 text-sm text-red-500 dark:bg-red-500/10">
-                  {errorMessage}
-                </div>
-              )}
-
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Họ và tên
+                    Họ và tên <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -121,7 +136,7 @@ const SignUp: React.FC = () => {
 
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Email
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -142,7 +157,69 @@ const SignUp: React.FC = () => {
 
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Mật khẩu
+                    Số điện thoại <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      name="soDienThoai"
+                      value={formData.soDienThoai}
+                      onChange={handleChange}
+                      placeholder="Nhập số điện thoại"
+                      className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      disabled={isSubmitting}
+                    />
+
+                    <span className="absolute right-4 top-4">
+                      <i className="ri-phone-line text-2xl"></i>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Ngày sinh <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      name="ngaySinh"
+                      value={formData.ngaySinh}
+                      onChange={handleChange}
+                      className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      disabled={isSubmitting}
+                    />
+
+                    <span className="absolute right-4 top-4">
+                      <i className="ri-calendar-line text-2xl"></i>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Địa chỉ
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="diaChi"
+                      value={formData.diaChi}
+                      onChange={handleChange}
+                      placeholder="Nhập địa chỉ (không bắt buộc)"
+                      className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      disabled={isSubmitting}
+                    />
+
+                    <span className="absolute right-4 top-4">
+                      <i className="ri-map-pin-line text-2xl"></i>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Mật khẩu <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -163,7 +240,7 @@ const SignUp: React.FC = () => {
 
                 <div className="mb-6">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Xác nhận mật khẩu
+                    Xác nhận mật khẩu <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input

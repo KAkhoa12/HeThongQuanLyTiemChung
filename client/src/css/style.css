@@ -28,6 +28,39 @@
   .inbox-height {
     @apply h-[calc(100vh_-_8.125rem)] lg:h-[calc(100vh_-_5.625rem)];
   }
+
+  /* Line clamp utilities */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+}
+
+/* Toast notifications CSS */
+.toast-close-button {
+  cursor: pointer !important;
+  opacity: 1 !important;
+  transition: opacity 0.2s ease-in-out !important;
+}
+
+.toast-close-button:hover {
+  opacity: 0.7 !important;
 }
 
 /* third-party libraries CSS */

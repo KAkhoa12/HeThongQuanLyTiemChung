@@ -13,12 +13,13 @@ const PrivateRoute = ({ children, requiredRoles = [] }: PrivateRouteProps) => {
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const location = useLocation();
-
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
   useEffect(() => {
     const checkAuth = async () => {
       try {
         if (!authService.isAuthenticated()) {
           setIsAuthenticated(false);
+          setRedirectPath("/auth/signin");
           setIsLoading(false);
           return;
         }
@@ -36,6 +37,7 @@ const PrivateRoute = ({ children, requiredRoles = [] }: PrivateRouteProps) => {
             try {
               const user = await authService.getCurrentUser();
               setIsAuthenticated(true);
+              
               setUserRoles([user.vaiTro]);
             } catch (e) {
               setIsAuthenticated(false);
@@ -49,6 +51,7 @@ const PrivateRoute = ({ children, requiredRoles = [] }: PrivateRouteProps) => {
         console.error('Auth check error:', error);
         setIsAuthenticated(false);
         setIsLoading(false);
+        setRedirectPath("/auth/signin");
       }
     };
 

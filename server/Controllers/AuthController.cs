@@ -103,6 +103,46 @@ namespace server.Controllers
                 return ApiResponse.Error("Đã xảy ra lỗi hệ thống", 500);
             }
         }
+
+        [HttpPost("logout")]
+        [Authorize]
+        public async Task<IActionResult> Logout(CancellationToken ct)
+        {
+            try
+            {
+                // Lấy userId từ token
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                    return ApiResponse.Error("Token không hợp lệ", 401);
+
+                // Tìm và vô hiệu hóa tất cả session của user
+                var activeSessions = await _context.PhienDangNhaps
+                    .Where(p => p.MaNguoiDung == userId && 
+                               p.IsActive == true && 
+                               p.IsDelete == false)
+                    .ToListAsync(ct);
+
+                if (activeSessions.Any())
+                {
+                    foreach (var session in activeSessions)
+                    {
+                        session.IsActive = false;
+                        session.NgayCapNhat = DateTime.UtcNow;
+                    }
+
+                    _context.PhienDangNhaps.UpdateRange(activeSessions);
+                    await _context.SaveChangesAsync(ct);
+                }
+
+                return ApiResponse.Success("Đăng xuất thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi đăng xuất");
+                return ApiResponse.Error("Đã xảy ra lỗi hệ thống", 500);
+            }
+        }
+
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshRequestDto request, CancellationToken ct)
         {

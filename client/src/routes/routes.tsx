@@ -25,6 +25,17 @@ const DoctorListPage = lazy(() => import('../pages/Doctor/DoctorListPage'));
 const ServiceListPage = lazy(() => import('../pages/Service/ServiceListPage'));
 const ServiceTypePage = lazy(() => import('../pages/Service/ServiceTypePage'));
 
+// Image Management
+const ImageManagementPage = lazy(() => import('../pages/ImageManagement'));
+
+// Doctor Schedule Management
+const DoctorSchedulePage = lazy(() => import('../pages/DoctorSchedule'));
+
+// Other Pages
+const Settings = lazy(() => import('../pages/Settings'));
+const Tables = lazy(() => import('../pages/Tables'));
+const Chart = lazy(() => import('../pages/Chart'));
+
 const routes = [
   {
     path: '/',
@@ -68,6 +79,15 @@ const routes = [
         )
       },
       {
+        path: 'profile',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Profile | HuitKIT" />
+            <Profile />
+          </PrivateRoute>
+        )
+      },
+      {
         path: 'calendar',
         element: (
           <PrivateRoute>
@@ -77,11 +97,11 @@ const routes = [
         )
       },
       {
-        path: 'profile',
+        path: 'doctor-schedule',
         element: (
           <PrivateRoute>
-            <PageTitle title="Profile | HuitKIT" />
-            <Profile />
+            <PageTitle title="Lịch Bác Sĩ | HuitKIT" />
+            <DoctorSchedulePage />
           </PrivateRoute>
         )
       }
@@ -145,6 +165,71 @@ const routes = [
         )
       },
       // Add more service routes as needed (create, edit, detail)
+    ]
+  },
+  // Image Management Routes
+  {
+    path: '/image-management',
+    element: <DefaultLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Quản lý Ảnh | HuitKIT" />
+            <ImageManagementPage />
+          </PrivateRoute>
+        )
+      },
+      // Add more image management routes as needed
+    ]
+  },
+  // Settings Routes
+  {
+    path: '/settings',
+    element: <DefaultLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Settings | HuitKIT" />
+            <Settings />
+          </PrivateRoute>
+        )
+      }
+    ]
+  },
+  // Tables Routes
+  {
+    path: '/tables',
+    element: <DefaultLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Tables | HuitKIT" />
+            <Tables />
+          </PrivateRoute>
+        )
+      }
+    ]
+  },
+  // Chart Routes
+  {
+    path: '/chart',
+    element: <DefaultLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Chart | HuitKIT" />
+            <Chart />
+          </PrivateRoute>
+        )
+      }
     ]
   },
   {

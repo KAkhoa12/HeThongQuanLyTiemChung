@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { getAllStaff, deleteStaff, searchStaff } from '../../services/staff.service';
 import { PagedResponse, Staff } from '../../types/staff.types';
 import DefaultLayout from '../../layout/DefaultLayout';
-import Breadcrumb from '../../components/Breadcrumb';
+import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { toast } from 'react-toastify';
 
 const StaffListPage = () => {

@@ -222,4 +222,6 @@ public class ImageController : ControllerBase
 
         return ApiResponse.Success("Xóa ảnh thành công", result);
     }
+
+
 }

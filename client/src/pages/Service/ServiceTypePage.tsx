@@ -4,7 +4,7 @@ import { getAllServiceTypes, deleteServiceType, createServiceType, updateService
 import { ServiceType, ServiceTypeCreateRequest, ServiceTypeUpdateRequest } from '../../types/service.types';
 import { PagedResponse } from '../../types/staff.types';
 import DefaultLayout from '../../layout/DefaultLayout';
-import Breadcrumb from '../../components/Breadcrumb';
+import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { toast } from 'react-toastify';
 
 const ServiceTypePage = () => {
