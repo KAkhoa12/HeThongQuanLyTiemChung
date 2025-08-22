@@ -1,0 +1,103 @@
+/* Màu dùng chung (giữ y như trước) */
+
+.faq-item:first-child {
+    box-shadow: none !important;
+}
+
+:root {
+    --bg: #f6f9ff;
+    --card: #fff;
+    --text: #0f172a;
+    --muted: #475569;
+    --border: #e2e8f0;
+    --accent: #2563eb;
+    --accent-weak: #eaf1ff;
+}
+
+
+/* Nền section */
+
+.section.light-background {
+    background: var(--bg);
+}
+
+
+/* Line dưới tiêu đề */
+
+.section-hr {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 10px 0 18px;
+}
+
+
+/* Wrapper KHÔNG cắt gì cả để khỏi đè viền card con */
+
+.faq-container {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    border-radius: 0;
+    overflow: visible;
+    /* <- quan trọng để không cắt góc item #1 */
+    padding: 0;
+}
+
+
+/* Mỗi FAQ item = 1 card, không bị clipping */
+
+.faq-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px 20px;
+    box-shadow: 0 6px 20px rgba(2, 6, 23, .03);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    background-clip: padding-box;
+    /* fix viền đậm trên 1 số trình duyệt */
+}
+
+.faq-item+.faq-item {
+    margin-top: 12px;
+}
+
+.faq-item:hover {
+    background: #fbfdff;
+}
+
+.faq-item h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.faq-content {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--muted);
+}
+
+.faq-content u {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.faq-toggle {
+    color: #94a3b8;
+    transition: transform .2s ease;
+}
+
+.faq-item.faq-active {
+    background: var(--accent-weak);
+    border-color: #dbeafe;
+}
+
+.faq-item.faq-active .faq-toggle {
+    transform: rotate(90deg);
+    color: var(--accent);
+}

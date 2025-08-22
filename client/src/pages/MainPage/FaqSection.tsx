@@ -1,12 +1,13 @@
+
 const FaqSection = () => {
     return (
         <section id="faq" className="faq section light-background">
         <div className="container section-title" data-aos="fade-up">
-          <h2>Frequently Asked Questions</h2>
+          <h2>Câu hỏi thường gặp</h2>
           <p>
-            Necessitatibus eius consequatur ex aliquid fuga eum quidem sint
-            consectetur velit
+            "Giải pháp đúng nhu cầu"
           </p>
+           <hr className="soft-hr" />
         </div>
 
         <div className="container">
@@ -14,95 +15,77 @@ const FaqSection = () => {
             <div className="col-lg-10" data-aos="fade-up" data-aos-delay="100">
               <div className="faq-container">
                 <div className="faq-item faq-active">
-                  <h3>Non consectetur a erat nam at lectus urna duis?</h3>
+                  <h3>1. Tôi có cần lo lắng về tình trạng sức khỏe hiện tại không?</h3>
                   <div className="faq-content">
                     <p>
-                      Feugiat pretium nibh ipsum consequat. Tempus iaculis urna
-                      id volutpat lacus laoreet non curabitur gravida. Venenatis
-                      lectus magna fringilla urna porttitor rhoncus dolor purus
-                      non.
+                      Không cần quá lo lắng, hãy duy trì lối sống lành mạnh và theo dõi thường xuyên.
                     </p>
                   </div>
                   <i className="faq-toggle bi bi-chevron-right"></i>
+                  <hr className="item-hr d-lg-none" />
                 </div>
 
                 <div className="faq-item">
-                  <h3>Feugiat scelerisque varius morbi enim nunc faucibus?</h3>
+                  <h3>2. Sự thay đổi lối sống có ảnh hưởng nhiều không?</h3>
                   <div className="faq-content">
                     <p>
-                      Dolor sit amet consectetur adipiscing elit pellentesque
-                      habitant morbi. Id interdum velit laoreet id donec
-                      ultrices. Fringilla phasellus faucibus scelerisque
-                      eleifend donec pretium. Est pellentesque elit ullamcorper
-                      dignissim. Mauris ultrices eros in cursus turpis massa
-                      tincidunt dui.
+                      Có, một số thay đổi nhỏ hàng ngày có thể mang lại sức khỏe lâu dài.
                     </p>
                   </div>
                   <i className="faq-toggle bi bi-chevron-right"></i>
+                  <hr className="item-hr d-lg-none" />
                 </div>
 
                 <div className="faq-item">
                   <h3>
-                    Dolor sit amet consectetur adipiscing elit pellentesque?
+                   3. Làm thế nào để duy trì thói quen tốt?
                   </h3>
                   <div className="faq-content">
                     <p>
-                      Eleifend mi in nulla posuere sollicitudin aliquam ultrices
-                      sagittis orci. Faucibus pulvinar elementum integer enim.
-                      Sem nulla pharetra diam sit amet nisl suscipit. Rutrum
-                      tellus pellentesque eu tincidunt. Lectus urna duis
-                      convallis convallis tellus. Urna molestie at elementum eu
-                      facilisis sed odio morbi quis
+                      Hãy bắt đầu từ những việc nhỏ, duy trì đều đặn sẽ tốt hơn là cầu toàn.
                     </p>
                   </div>
                   <i className="faq-toggle bi bi-chevron-right"></i>
+                  <hr className="item-hr d-lg-none" />
                 </div>
 
                 <div className="faq-item">
                   <h3>
-                    Ac odio tempor orci dapibus. Aliquam eleifend mi in nulla?
+                   4. Tôi có nên bắt đầu ngay không?
                   </h3>
                   <div className="faq-content">
                     <p>
-                      Dolor sit amet consectetur adipiscing elit pellentesque
-                      habitant morbi. Id interdum velit laoreet id donec
-                      ultrices. Fringilla phasellus faucibus scelerisque
-                      eleifend donec pretium. Est pellentesque elit ullamcorper
-                      dignissim. Mauris ultrices eros in cursus turpis massa
-                      tincidunt dui.
+                      Có, hãy bắt đầu từ hôm nay. Mỗi bước đi nhỏ đều có giá trị lớn.
                     </p>
                   </div>
                   <i className="faq-toggle bi bi-chevron-right"></i>
+                  <hr className="item-hr d-lg-none" />
                 </div>
 
                 <div className="faq-item">
                   <h3>
-                    Tempus quam pellentesque nec nam aliquam sem et tortor?
+                    5. Thời gian có ảnh hưởng đến kết quả không?
                   </h3>
                   <div className="faq-content">
                     <p>
-                      Molestie a iaculis at erat pellentesque adipiscing
-                      commodo. Dignissim suspendisse in est ante in. Nunc vel
-                      risus commodo viverra maecenas accumsan. Sit amet nisl
-                      suscipit adipiscing bibendum est. Purus gravida quis
-                      blandit turpis cursus in
+                     Có, sự kiên trì theo thời gian là yếu tố quyết định thành công.
                     </p>
                   </div>
                   <i className="faq-toggle bi bi-chevron-right"></i>
+                  <hr className="item-hr d-lg-none" />
                 </div>
 
                 <div className="faq-item">
-                  <h3>Perspiciatis quod quo quos nulla quo illum ullam?</h3>
+                  <h3>6. Làm sao để vượt qua khó khăn và thử thách?</h3>
                   <div className="faq-content">
                     <p>
-                      Enim ea facilis quaerat voluptas quidem et dolorem. Quis
-                      et consequatur non sed in suscipit sequi. Distinctio ipsam
-                      dolore et.
+                      Hãy tin tưởng vào bản thân, tìm sự hỗ trợ từ gia đình và chuyên gia.
                     </p>
                   </div>
                   <i className="faq-toggle bi bi-chevron-right"></i>
                 </div>
               </div>
+              <hr className="item-hr d-lg-none" />
             </div>
           </div>
         </div>

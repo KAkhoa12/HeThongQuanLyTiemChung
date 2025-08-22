@@ -8,12 +8,10 @@ const TestimonialsSection = () => {
               data-aos="fade-up"
               data-aos-delay="100"
             >
-              <h3>Testimonials</h3>
+              <h3>Đáng Giá </h3>
               <p>
-                Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis
-                aute irure dolor in reprehenderit in voluptate velit esse cillum
-                dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-                cupidatat non proident.
+                "Chúng tôi cam kết làm việc tận tâm, luôn mang lại dịch vụ chất lượng cao.
+                Mỗi bước đi đều hướng đến sự hài lòng của khách hàng, đồng thời tuân thủ chuẩn mực chuyên nghiệp và uy tín."
               </p>
             </div>
 
@@ -29,7 +27,7 @@ const TestimonialsSection = () => {
                           alt=""
                         />
                         <div>
-                          <h3>Saul Goodman</h3>
+                          <h3>Trần Thị Hà</h3>
                           <h4>Ceo &amp; Founder</h4>
                           <div className="stars">
                             <i className="bi bi-star-fill"></i>
@@ -43,10 +41,7 @@ const TestimonialsSection = () => {
                       <p>
                         <i className="bi bi-quote quote-icon-left"></i>
                         <span>
-                          Proin iaculis purus consequat sem cure digni ssim
-                          donec porttitora entum suscipit rhoncus. Accusantium
-                          quam, ultricies eget id, aliquam eget nibh et. Maecen
-                          aliquam, risus at semper.
+                         "Phong cách làm việc chuyên nghiệp, luôn mang lại sự tin tưởng cho khách hàng."
                         </span>
                         <i className="bi bi-quote quote-icon-right"></i>
                       </p>
@@ -62,7 +57,7 @@ const TestimonialsSection = () => {
                           alt=""
                         />
                         <div>
-                          <h3>Sara Wilsson</h3>
+                          <h3>Nguyễn Văn Thái</h3>
                           <h4>Designer</h4>
                           <div className="stars">
                             <i className="bi bi-star-fill"></i>
@@ -76,10 +71,7 @@ const TestimonialsSection = () => {
                       <p>
                         <i className="bi bi-quote quote-icon-left"></i>
                         <span>
-                          Export tempor illum tamen malis malis eram quae irure
-                          esse labore quem cillum quid cillum eram malis quorum
-                          velit fore eram velit sunt aliqua noster fugiat irure
-                          amet legam anim culpa.
+                          "Dịch vụ nhanh chóng, uy tín và đáng tin cậy."
                         </span>
                         <i className="bi bi-quote quote-icon-right"></i>
                       </p>
@@ -95,7 +87,7 @@ const TestimonialsSection = () => {
                           alt=""
                         />
                         <div>
-                          <h3>Jena Karlis</h3>
+                          <h3>Hồ Thị Phượng</h3>
                           <h4>Store Owner</h4>
                           <div className="stars">
                             <i className="bi bi-star-fill"></i>
@@ -109,10 +101,7 @@ const TestimonialsSection = () => {
                       <p>
                         <i className="bi bi-quote quote-icon-left"></i>
                         <span>
-                          Enim nisi quem export duis labore cillum quae magna
-                          enim sint quorum nulla quem veniam duis minim tempor
-                          labore quem eram duis noster aute amet eram fore quis
-                          sint minim.
+                          "Đội ngũ tận tâm, kỹ năng cao, khiến tôi rất hài lòng."
                         </span>
                         <i className="bi bi-quote quote-icon-right"></i>
                       </p>
@@ -128,7 +117,7 @@ const TestimonialsSection = () => {
                           alt=""
                         />
                         <div>
-                          <h3>Matt Brandon</h3>
+                          <h3>Lê Minh Khôi</h3>
                           <h4>Freelancer</h4>
                           <div className="stars">
                             <i className="bi bi-star-fill"></i>
@@ -142,10 +131,7 @@ const TestimonialsSection = () => {
                       <p>
                         <i className="bi bi-quote quote-icon-left"></i>
                         <span>
-                          Fugiat enim eram quae cillum dolore dolor amet nulla
-                          culpa multos export minim fugiat minim velit minim
-                          dolor enim duis veniam ipsum anim magna sunt elit fore
-                          quem dolore labore illum veniam.
+                          "Chất lượng và tận tâm, dịch vụ rất tốt"
                         </span>
                         <i className="bi bi-quote quote-icon-right"></i>
                       </p>
@@ -161,7 +147,7 @@ const TestimonialsSection = () => {
                           alt=""
                         />
                         <div>
-                          <h3>John Larson</h3>
+                          <h3>Thái Linh Hương</h3>
                           <h4>Entrepreneur</h4>
                           <div className="stars">
                             <i className="bi bi-star-fill"></i>
@@ -175,10 +161,7 @@ const TestimonialsSection = () => {
                       <p>
                         <i className="bi bi-quote quote-icon-left"></i>
                         <span>
-                          Quis quorum aliqua sint quem legam fore sunt eram
-                          irure aliqua veniam tempor noster veniam enim culpa
-                          labore duis sunt culpa nulla illum cillum fugiat legam
-                          esse veniam culpa fore nisi cillum quid.
+                          "Dịch vụ đi ngang với trách nhiệm, sẽ quay lại đặt lịch khám sau này"
                         </span>
                         <i className="bi bi-quote quote-icon-right"></i>
                       </p>

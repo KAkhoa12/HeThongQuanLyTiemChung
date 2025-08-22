@@ -2,10 +2,9 @@ const ContactSection = () => {
     return (
         <section id="contact" className="contact section">
         <div className="container section-title" data-aos="fade-up">
-          <h2>Contact</h2>
+          <h2>Liên hệ</h2>
           <p>
-            Necessitatibus eius consequatur ex aliquid fuga eum quidem sint
-            consectetur velit
+            "Hãy liên hệ với chúng tôi để được tư vấn và hỗ trợ tốt nhất."
           </p>
         </div>
 
@@ -30,7 +29,7 @@ const ContactSection = () => {
               >
                 <i className="bi bi-geo-alt flex-shrink-0"></i>
                 <div>
-                  <h3>Location</h3>
+                  <h3>Vị Trí</h3>
                   <p>A108 Adam Street, New York, NY 535022</p>
                 </div>
               </div>

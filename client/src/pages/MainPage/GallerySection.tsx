@@ -2,10 +2,9 @@ const GallerySection = () => {
     return (
         <section id="gallery" className="gallery section">
         <div className="container section-title" data-aos="fade-up">
-          <h2>Gallery</h2>
+          <h2>Thư viện hình ảnh</h2>
           <p>
-            Necessitatibus eius consequatur ex aliquid fuga eum quidem sint
-            consectetur velit
+           "Những khoảnh khắc và hình ảnh thực tế từ quá trình làm việc."
           </p>
         </div>
 
