@@ -77,9 +77,9 @@ const DoctorScheduleForm: React.FC<DoctorScheduleFormProps> = ({
     try {
       const newSchedule = await doctorScheduleService.createDoctorSchedule(formData);
       onScheduleCreated(newSchedule);
-      showSuccess('Tạo lịch bác sĩ thành công');
+      showSuccess('Thành công', 'Tạo lịch bác sĩ thành công');
     } catch (error) {
-      showError('Không thể tạo lịch bác sĩ');
+      showError('Lỗi', 'Không thể tạo lịch bác sĩ');
       console.error('Create schedule error:', error);
     } finally {
       setLoading(false);

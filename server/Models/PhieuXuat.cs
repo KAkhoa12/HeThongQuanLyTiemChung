@@ -11,6 +11,8 @@ public partial class PhieuXuat
 
     public string? MaDiaDiemNhap { get; set; }
 
+    public string? MaQuanLy { get; set; }
+
     public DateTime? NgayXuat { get; set; }
 
     public string? LoaiXuat { get; set; }
@@ -30,4 +32,6 @@ public partial class PhieuXuat
     public virtual DiaDiem? MaDiaDiemNhapNavigation { get; set; }
 
     public virtual DiaDiem? MaDiaDiemXuatNavigation { get; set; }
+
+    public virtual QuanLy? MaQuanLyNavigation { get; set; }
 }

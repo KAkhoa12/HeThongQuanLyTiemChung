@@ -31,7 +31,7 @@ const DoctorSchedulePage: React.FC = () => {
       setDoctors(doctorsData || []);
       setAppointments(appointmentsData?.data || []);
     } catch (error) {
-      showError('Không thể tải dữ liệu');
+      showError('Lỗi', 'Không thể tải dữ liệu');
       console.error('Load data error:', error);
     } finally {
       setLoading(false);
@@ -46,10 +46,10 @@ const DoctorSchedulePage: React.FC = () => {
   const handleScheduleCreated = useCallback(async (newSchedule: DoctorSchedule) => {
     try {
       setSchedules(prev => [...prev, newSchedule]);
-      showSuccess('Tạo lịch bác sĩ thành công');
+      showSuccess('Thành công', 'Tạo lịch bác sĩ thành công');
       setActiveTab('calendar');
     } catch (error) {
-      showError('Không thể tạo lịch bác sĩ');
+      showError('Lỗi', 'Không thể tạo lịch bác sĩ', );
     }
   }, [showSuccess, showError]);
 
@@ -57,10 +57,10 @@ const DoctorSchedulePage: React.FC = () => {
   const handleAppointmentCreated = useCallback(async (newAppointment: Appointment) => {
     try {
       setAppointments(prev => [...prev, newAppointment]);
-      showSuccess('Đăng ký lịch hẹn thành công');
+      showSuccess('Thành công', 'Đăng ký lịch hẹn thành công');
       setActiveTab('calendar');
     } catch (error) {
-      showError('Không thể đăng ký lịch hẹn');
+      showError('Lỗi', 'Không thể đăng ký lịch hẹn');
     }
   }, [showSuccess, showError]);
 
