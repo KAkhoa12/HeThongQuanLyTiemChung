@@ -70,9 +70,11 @@ const AppointmentSectison = () => {
                   required
                 >
                   <option value="">Chọn cơ sở tiêm phòng</option>
-                  <option value="Department 1">cơ sở HUITKIT Lê Trọng Tấn </option>
-                  <option value="Department 2">cơ sở HUITKIT Bình Thạnh</option>
-                  <option value="Department 3">cơ sở HUITKIT Trường Chinh</option>
+                  <option value="Department 1">cơ sở HUITKIT Quận 1</option>
+                  <option value="Department 2">cơ sở HUITKIT Tân Bình</option>
+                  <option value="Department 3">cơ sở HUITKIT Bình Thạnh</option>
+                  <option value="Department 4">cơ sở HUITKIT Cầu Giấy, Hà Nội</option>
+                  <option value="Department 5">cơ sở HUITKIT Đà Nẵng</option>
                 </select>
               </div>
               <div className="col-span-1">
