@@ -6,10 +6,9 @@ const AppointmentSectison = () => {
       <div className="container mx-auto px-4">
         {/* Section Title */}
         <div className="text-center mb-12" data-aos="fade-up">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Appointment</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Đặt lịch tiêm chủng tại đây!</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Necessitatibus eius consequatur ex aliquid fuga eum quidem sint
-            consectetur velit
+            Điền thông tin bên dưới để đặt lịch. Chúng tôi sẽ xác nhận trong thời gian sớm nhất!
           </p>
         </div>
 
@@ -70,10 +69,10 @@ const AppointmentSectison = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                   required
                 >
-                  <option value="">Select Department</option>
-                  <option value="Department 1">Department 1</option>
-                  <option value="Department 2">Department 2</option>
-                  <option value="Department 3">Department 3</option>
+                  <option value="">Chọn cơ sở tiêm phòng</option>
+                  <option value="Department 1">cơ sở HUITKIT Lê Trọng Tấn </option>
+                  <option value="Department 2">cơ sở HUITKIT Bình Thạnh</option>
+                  <option value="Department 3">cơ sở HUITKIT Trường Chinh</option>
                 </select>
               </div>
               <div className="col-span-1">
@@ -83,10 +82,10 @@ const AppointmentSectison = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                   required
                 >
-                  <option value="">Select Doctor</option>
-                  <option value="Doctor 1">Doctor 1</option>
-                  <option value="Doctor 2">Doctor 2</option>
-                  <option value="Doctor 3">Doctor 3</option>
+                  <option value="">Chọn bác sĩ bạn muốn gặp</option>
+                  <option value="Doctor 1">Bác sĩ Phạm Hồng Phong</option>
+                  <option value="Doctor 2">Bác sĩ Phạm Đức Trọng</option>
+                  <option value="Doctor 3">Bác sĩ Trịnh Nguyễn Hoàng Nhật</option>
                 </select>
               </div>
             </div>
@@ -115,7 +114,7 @@ const AppointmentSectison = () => {
               
               {/* Success message */}
               <div className="hidden sent-message text-center py-2 text-green-600">
-                Your appointment request has been sent successfully. Thank you!
+                Bạn đã đặt lịch thành công! Xin cảm ơn!
               </div>
               
               <div className="text-center">
@@ -123,7 +122,7 @@ const AppointmentSectison = () => {
                   type="submit"
                   className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 >
-                  Make an Appointment
+                  Xác nhận đặt lịch
                 </button>
               </div>
             </div>
