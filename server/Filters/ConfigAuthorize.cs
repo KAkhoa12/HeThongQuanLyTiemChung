@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using server.Helpers;
+using System.Security.Claims;
 
 namespace server.Filters;
 
@@ -12,15 +13,7 @@ public class ConfigAuthorizeAttribute : Attribute, IAuthorizationFilter   // ←
     {
         if (!context.HttpContext.User.Identity?.IsAuthenticated ?? true)
         {
-            context.Result = new JsonResult(new
-            {
-                status = "error",
-                code = 401,
-                message = "Bạn cần đăng nhập."
-            })
-            {
-                StatusCode = 401
-            };
+            context.Result = ApiResponse.Error("Phiên đăng nhập đã hết hạn.");
             return;
         }
 

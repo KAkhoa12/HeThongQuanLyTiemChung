@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using server.DTOs.Auth;
 using server.DTOs.NguoiDung;
 using Microsoft.EntityFrameworkCore;
+using server.Filters;
 namespace server.Controllers
 {
     [Controller]
@@ -60,7 +61,30 @@ namespace server.Controllers
             };
 
             _context.NguoiDungs.Add(user);
+
+            // Tạo ThongTinNguoiDung mặc định cho user mới
+            var healthInfo = new ThongTinNguoiDung
+            {
+                MaThongTin = Guid.NewGuid().ToString("N"),
+                MaNguoiDung = user.MaNguoiDung,
+                ChieuCao = null,
+                CanNang = null,
+                Bmi = null,
+                NhomMau = null,
+                BenhNen = null,
+                DiUng = null,
+                ThuocDangDung = null,
+                TinhTrangMangThai = null,
+                NgayKhamGanNhat = null,
+                IsActive = true,
+                IsDelete = false,
+                NgayTao = DateTime.UtcNow,
+                NgayCapNhat = DateTime.UtcNow
+            };
+
+            _context.ThongTinNguoiDungs.Add(healthInfo);
             await _context.SaveChangesAsync(ct);
+
             var userDto = new UserDto(
                 user.MaNguoiDung,
                 user.Ten,
@@ -105,7 +129,7 @@ namespace server.Controllers
         }
 
         [HttpPost("logout")]
-        [Authorize]
+        [ConfigAuthorize]
         public async Task<IActionResult> Logout(CancellationToken ct)
         {
             try
@@ -181,10 +205,7 @@ namespace server.Controllers
                 return ApiResponse.Error("Đã xảy ra lỗi hệ thống", 500);
             }
         }
-        /// <summary>
-        /// Lấy thông tin người dùng đang đăng nhập
-        /// </summary>
-        [Authorize]                       // yêu cầu Bearer token
+        [ConfigAuthorize]                       // yêu cầu Bearer token
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser(CancellationToken ct)
         {
@@ -196,6 +217,7 @@ namespace server.Controllers
             // 2. Query kèm role & nhãn ảnh nếu cần
             var user = await _context.NguoiDungs
                 .Include(u => u.MaVaiTroNavigation)
+                .Include(u => u.MaAnhNavigation)
                 .FirstOrDefaultAsync(u => u.MaNguoiDung == userId &&
                                           u.IsActive == true &&
                                           u.IsDelete == false, ct);
@@ -212,7 +234,8 @@ namespace server.Controllers
                 user.NgaySinh,
                 user.DiaChi,
                 user.MaVaiTroNavigation?.TenVaiTro ?? "USER",
-                user.NgayTao!.Value
+                user.NgayTao!.Value, 
+                user.MaAnhNavigation?.UrlAnh ?? "/media/f599588d483a491c8a70e8b9e9d5292b.png"
             );
 
             return ApiResponse.Success("Lấy thông tin thành công", dto);
@@ -232,6 +255,7 @@ namespace server.Controllers
                 new Claim(JwtRegisteredClaimNames.Sub, user.MaNguoiDung),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.NameIdentifier, user.MaNguoiDung),
+                new Claim("userId", user.MaNguoiDung), // Thêm userId claim để controllers có thể sử dụng
                 new Claim(ClaimTypes.Role, user.MaVaiTro)
             };
             foreach (var permission in userPermissions)

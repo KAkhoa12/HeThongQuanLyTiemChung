@@ -1,327 +1,263 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using server.DTOs.PhieuThanhLy;
+using server.DTOs.Kho;
+using server.DTOs.Pagination;
 using server.Helpers;
 using server.Models;
 
 namespace server.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/phieu-thanh-ly")]
 public class PhieuThanhLyController : ControllerBase
 {
-    private readonly HeThongQuanLyTiemChungContext _context;
+    private readonly HeThongQuanLyTiemChungContext _ctx;
 
-    public PhieuThanhLyController(HeThongQuanLyTiemChungContext context)
-    {
-        _context = context;
-    }
+    public PhieuThanhLyController(HeThongQuanLyTiemChungContext ctx) => _ctx = ctx;
 
-    // GET: api/PhieuThanhLy
+    /* ---------- 1. Lấy danh sách phiếu thanh lý (có phân trang) ---------- */
     [HttpGet]
-    public async Task<IActionResult> GetPhieuThanhLies(
+    public async Task<IActionResult> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] string? trangThai = null,
+        [FromQuery] string? search = null,
         [FromQuery] string? maDiaDiem = null,
-        [FromQuery] DateTime? ngayThanhLyFrom = null,
-        [FromQuery] DateTime? ngayThanhLyTo = null)
+        [FromQuery] string? trangThai = null,
+        CancellationToken ct = default)
     {
-        try
+        var query = _ctx.PhieuThanhLies
+            .Include(p => p.MaDiaDiemNavigation)
+            .Where(p => p.IsDelete == false);
+
+        // Tìm kiếm theo từ khóa
+        if (!string.IsNullOrEmpty(search))
         {
-            var query = _context.PhieuThanhLies
-                .Include(p => p.MaDiaDiemNavigation)
-                .Include(p => p.ChiTietThanhLies)
-                .ThenInclude(ct => ct.MaLoNavigation)
-                .ThenInclude(l => l.MaVaccineNavigation)
-                .Where(p => !p.IsDelete.HasValue || !p.IsDelete.Value)
-                .AsQueryable();
-
-            // Apply filters
-            if (!string.IsNullOrEmpty(trangThai))
-                query = query.Where(p => p.TrangThai == trangThai);
-
-            if (!string.IsNullOrEmpty(maDiaDiem))
-                query = query.Where(p => p.MaDiaDiem == maDiaDiem);
-
-            if (ngayThanhLyFrom.HasValue)
-                query = query.Where(p => p.NgayThanhLy >= ngayThanhLyFrom.Value);
-
-            if (ngayThanhLyTo.HasValue)
-                query = query.Where(p => p.NgayThanhLy <= ngayThanhLyTo.Value);
-
-            // Get total count
-            var totalCount = await query.CountAsync();
-
-            // Apply pagination
-            var phieuThanhLies = await query
-                .OrderByDescending(p => p.NgayTao)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            // Map to DTOs
-            var phieuThanhLyDtos = phieuThanhLies.Select(p => new PhieuThanhLyResponseDto
-            {
-                MaPhieuThanhLy = p.MaPhieuThanhLy,
-                MaDiaDiem = p.MaDiaDiem,
-                TenDiaDiem = p.MaDiaDiemNavigation?.Ten,
-                NgayThanhLy = p.NgayThanhLy,
-                TrangThai = p.TrangThai,
-                IsActive = p.IsActive,
-                NgayTao = p.NgayTao,
-                ChiTietThanhLies = p.ChiTietThanhLies.Select(ct => new ChiTietThanhLyResponseDto
-                {
-                    MaChiTiet = ct.MaChiTiet,
-                    MaLo = ct.MaLo,
-                    TenVaccine = ct.MaLoNavigation?.MaVaccineNavigation?.Ten,
-                    SoLo = ct.MaLoNavigation?.SoLo,
-                    SoLuong = ct.SoLuong,
-                    LyDo = ct.LyDo,
-                    NgayHetHan = ct.MaLoNavigation?.NgayHetHan
-                }).ToList()
-            }).ToList();
-
-            var result = new
-            {
-                data = phieuThanhLyDtos,
-                totalCount = totalCount,
-                page = page,
-                pageSize = pageSize,
-                totalPages = (int)Math.Ceiling((double)totalCount / pageSize)
-            };
-
-            return ApiResponse.Success("Lấy danh sách phiếu thanh lý thành công", result);
+            query = query.Where(p => 
+                p.MaPhieuThanhLy.Contains(search) ||
+                p.MaDiaDiemNavigation.Ten.Contains(search));
         }
-        catch (Exception ex)
+
+        // Lọc theo địa điểm
+        if (!string.IsNullOrEmpty(maDiaDiem))
         {
-            return ApiResponse.Error($"Lỗi: {ex.Message}");
+            query = query.Where(p => p.MaDiaDiem == maDiaDiem);
         }
+
+        // Lọc theo trạng thái
+        if (!string.IsNullOrEmpty(trangThai))
+        {
+            query = query.Where(p => p.TrangThai == trangThai);
+        }
+
+        var result = await query
+            .OrderByDescending(p => p.NgayTao)
+            .Select(p => new PhieuThanhLyDto(
+                p.MaPhieuThanhLy,
+                p.MaDiaDiem,
+                p.NgayThanhLy,
+                p.TrangThai,
+                p.NgayTao,
+                p.NgayCapNhat,
+                p.MaDiaDiemNavigation.Ten
+            ))
+            .ToPagedAsync(page, pageSize, ct);
+
+        return ApiResponse.Success("Lấy danh sách phiếu thanh lý thành công", result);
     }
 
-    // GET: api/PhieuThanhLy/{id}
+    /* ---------- 2. Lấy chi tiết phiếu thanh lý theo ID ---------- */
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetPhieuThanhLy(string id)
+    public async Task<IActionResult> GetById(string id, CancellationToken ct = default)
     {
-        try
-        {
-            var phieuThanhLy = await _context.PhieuThanhLies
-                .Include(p => p.MaDiaDiemNavigation)
-                .Include(p => p.ChiTietThanhLies)
+        var phieuThanhLy = await _ctx.PhieuThanhLies
+            .Include(p => p.MaDiaDiemNavigation)
+            .Include(p => p.ChiTietThanhLies)
                 .ThenInclude(ct => ct.MaLoNavigation)
-                .ThenInclude(l => l.MaVaccineNavigation)
-                .FirstOrDefaultAsync(p => p.MaPhieuThanhLy == id && (!p.IsDelete.HasValue || !p.IsDelete.Value));
+                    .ThenInclude(l => l.MaVaccineNavigation)
+            .FirstOrDefaultAsync(p => p.MaPhieuThanhLy == id && p.IsDelete == false, ct);
 
-            if (phieuThanhLy == null)
-                return ApiResponse.Error("Không tìm thấy phiếu thanh lý");
+        if (phieuThanhLy == null)
+            return ApiResponse.Error("Không tìm thấy phiếu thanh lý", 404);
 
-            var phieuThanhLyDto = new PhieuThanhLyResponseDto
-            {
-                MaPhieuThanhLy = phieuThanhLy.MaPhieuThanhLy,
-                MaDiaDiem = phieuThanhLy.MaDiaDiem,
-                TenDiaDiem = phieuThanhLy.MaDiaDiemNavigation?.Ten,
-                NgayThanhLy = phieuThanhLy.NgayThanhLy,
-                TrangThai = phieuThanhLy.TrangThai,
-                IsActive = phieuThanhLy.IsActive,
-                NgayTao = phieuThanhLy.NgayTao,
-                ChiTietThanhLies = phieuThanhLy.ChiTietThanhLies.Select(ct => new ChiTietThanhLyResponseDto
-                {
-                    MaChiTiet = ct.MaChiTiet,
-                    MaLo = ct.MaLo,
-                    TenVaccine = ct.MaLoNavigation?.MaVaccineNavigation?.Ten,
-                    SoLo = ct.MaLoNavigation?.SoLo,
-                    SoLuong = ct.SoLuong,
-                    LyDo = ct.LyDo,
-                    NgayHetHan = ct.MaLoNavigation?.NgayHetHan
-                }).ToList()
-            };
+        var chiTietThanhLies = phieuThanhLy.ChiTietThanhLies
+            .Where(ct => ct.IsDelete == false)
+            .Select(ct => new ChiTietThanhLyDto(
+                ct.MaChiTiet,
+                ct.MaPhieuThanhLy,
+                ct.MaLo,
+                ct.SoLuong,
+                ct.LyDo,
+                ct.MaLoNavigation.SoLo,
+                ct.MaLoNavigation.MaVaccineNavigation.Ten
+            ))
+            .ToList();
 
-            return ApiResponse.Success("Lấy thông tin phiếu thanh lý thành công", phieuThanhLyDto);
-        }
-        catch (Exception ex)
-        {
-            return ApiResponse.Error($"Lỗi: {ex.Message}");
-        }
+        var result = new PhieuThanhLyDetailDto(
+            phieuThanhLy.MaPhieuThanhLy,
+            phieuThanhLy.MaDiaDiem,
+            phieuThanhLy.NgayThanhLy,
+            phieuThanhLy.TrangThai,
+            phieuThanhLy.NgayTao,
+            phieuThanhLy.NgayCapNhat,
+            phieuThanhLy.MaDiaDiemNavigation?.Ten,
+            chiTietThanhLies
+        );
+
+        return ApiResponse.Success("Lấy chi tiết phiếu thanh lý thành công", result);
     }
 
-    // POST: api/PhieuThanhLy
+    /* ---------- 3. Tạo phiếu thanh lý mới ---------- */
     [HttpPost]
-    public async Task<IActionResult> CreatePhieuThanhLy(PhieuThanhLyCreateDto createDto)
+    public async Task<IActionResult> Create(
+        [FromBody] PhieuThanhLyCreateDto dto,
+        CancellationToken ct = default)
     {
-        try
+        // Kiểm tra địa điểm tồn tại
+        if (!string.IsNullOrEmpty(dto.MaDiaDiem))
         {
-            if (!ModelState.IsValid)
-                return ApiResponse.Error("Dữ liệu không hợp lệ");
+            if (!await _ctx.DiaDiems.AnyAsync(dd => dd.MaDiaDiem == dto.MaDiaDiem && dd.IsDelete == false, ct))
+                return ApiResponse.Error("Địa điểm không tồn tại", 404);
+        }
 
-            // Validate chi tiết
-            if (createDto.ChiTietThanhLies == null || !createDto.ChiTietThanhLies.Any())
-                return ApiResponse.Error("Phiếu thanh lý phải có ít nhất một chi tiết");
+        // Kiểm tra các lô vaccine có đủ số lượng để thanh lý
+        foreach (var chiTiet in dto.ChiTietThanhLies)
+        {
+            var tonKho = await _ctx.TonKhoLos
+                .FirstOrDefaultAsync(tk => tk.MaLo == chiTiet.MaLo && tk.MaDiaDiem == dto.MaDiaDiem && tk.IsDelete == false, ct);
+            
+            if (tonKho == null || (tonKho.SoLuong ?? 0) < chiTiet.SoLuong)
+                return ApiResponse.Error($"Lô vaccine {chiTiet.MaLo} không đủ số lượng để thanh lý", 400);
+        }
 
-            // Generate mã phiếu thanh lý
-            var maPhieuThanhLy = $"PTL{DateTime.Now:yyyyMMddHHmmss}";
+        var phieuThanhLy = new PhieuThanhLy
+        {
+            MaPhieuThanhLy = Guid.NewGuid().ToString("N"),
+            MaDiaDiem = dto.MaDiaDiem,
+            NgayThanhLy = dto.NgayThanhLy ?? DateTime.UtcNow,
+            TrangThai = "Chờ xác nhận",
+            IsActive = true,
+            IsDelete = false,
+            NgayTao = DateTime.UtcNow
+        };
 
-            // Create phiếu thanh lý
-            var phieuThanhLy = new PhieuThanhLy
+        _ctx.PhieuThanhLies.Add(phieuThanhLy);
+
+        // Tạo chi tiết phiếu thanh lý
+        var chiTietThanhLies = new List<ChiTietThanhLy>();
+
+        foreach (var chiTietDto in dto.ChiTietThanhLies)
+        {
+            var chiTiet = new ChiTietThanhLy
             {
-                MaPhieuThanhLy = maPhieuThanhLy,
-                MaDiaDiem = createDto.MaDiaDiem,
-                NgayThanhLy = createDto.NgayThanhLy,
-                TrangThai = createDto.TrangThai,
-                IsDelete = false,
+                MaChiTiet = Guid.NewGuid().ToString("N"),
+                MaPhieuThanhLy = phieuThanhLy.MaPhieuThanhLy,
+                MaLo = chiTietDto.MaLo,
+                SoLuong = chiTietDto.SoLuong,
+                LyDo = chiTietDto.LyDo,
                 IsActive = true,
-                NgayTao = DateTime.UtcNow,
-                NgayCapNhat = DateTime.UtcNow
+                IsDelete = false,
+                NgayTao = DateTime.UtcNow
             };
 
-            _context.PhieuThanhLies.Add(phieuThanhLy);
+            chiTietThanhLies.Add(chiTiet);
 
-            // Create chi tiết thanh lý và update số lượng lô vaccine
-            foreach (var chiTietDto in createDto.ChiTietThanhLies)
+            // Cập nhật số lượng tồn kho
+            var tonKho = await _ctx.TonKhoLos
+                .FirstOrDefaultAsync(tk => tk.MaLo == chiTietDto.MaLo && tk.MaDiaDiem == dto.MaDiaDiem && tk.IsDelete == false, ct);
+            
+            if (tonKho != null)
             {
-                var chiTiet = new ChiTietThanhLy
-                {
-                    MaChiTiet = Guid.NewGuid().ToString(),
-                    MaPhieuThanhLy = maPhieuThanhLy,
-                    MaLo = chiTietDto.MaLo,
-                    SoLuong = chiTietDto.SoLuong,
-                    LyDo = chiTietDto.LyDo,
-                    IsDelete = false,
-                    IsActive = true,
-                    NgayTao = DateTime.UtcNow,
-                    NgayCapNhat = DateTime.UtcNow
-                };
-
-                _context.ChiTietThanhLies.Add(chiTiet);
-
-                // Update số lượng lô vaccine (giảm số lượng)
-                var loVaccine = await _context.LoVaccines.FindAsync(chiTietDto.MaLo);
-                if (loVaccine != null)
-                {
-                    if (loVaccine.SoLuongHienTai < chiTietDto.SoLuong)
-                        return ApiResponse.Error($"Lô vaccine {loVaccine.SoLo} không đủ số lượng để thanh lý");
-
-                    loVaccine.SoLuongHienTai = loVaccine.SoLuongHienTai - chiTietDto.SoLuong;
-                    loVaccine.NgayCapNhat = DateTime.UtcNow;
-                }
+                tonKho.SoLuong = (tonKho.SoLuong ?? 0) - chiTietDto.SoLuong;
+                tonKho.NgayCapNhat = DateTime.UtcNow;
             }
-
-            await _context.SaveChangesAsync();
-
-            // Return created entity
-            var createdPhieuThanhLy = await GetPhieuThanhLy(maPhieuThanhLy);
-            if (createdPhieuThanhLy is ObjectResult objResult && objResult.Value != null)
-            {
-                var response = objResult.Value as dynamic;
-                return ApiResponse.Success("Tạo phiếu thanh lý thành công", response?.payload);
-            }
-            return ApiResponse.Success("Tạo phiếu thanh lý thành công", null);
         }
-        catch (Exception ex)
-        {
-            return ApiResponse.Error($"Lỗi: {ex.Message}");
-        }
+
+        _ctx.ChiTietThanhLies.AddRange(chiTietThanhLies);
+
+        await _ctx.SaveChangesAsync(ct);
+
+        return ApiResponse.Success("Tạo phiếu thanh lý thành công", 
+            new { phieuThanhLy.MaPhieuThanhLy }, 201);
     }
 
-    // PUT: api/PhieuThanhLy/{id}
+    /* ---------- 4. Cập nhật phiếu thanh lý ---------- */
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdatePhieuThanhLy(string id, PhieuThanhLyUpdateDto updateDto)
+    public async Task<IActionResult> Update(
+        string id,
+        [FromBody] PhieuThanhLyUpdateDto dto,
+        CancellationToken ct = default)
     {
-        try
+        var phieuThanhLy = await _ctx.PhieuThanhLies
+            .FirstOrDefaultAsync(p => p.MaPhieuThanhLy == id && p.IsDelete == false, ct);
+
+        if (phieuThanhLy == null)
+            return ApiResponse.Error("Không tìm thấy phiếu thanh lý", 404);
+
+        // Kiểm tra địa điểm tồn tại
+        if (!string.IsNullOrEmpty(dto.MaDiaDiem))
         {
-            var phieuThanhLy = await _context.PhieuThanhLies
-                .FirstOrDefaultAsync(p => p.MaPhieuThanhLy == id && (!p.IsDelete.HasValue || !p.IsDelete.Value));
-
-            if (phieuThanhLy == null)
-                return ApiResponse.Error("Không tìm thấy phiếu thanh lý");
-
-            // Update fields
-            if (updateDto.MaDiaDiem != null)
-                phieuThanhLy.MaDiaDiem = updateDto.MaDiaDiem;
-
-            if (updateDto.NgayThanhLy.HasValue)
-                phieuThanhLy.NgayThanhLy = updateDto.NgayThanhLy.Value;
-
-            if (updateDto.TrangThai != null)
-                phieuThanhLy.TrangThai = updateDto.TrangThai;
-
-            if (updateDto.IsActive.HasValue)
-                phieuThanhLy.IsActive = updateDto.IsActive.Value;
-
-            phieuThanhLy.NgayCapNhat = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            // Return updated entity
-            var updatedPhieuThanhLy = await GetPhieuThanhLy(id);
-            if (updatedPhieuThanhLy is ObjectResult objResult && objResult.Value != null)
-            {
-                var response = objResult.Value as dynamic;
-                return ApiResponse.Success("Cập nhật phiếu thanh lý thành công", response?.payload);
-            }
-            return ApiResponse.Success("Cập nhật phiếu thanh lý thành công", null);
+            if (!await _ctx.DiaDiems.AnyAsync(dd => dd.MaDiaDiem == dto.MaDiaDiem && dd.IsDelete == false, ct))
+                return ApiResponse.Error("Địa điểm không tồn tại", 404);
+            phieuThanhLy.MaDiaDiem = dto.MaDiaDiem;
         }
-        catch (Exception ex)
-        {
-            return ApiResponse.Error($"Lỗi: {ex.Message}");
-        }
+
+        if (dto.NgayThanhLy.HasValue)
+            phieuThanhLy.NgayThanhLy = dto.NgayThanhLy.Value;
+
+        if (!string.IsNullOrEmpty(dto.TrangThai))
+            phieuThanhLy.TrangThai = dto.TrangThai;
+
+        phieuThanhLy.NgayCapNhat = DateTime.UtcNow;
+
+        await _ctx.SaveChangesAsync(ct);
+        return ApiResponse.Success("Cập nhật phiếu thanh lý thành công", null);
     }
 
-    // DELETE: api/PhieuThanhLy/{id}
+    /* ---------- 5. Xóa phiếu thanh lý (soft delete) ---------- */
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeletePhieuThanhLy(string id)
+    public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
     {
-        try
+        var phieuThanhLy = await _ctx.PhieuThanhLies
+            .FirstOrDefaultAsync(p => p.MaPhieuThanhLy == id && p.IsDelete == false, ct);
+
+        if (phieuThanhLy == null)
+            return ApiResponse.Error("Không tìm thấy phiếu thanh lý", 404);
+
+        phieuThanhLy.IsDelete = true;
+        phieuThanhLy.NgayCapNhat = DateTime.UtcNow;
+
+        // Xóa các chi tiết phiếu thanh lý
+        var chiTietThanhLies = await _ctx.ChiTietThanhLies
+            .Where(ct => ct.MaPhieuThanhLy == id && ct.IsDelete == false)
+            .ToListAsync(ct);
+
+        foreach (var chiTiet in chiTietThanhLies)
         {
-            var phieuThanhLy = await _context.PhieuThanhLies
-                .Include(p => p.ChiTietThanhLies)
-                .FirstOrDefaultAsync(p => p.MaPhieuThanhLy == id && (!p.IsDelete.HasValue || !p.IsDelete.Value));
-
-            if (phieuThanhLy == null)
-                return ApiResponse.Error("Không tìm thấy phiếu thanh lý");
-
-            // Soft delete phiếu thanh lý
-            phieuThanhLy.IsDelete = true;
-            phieuThanhLy.NgayCapNhat = DateTime.UtcNow;
-
-            // Soft delete chi tiết
-            foreach (var chiTiet in phieuThanhLy.ChiTietThanhLies)
-            {
-                chiTiet.IsDelete = true;
-                chiTiet.NgayCapNhat = DateTime.UtcNow;
-            }
-
-            await _context.SaveChangesAsync();
-
-            return ApiResponse.Success("Xóa phiếu thanh lý thành công", id);
+            chiTiet.IsDelete = true;
+            chiTiet.NgayCapNhat = DateTime.UtcNow;
         }
-        catch (Exception ex)
-        {
-            return ApiResponse.Error($"Lỗi: {ex.Message}");
-        }
+
+        await _ctx.SaveChangesAsync(ct);
+        return ApiResponse.Success("Xóa phiếu thanh lý thành công", null);
     }
 
-    // PUT: api/PhieuThanhLy/{id}/status
-    [HttpPut("{id}/status")]
-    public async Task<IActionResult> UpdatePhieuThanhLyStatus(string id, [FromBody] string trangThai)
+    /* ---------- 6. Xác nhận phiếu thanh lý ---------- */
+    [HttpPost("{id}/confirm")]
+    public async Task<IActionResult> Confirm(string id, CancellationToken ct = default)
     {
-        try
-        {
-            var phieuThanhLy = await _context.PhieuThanhLies
-                .FirstOrDefaultAsync(p => p.MaPhieuThanhLy == id && (!p.IsDelete.HasValue || !p.IsDelete.Value));
+        var phieuThanhLy = await _ctx.PhieuThanhLies
+            .FirstOrDefaultAsync(p => p.MaPhieuThanhLy == id && p.IsDelete == false, ct);
 
-            if (phieuThanhLy == null)
-                return ApiResponse.Error("Không tìm thấy phiếu thanh lý");
+        if (phieuThanhLy == null)
+            return ApiResponse.Error("Không tìm thấy phiếu thanh lý", 404);
 
-            phieuThanhLy.TrangThai = trangThai;
-            phieuThanhLy.NgayCapNhat = DateTime.UtcNow;
+        if (phieuThanhLy.TrangThai == "Đã xác nhận")
+            return ApiResponse.Error("Phiếu thanh lý đã được xác nhận", 400);
 
-            await _context.SaveChangesAsync();
+        phieuThanhLy.TrangThai = "Đã xác nhận";
+        phieuThanhLy.NgayCapNhat = DateTime.UtcNow;
 
-            return ApiResponse.Success("Cập nhật trạng thái phiếu thanh lý thành công", trangThai);
-        }
-        catch (Exception ex)
-        {
-            return ApiResponse.Error($"Lỗi: {ex.Message}");
-        }
+        await _ctx.SaveChangesAsync(ct);
+        return ApiResponse.Success("Xác nhận phiếu thanh lý thành công", null);
     }
 } 

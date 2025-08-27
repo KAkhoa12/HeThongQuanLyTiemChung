@@ -1,5 +1,4 @@
-import API_CONFIG from '../config/api.config';
-import { apiGet, apiPost, apiPut, apiDelete } from '../utils/apiHelper';
+import apiService from './api.service';
 
 // Types
 export interface ImageLabel {
@@ -21,77 +20,41 @@ export interface ImageLabelUpdateDto {
   isActive?: boolean;
 }
 
-export interface ApiResponse<T> {
-  status: string;
-  message: string;
-  payload: T;
-}
-
 // Image Label Service
 class ImageLabelService {
   /**
    * Get all image labels
    */
   async getAllLabels(): Promise<ImageLabel[]> {
-    try {
-      const data: ApiResponse<ImageLabel[]> = await apiGet(API_CONFIG.IMAGE_LABELS.BASE);
-      return data.payload;
-    } catch (error) {
-      console.error('Get labels error:', error);
-      throw error;
-    }
+    return await apiService.get('/api/image-labels');
   }
 
   /**
    * Get image label by ID
    */
   async getLabelById(id: string): Promise<ImageLabel> {
-    try {
-      const data: ApiResponse<ImageLabel> = await apiGet(`${API_CONFIG.IMAGE_LABELS.BASE}/${id}`);
-      return data.payload;
-    } catch (error) {
-      console.error('Get label error:', error);
-      throw error;
-    }
+    return await apiService.get(`/api/image-labels/${id}`);
   }
 
   /**
    * Create new image label
    */
   async createLabel(labelData: ImageLabelCreateDto): Promise<any> {
-    try {
-      const data: ApiResponse<ImageLabel> = await apiPost(API_CONFIG.IMAGE_LABELS.BASE, labelData);
-      return data.payload;
-    } catch (error) {
-      console.error('Create label error:', error);
-      throw error;
-    }
+    return await apiService.create('/api/image-labels', labelData);
   }
 
   /**
    * Update image label
    */
   async updateLabel(id: string, updateData: ImageLabelUpdateDto): Promise<any> {
-    try {
-      const data: ApiResponse<ImageLabel> = await apiPut(`${API_CONFIG.IMAGE_LABELS.BASE}/${id}`, updateData);
-      return data.payload;
-    } catch (error) {
-      console.error('Update label error:', error);
-      throw error;
-    }
+    return await apiService.update(`/api/image-labels/${id}`, updateData);
   }
 
   /**
    * Delete image label
    */
   async deleteLabel(id: string): Promise<any> {
-    try {
-      const data: ApiResponse<any> = await apiDelete(`${API_CONFIG.IMAGE_LABELS.BASE}/${id}`);
-      return data.payload;
-    } catch (error) {
-      console.error('Delete label error:', error);
-      throw error;
-    }
+    return await apiService.delete(`/api/image-labels/${id}`);
   }
 }
 

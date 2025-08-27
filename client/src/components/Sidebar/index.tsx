@@ -206,7 +206,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Staff Management --> */}
               <li>
                 <NavLink
-                  to="/staff"
+                  to="/dashboard/staff"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes('staff') && 'bg-graydark dark:bg-meta-4'
                   }`}
@@ -236,7 +236,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Doctor Management --> */}
               <li>
                 <NavLink
-                  to="/doctors"
+                  to="/dashboard/doctors"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes('doctors') && 'bg-graydark dark:bg-meta-4'
                   }`}
@@ -266,7 +266,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Services Management --> */}
               <SidebarLinkGroup
                 activeCondition={
-                  pathname === '/services' || pathname.includes('services')
+                  pathname === '/dashboard/services' || pathname.includes('services')
                 }
               >
                 {(handleClick, open) => {
@@ -275,7 +275,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                       <NavLink
                         to="#"
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                          (pathname === '/services' ||
+                          (pathname === '/dashboard/services' ||
                             pathname.includes('services')) &&
                           'bg-graydark dark:bg-meta-4'
                         }`}
@@ -339,7 +339,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                         <ul className="mt-4 mb-5.5 flex flex-col gap-2.5 pl-6">
                           <li>
                             <NavLink
-                              to="/services"
+                              to="/dashboard/services"
                               className={({ isActive }) =>
                                 'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
                                 (isActive && '!text-white')
@@ -350,15 +350,16 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                           </li>
                           <li>
                             <NavLink
-                              to="/services/types"
+                              to="/dashboard/services/types"
                               className={({ isActive }) =>
                                 'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
-                                (isActive && '!text-white')
+                                (isActive && 'isActive')
                               }
                             >
                               Loại dịch vụ
                             </NavLink>
                           </li>
+
                         </ul>
                       </div>
                       {/* <!-- Dropdown Menu End --> */}
@@ -368,10 +369,130 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               </SidebarLinkGroup>
               {/* <!-- Menu Item Services Management --> */}
 
+              {/* <!-- Menu Item Location Management --> */}
+              <li>
+                <NavLink
+                  to="/dashboard/locations"
+                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    pathname.includes('locations') && 'bg-graydark dark:hover:bg-meta-4'
+                  }`}
+                >
+                  <svg
+                    className="fill-current"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M9 0.5625C4.17188 0.5625 0.25 4.48438 0.25 9.3125C0.25 14.1406 4.17188 18.0625 9 18.0625C13.8281 18.0625 17.75 14.1406 17.75 9.3125C17.75 4.48438 13.8281 0.5625 9 0.5625ZM9 16.3125C5.13281 16.3125 2 13.1797 2 9.3125C2 5.44531 5.13281 2.3125 9 2.3125C12.8672 2.3125 16 5.44531 16 9.3125C16 13.1797 12.8672 16.3125 9 16.3125Z"
+                      fill=""
+                    />
+                    <path
+                      d="M9 4.6875C6.51562 4.6875 4.5 6.70312 4.5 9.1875C4.5 11.6719 6.51562 13.6875 9 13.6875C11.4844 13.6875 13.5 11.6719 13.5 9.1875C13.5 6.70312 11.4844 4.6875 9 4.6875ZM9 11.6875C7.51562 11.6875 6.5 10.6719 6.5 9.1875C6.5 7.70312 7.51562 6.6875 9 6.6875C10.4844 6.6875 11.5 7.70312 11.5 9.1875C11.5 10.6719 10.4844 11.6875 9 11.6875Z"
+                      fill=""
+                    />
+                  </svg>
+                  Địa điểm
+                </NavLink>
+              </li>
+              {/* <!-- Menu Item Location Management --> */}
+
+              {/* <!-- Menu Item Vaccine Management --> */}
+              <li>
+                <NavLink
+                  to="/dashboard/vaccine-manage"
+                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    pathname.includes('vaccine-manage') && 'bg-graydark dark:bg-meta-4'
+                  }`}
+                >
+                  <svg
+                    className="fill-current"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M9 0.75C4.17157 0.75 0.25 4.67157 0.25 9.5C0.25 14.3284 4.17157 18.25 9 18.25C13.8284 18.25 17.75 14.3284 17.75 9.5C17.75 4.67157 13.8284 0.75 9 0.75ZM9 16.75C5.13401 16.75 2.25 13.866 2.25 9.5C2.25 5.13401 5.13401 2.25 9 2.25C12.866 2.25 15.75 5.13401 15.75 9.5C15.75 13.866 12.866 16.75 9 16.75Z"
+                      fill=""
+                    />
+                    <path
+                      d="M9 4.25C6.51472 4.25 4.5 6.26472 4.5 8.75C4.5 11.2353 6.51472 13.25 9 13.25C11.4853 13.25 13.5 11.2353 13.5 8.75C13.5 6.26472 11.4853 4.25 9 4.25ZM9 11.75C7.61929 11.75 6.5 10.6307 6.5 9.25C6.5 7.86929 7.61929 6.75 9 6.75C10.3807 6.75 11.5 7.86929 11.5 9.25C11.5 10.6307 10.3807 11.75 9 11.75Z"
+                      fill=""
+                    />
+                  </svg>
+                  Quản lý Vaccine
+                </NavLink>
+              </li>
+              {/* <!-- Menu Item Vaccine Management --> */}
+
+              {/* <!-- Menu Item Invoice Management --> */}
+              <li>
+                <NavLink
+                  to="/dashboard/invoices"
+                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    pathname.includes('invoices') && 'bg-graydark dark:bg-meta-4'
+                  }`}
+                >
+                  <svg
+                    className="fill-current"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M16.875 0H1.125C0.5025 0 0 0.5025 0 1.125V16.875C0 17.4975 0.5025 18 1.125 18H16.875C17.4975 18 18 17.4975 18 16.875V1.125C18 0.5025 17.4975 0 16.875 0ZM16.875 16.875H1.125V1.125H16.875V16.875Z"
+                      fill=""
+                    />
+                    <path
+                      d="M4.5 4.5H13.5V6.75H4.5V4.5ZM4.5 8.25H13.5V10.5H4.5V8.25ZM4.5 12H10.125V14.25H4.5V12Z"
+                      fill=""
+                    />
+                  </svg>
+                  Hóa đơn
+                </NavLink>
+              </li>
+              {/* <!-- Menu Item Invoice Management --> */}
+
+              {/* <!-- Menu Item Appointment Management --> */}
+              <li>
+                <NavLink
+                  to="/dashboard/appointments"
+                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    pathname.includes('appointments') && 'bg-graydark dark:bg-meta-4'
+                  }`}
+                >
+                  <svg
+                    className="fill-current"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M9 0.75C4.17157 0.75 0.25 4.67157 0.25 9C0.25 13.3284 4.17157 17.25 9 17.25C13.3284 17.25 17.25 13.3284 17.25 9C17.25 4.67157 13.3284 0.75 9 0.75ZM9 15.75C5.13401 15.75 2.25 12.866 2.25 9C2.25 5.13401 5.13401 2.25 9 2.25C12.866 2.25 15.75 5.13401 15.75 9C15.75 12.866 12.866 15.75 9 15.75Z"
+                      fill=""
+                    />
+                    <path
+                      d="M9 4.5C9.41421 4.5 9.75 4.83579 9.75 5.25V8.25L12.75 8.25C13.1642 8.25 13.5 8.58579 13.5 9C13.5 9.41421 13.1642 9.75 12.75 9.75L9.75 9.75V12.75C9.75 13.1642 9.41421 13.5 9 13.5C8.58579 13.5 8.25 13.1642 8.25 12.75V9.75L5.25 9.75C4.83579 9.75 4.5 9.41421 4.5 9C4.5 8.58579 4.83579 8.25 5.25 8.25L8.25 8.25V5.25C8.25 4.83579 8.58579 4.5 9 4.5Z"
+                      fill=""
+                    />
+                  </svg>
+                  Quản lý Lịch hẹn
+                </NavLink>
+              </li>
+              {/* <!-- Menu Item Appointment Management --> */}
+
               {/* <!-- Menu Item Image Management --> */}
               <li>
                 <NavLink
-                  to="/image-management"
+                  to="/dashboard/image-management"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes('image-management') && 'bg-graydark dark:bg-meta-4'
                   }`}
@@ -544,7 +665,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Tables --> */}
               <li>
                 <NavLink
-                  to="/tables"
+                  to="/dashboard/tables"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes('tables') && 'bg-graydark dark:bg-meta-4'
                   }`}
@@ -582,7 +703,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Settings --> */}
               <li>
                 <NavLink
-                  to="/settings"
+                  to="/dashboard/settings"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes('settings') &&
                     'bg-graydark dark:bg-meta-4'
@@ -634,7 +755,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Chart --> */}
               <li>
                 <NavLink
-                  to="/chart"
+                  to="/dashboard/chart"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes('chart') && 'bg-graydark dark:bg-meta-4'
                   }`}

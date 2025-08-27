@@ -12,6 +12,7 @@ export interface UserInfo {
   diaChi?: string;
   vaiTro: string;
   ngayTao: string;
+  avatarUrl?: string;
 }
 
 export interface AuthState {
@@ -28,6 +29,7 @@ export interface AuthState {
   clearError: () => void;
   setUser: (user: UserInfo) => void;
   checkAuthStatus: () => boolean;
+  updateAvatar: (avatarUrl: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -158,6 +160,19 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
           error: null
         });
+      },
+
+      // Update user avatar
+      updateAvatar: (avatarUrl: string) => {
+        const currentUser = get().user;
+        if (currentUser) {
+          set({
+            user: {
+              ...currentUser,
+              avatarUrl: avatarUrl
+            }
+          });
+        }
       }
     }),
     {

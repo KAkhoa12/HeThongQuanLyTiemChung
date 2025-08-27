@@ -1,5 +1,5 @@
 import Cookies from 'js-cookie';
-import API_CONFIG from '../config/api.config';
+import apiService from './api.service';
 
 // Cookie settings
 const TOKEN_COOKIE_NAME = 'auth_token';
@@ -49,27 +49,15 @@ class AuthService {
    */
   async login(credentials: LoginCredentials): Promise<UserInfo> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.AUTH.LOGIN}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      const data = await response.json();
+      const data = await apiService.post<AuthResponse>('/api/auth/login', credentials);
       
-      if (!response.ok) {
-        throw new Error(data.message || 'Đăng nhập thất bại');
-      }
-      
-      if (data.status === 'success' && data.payload) {
-        this.setTokens(data.payload);
+      if (data && data.accessToken) {
+        this.setTokens(data);
         const userInfo = await this.getCurrentUser();
         return userInfo;
       }
       
-      throw new Error(data.message || 'Đăng nhập thất bại');
+      throw new Error('Đăng nhập thất bại');
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -81,21 +69,7 @@ class AuthService {
    */
   async register(userData: RegisterData): Promise<any> {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.AUTH.REGISTER}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Đăng ký thất bại');
-      }
-      
-      return data.payload;
+      return await apiService.create('/api/auth/register', userData);
     } catch (error) {
       console.error('Register error:', error);
       throw error;
@@ -113,24 +87,10 @@ class AuthService {
         throw new Error('Không có token đăng nhập');
       }
       
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.AUTH.ME}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        this.logout();
-        throw new Error(data.message || 'Không thể lấy thông tin người dùng');
-      }
-      
-      return data.payload;
+      return await apiService.get('/api/auth/me');
     } catch (error) {
       console.error('Get user error:', error);
+      this.logout();
       throw error;
     }
   }
@@ -146,23 +106,10 @@ class AuthService {
         return false;
       }
       
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.AUTH.REFRESH}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      const data = await response.json();
+      const data = await apiService.post<AuthResponse>('/api/auth/refresh', { refreshToken });
       
-      if (!response.ok) {
-        this.logout();
-        return false;
-      }
-      
-      if (data.status === 'success' && data.payload) {
-        this.setTokens(data.payload);
+      if (data && data.accessToken) {
+        this.setTokens(data);
         return true;
       }
       
@@ -181,28 +128,13 @@ class AuthService {
     try {
       const token = this.getToken();
       
-      if (!token) {
-        // If no token, just clear local data
-        this.clearLocalData();
-        return true;
+      if (token) {
+        await apiService.post('/api/auth/logout', {});
       }
       
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.AUTH.LOGOUT}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
       // Always clear local data regardless of response
       this.clearLocalData();
-      
-      if (response.ok) {
-        return true;
-      }
-      
-      return false;
+      return true;
     } catch (error) {
       console.error('Logout error:', error);
       // Even if API call fails, clear local data

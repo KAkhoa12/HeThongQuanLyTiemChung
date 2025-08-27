@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import logo from '../../../images/logo/logo-icon.svg';
 import { useAuthStore } from '../../../store/useAuthStore';
+import { API_CONFIG } from '../../../config/api.config';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isNestedDropdownOpen, setIsNestedDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   // Use actual auth store instead of mock data
@@ -31,10 +31,6 @@ const Navigation = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const toggleNestedDropdown = () => {
-    setIsNestedDropdownOpen(!isNestedDropdownOpen);
-  };
-
   const toggleUserDropdown = () => {
     setIsUserDropdownOpen(!isUserDropdownOpen);
   };
@@ -46,8 +42,7 @@ const Navigation = () => {
 
   // Get user avatar - fallback to default if no avatar
   const getUserAvatar = () => {
-    // You can replace this with actual user avatar from your user data
-    return 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face';
+    return `${API_CONFIG.BASE_URL}${user?.avatarUrl}` || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face';
   };
 
   // Show loading state while checking authentication
@@ -91,13 +86,20 @@ const Navigation = () => {
           <a href="#departments" className="text-gray-700 font-medium hover:text-blue-600">Địa điểm </a>
           <a href="#doctors" className="text-gray-700 font-medium hover:text-blue-600">Bác sĩ</a>
           
-          {/* Dropdown */}
+          {/* Đăng ký lịch hẹn */}
+          {isAuthenticated && user && (
+            <Link to="/appointment-registration" className="text-gray-700 font-medium hover:text-blue-600">
+              Đăng ký lịch hẹn
+            </Link>
+          )}
+          
+          {/* Dịch vụ Dropdown */}
           <div className="relative">
             <button 
               className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
               onClick={toggleDropdown}
             >
-              Dropdown
+              Dịch vụ
               <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
@@ -106,33 +108,25 @@ const Navigation = () => {
             {isDropdownOpen && (
               <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
                 <div className="py-1">
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dropdown 1</a>
+                  <Link to="/services" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <span className="mr-2">💉</span>
+                    Xem tất cả dịch vụ
+                  </Link>
                   
-                  {/* Nested Dropdown */}
-                  <div className="relative">
-                    <button 
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center justify-between"
-                      onClick={toggleNestedDropdown}
-                    >
-                      Deep Dropdown
-                      <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                    
-                    {isNestedDropdownOpen && (
-                      <div className="absolute left-full top-0 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                        <div className="py-1">
-                          <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Deep Dropdown 1</a>
-                          <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Deep Dropdown 2</a>
-                          <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Deep Dropdown 3</a>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <a href="#services" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <span className="mr-2">🏥</span>
+                    Dịch vụ tiêm chủng
+                  </a>
                   
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dropdown 2</a>
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dropdown 3</a>
+                  <a href="#departments" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <span className="mr-2">📍</span>
+                    Địa điểm tiêm chủng
+                  </a>
+                  
+                  <a href="#doctors" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                    <span className="mr-2">👨‍⚕️</span>
+                    Đội ngũ bác sĩ
+                  </a>
                 </div>
               </div>
             )}
@@ -172,6 +166,9 @@ const Navigation = () => {
                   <Link to="/appointments" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Lịch hẹn của tôi
                   </Link>
+                  <Link to="/cart" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Giỏ hàng của tôi
+                  </Link>
                   <Link to="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Cài đặt
                   </Link>
@@ -199,13 +196,29 @@ const Navigation = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200 py-2">
           <div className="container mx-auto px-4 space-y-2">
-            <Link to="/" className="block py-2 text-blue-600 font-medium">Home</Link>
-            <a href="#about" className="block py-2 text-gray-700 font-medium">About</a>
-            <a href="#services" className="block py-2 text-gray-700 font-medium">Services</a>
-            <a href="#departments" className="block py-2 text-gray-700 font-medium">Departments</a>
-            <a href="#doctors" className="block py-2 text-gray-700 font-medium">Doctors</a>
-            <a href="#" className="block py-2 text-gray-700 font-medium">Dropdown</a>
-            <a href="#contact" className="block py-2 text-gray-700 font-medium">Contact</a>
+            <Link to="/" className="block py-2 text-blue-600 font-medium">Trang chủ</Link>
+            <a href="#about" className="block py-2 text-gray-700 font-medium">Về chúng tôi</a>
+            
+            {/* Mobile Services Dropdown */}
+            <div className="border-l-2 border-blue-200 pl-4 ml-2">
+              <div className="text-sm font-medium text-blue-600 mb-2">Dịch vụ</div>
+              <Link to="/services" className="block py-2 text-sm text-gray-600 hover:text-blue-600 flex items-center">
+                <span className="mr-2">💉</span>
+                Xem tất cả dịch vụ
+              </Link>
+              <a href="#services" className="block py-2 text-sm text-gray-600 hover:text-blue-600">Dịch vụ tiêm chủng</a>
+              <a href="#departments" className="block py-2 text-sm text-gray-600 hover:text-blue-600">Địa điểm tiêm chủng</a>
+                          <a href="#doctors" className="block py-2 text-sm text-gray-600 hover:text-blue-600">Đội ngũ bác sĩ</a>
+          </div>
+          
+          {/* Mobile Đăng ký lịch hẹn */}
+          {isAuthenticated && user && (
+            <Link to="/appointment-registration" className="block py-2 text-gray-700 font-medium">
+              Đăng ký lịch hẹn
+            </Link>
+          )}
+          
+          <a href="#contact" className="block py-2 text-gray-700 font-medium">Liên hệ</a>
             
             {/* Mobile User Profile / Login */}
             {isAuthenticated && user ? (

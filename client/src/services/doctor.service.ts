@@ -1,9 +1,9 @@
-import axios from 'axios';
-import API_CONFIG from '../config/api.config';
+import apiService from './api.service';
 import { ApiResponse, PagedResponse } from '../types/staff.types';
 import { 
   Doctor, 
   DoctorCreateRequest, 
+  DoctorCreateWithUserRequest,
   DoctorDetail, 
   DoctorSchedule, 
   DoctorUpdateRequest,
@@ -14,83 +14,58 @@ import {
   WorkScheduleUpdateRequest
 } from '../types/doctor.types';
 
-const DOCTOR_BASE_URL = `${API_CONFIG.BASE_URL}${API_CONFIG.DOCTOR.BASE}`;
-const SCHEDULE_BASE_URL = `${API_CONFIG.BASE_URL}${API_CONFIG.SCHEDULE.BASE}`;
-
 /**
  * Get all doctors with pagination
  */
 export const getAllDoctors = async (page: number = 1, pageSize: number = 20): Promise<PagedResponse<Doctor>> => {
-  try {
-    const response = await axios.get<ApiResponse<PagedResponse<Doctor>>>(`${DOCTOR_BASE_URL}?page=${page}&pageSize=${pageSize}`);
-    return response.data.payload;
-  } catch (error) {
-    console.error('Error fetching doctors:', error);
-    throw error;
-  }
+  return await apiService.get(`/api/doctors?page=${page}&pageSize=${pageSize}`);
 };
 
 /**
  * Get all doctors without pagination
  */
 export const getAllDoctorsNoPage = async (): Promise<Doctor[]> => {
-  try {
-    const response = await axios.get<ApiResponse<Doctor[]>>(`${DOCTOR_BASE_URL}/all`);
-    return response.data.payload;
-  } catch (error) {
-    console.error('Error fetching all doctors:', error);
-    throw error;
-  }
+  return await apiService.get('/api/doctors/all');
 };
 
 /**
  * Get doctor by ID
  */
 export const getDoctorById = async (id: string): Promise<DoctorDetail> => {
-  try {
-    const response = await axios.get<ApiResponse<DoctorDetail>>(`${DOCTOR_BASE_URL}/${id}`);
-    return response.data.payload;
-  } catch (error) {
-    console.error(`Error fetching doctor with ID ${id}:`, error);
-    throw error;
-  }
+  return await apiService.get(`/api/doctors/${id}`);
 };
 
 /**
  * Create new doctor
  */
 export const createDoctor = async (doctorData: DoctorCreateRequest): Promise<{ id: string }> => {
-  try {
-    const response = await axios.post<ApiResponse<{ id: string }>>(DOCTOR_BASE_URL, doctorData);
-    return response.data.payload;
-  } catch (error) {
-    console.error('Error creating doctor:', error);
-    throw error;
-  }
+  return await apiService.create('/api/doctors', doctorData);
+};
+
+/**
+ * Create new doctor with new user
+ */
+export const createDoctorWithUser = async (doctorData: DoctorCreateWithUserRequest): Promise<{ 
+  doctorId: string; 
+  userId: string; 
+  userName: string; 
+  email: string; 
+}> => {
+  return await apiService.create('/api/doctors/create-with-user', doctorData);
 };
 
 /**
  * Update doctor
  */
 export const updateDoctor = async (id: string, doctorData: DoctorUpdateRequest): Promise<void> => {
-  try {
-    await axios.put<ApiResponse<null>>(`${DOCTOR_BASE_URL}/${id}`, doctorData);
-  } catch (error) {
-    console.error(`Error updating doctor with ID ${id}:`, error);
-    throw error;
-  }
+  await apiService.update(`/api/doctors/${id}`, doctorData);
 };
 
 /**
  * Delete doctor (soft delete)
  */
 export const deleteDoctor = async (id: string): Promise<void> => {
-  try {
-    await axios.delete<ApiResponse<null>>(`${DOCTOR_BASE_URL}/${id}`);
-  } catch (error) {
-    console.error(`Error deleting doctor with ID ${id}:`, error);
-    throw error;
-  }
+  await apiService.delete(`/api/doctors/${id}`);
 };
 
 /**
@@ -103,30 +78,18 @@ export const getDoctorSchedules = async (
   page: number = 1, 
   pageSize: number = 20
 ): Promise<PagedResponse<DoctorSchedule>> => {
-  try {
-    let url = `${DOCTOR_BASE_URL}/${doctorId}/schedules?page=${page}&pageSize=${pageSize}`;
-    if (fromDate) url += `&fromDate=${fromDate}`;
-    if (toDate) url += `&toDate=${toDate}`;
-    
-    const response = await axios.get<ApiResponse<PagedResponse<DoctorSchedule>>>(url);
-    return response.data.payload;
-  } catch (error) {
-    console.error(`Error fetching schedules for doctor with ID ${doctorId}:`, error);
-    throw error;
-  }
+  let params: any = { page, pageSize };
+  if (fromDate) params.fromDate = fromDate;
+  if (toDate) params.toDate = toDate;
+  
+  return await apiService.get(`/api/doctors/${doctorId}/schedules`, params);
 };
 
 /**
  * Search doctors by name or specialty
  */
 export const searchDoctors = async (query: string, page: number = 1, pageSize: number = 20): Promise<PagedResponse<Doctor>> => {
-  try {
-    const response = await axios.get<ApiResponse<PagedResponse<Doctor>>>(`${DOCTOR_BASE_URL}/search?query=${query}&page=${page}&pageSize=${pageSize}`);
-    return response.data.payload;
-  } catch (error) {
-    console.error('Error searching doctors:', error);
-    throw error;
-  }
+  return await apiService.get(`/api/doctors/search?query=${query}&page=${page}&pageSize=${pageSize}`);
 };
 
 // Work Schedule API functions
@@ -142,119 +105,63 @@ export const getAllSchedules = async (
   page: number = 1,
   pageSize: number = 20
 ): Promise<PagedResponse<WorkSchedule>> => {
-  try {
-    let url = `${SCHEDULE_BASE_URL}?page=${page}&pageSize=${pageSize}`;
-    if (fromDate) url += `&fromDate=${fromDate}`;
-    if (toDate) url += `&toDate=${toDate}`;
-    if (locationId) url += `&locationId=${locationId}`;
-    if (doctorId) url += `&doctorId=${doctorId}`;
-    
-    const response = await axios.get<ApiResponse<PagedResponse<WorkSchedule>>>(url);
-    return response.data.payload;
-  } catch (error) {
-    console.error('Error fetching work schedules:', error);
-    throw error;
-  }
+  let params: any = { page, pageSize };
+  if (fromDate) params.fromDate = fromDate;
+  if (toDate) params.toDate = toDate;
+  if (locationId) params.locationId = locationId;
+  if (doctorId) params.doctorId = doctorId;
+  
+  return await apiService.get('/api/schedules', params);
 };
 
 /**
  * Get work schedule by ID
  */
 export const getScheduleById = async (id: string, includeAppointments: boolean = false): Promise<WorkScheduleDetail> => {
-  try {
-    const response = await axios.get<ApiResponse<WorkScheduleDetail>>(`${SCHEDULE_BASE_URL}/${id}?includeAppointments=${includeAppointments}`);
-    return response.data.payload;
-  } catch (error) {
-    console.error(`Error fetching work schedule with ID ${id}:`, error);
-    throw error;
-  }
+  return await apiService.get(`/api/schedules/${id}?includeAppointments=${includeAppointments}`);
 };
 
 /**
  * Create new work schedule
  */
 export const createSchedule = async (scheduleData: WorkScheduleCreateRequest): Promise<{ id: string }> => {
-  try {
-    const response = await axios.post<ApiResponse<{ id: string }>>(SCHEDULE_BASE_URL, scheduleData);
-    return response.data.payload;
-  } catch (error) {
-    console.error('Error creating work schedule:', error);
-    throw error;
-  }
+  return await apiService.create('/api/schedules', scheduleData);
 };
 
 /**
  * Update work schedule
  */
 export const updateSchedule = async (id: string, scheduleData: WorkScheduleUpdateRequest): Promise<void> => {
-  try {
-    await axios.put<ApiResponse<null>>(`${SCHEDULE_BASE_URL}/${id}`, scheduleData);
-  } catch (error) {
-    console.error(`Error updating work schedule with ID ${id}:`, error);
-    throw error;
-  }
+  await apiService.update(`/api/schedules/${id}`, scheduleData);
 };
 
 /**
- * Delete work schedule (soft delete)
+ * Delete work schedule
  */
 export const deleteSchedule = async (id: string): Promise<void> => {
-  try {
-    await axios.delete<ApiResponse<null>>(`${SCHEDULE_BASE_URL}/${id}`);
-  } catch (error) {
-    console.error(`Error deleting work schedule with ID ${id}:`, error);
-    throw error;
-  }
+  await apiService.delete(`/api/schedules/${id}`);
 };
 
 /**
- * Get available schedule slots
+ * Get schedule availability
  */
 export const getScheduleAvailability = async (
-  fromDate?: string,
-  toDate?: string,
-  locationId?: string,
-  doctorId?: string
+  doctorId: string,
+  date: string,
+  locationId?: string
 ): Promise<ScheduleAvailability[]> => {
-  try {
-    let url = `${API_CONFIG.BASE_URL}${API_CONFIG.SCHEDULE.AVAILABILITY}`;
-    const params = new URLSearchParams();
-    
-    if (fromDate) params.append('fromDate', fromDate);
-    if (toDate) params.append('toDate', toDate);
-    if (locationId) params.append('locationId', locationId);
-    if (doctorId) params.append('doctorId', doctorId);
-    
-    if (params.toString()) url += `?${params.toString()}`;
-    
-    const response = await axios.get<ApiResponse<ScheduleAvailability[]>>(url);
-    return response.data.payload;
-  } catch (error) {
-    console.error('Error fetching schedule availability:', error);
-    throw error;
-  }
+  let params: any = { date };
+  if (locationId) params.locationId = locationId;
+  
+  return await apiService.get(`/api/schedules/availability/${doctorId}`, params);
 };
 
 /**
- * Get schedules by doctor and location
+ * Update schedule availability
  */
-export const getSchedulesByDoctorAndLocation = async (
-  doctorId: string,
-  locationId: string,
-  fromDate?: string,
-  toDate?: string,
-  page: number = 1,
-  pageSize: number = 20
-): Promise<PagedResponse<WorkSchedule>> => {
-  try {
-    let url = `${API_CONFIG.BASE_URL}${API_CONFIG.SCHEDULE.BY_DOCTOR_LOCATION}?doctorId=${doctorId}&locationId=${locationId}&page=${page}&pageSize=${pageSize}`;
-    if (fromDate) url += `&fromDate=${fromDate}`;
-    if (toDate) url += `&toDate=${toDate}`;
-    
-    const response = await axios.get<ApiResponse<PagedResponse<WorkSchedule>>>(url);
-    return response.data.payload;
-  } catch (error) {
-    console.error(`Error fetching schedules for doctor ${doctorId} at location ${locationId}:`, error);
-    throw error;
-  }
+export const updateScheduleAvailability = async (
+  scheduleId: string,
+  availability: ScheduleAvailability[]
+): Promise<void> => {
+  await apiService.update(`/api/schedules/${scheduleId}/availability`, { availability });
 };

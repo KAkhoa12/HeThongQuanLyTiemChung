@@ -4,11 +4,13 @@ using server.DTOs.DichVu;
 using server.DTOs.Pagination;
 using server.Helpers;
 using server.Models;
+using server.Filters;
 
 namespace server.Controllers;
 
 [ApiController]
 [Route("api/services")]
+
 public class DichVuController : ControllerBase
 {
     private readonly HeThongQuanLyTiemChungContext _ctx;
@@ -46,6 +48,27 @@ public class DichVuController : ControllerBase
                 paged.PageSize,
                 paged.TotalPages,
                 data));
+    }
+
+    /* ---------- 1.1. Tất cả dịch vụ (không paging) ---------- */
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllNoPage(CancellationToken ct = default)
+    {
+        var services = await _ctx.DichVus
+                        .Include(d => d.MaLoaiDichVuNavigation)
+                        .Where(d => d.IsDelete == false)
+                        .OrderByDescending(d => d.NgayTao)
+                        .Select(d => new ServiceDto(
+                            d.MaDichVu,
+                            d.Ten,
+                            d.MoTa,
+                            d.Gia,
+                            d.MaLoaiDichVu,
+                            d.MaLoaiDichVuNavigation != null ? d.MaLoaiDichVuNavigation.TenLoai : null,
+                            d.NgayTao!.Value))
+                        .ToListAsync(ct);
+
+        return ApiResponse.Success("Lấy danh sách dịch vụ thành công", services);
     }
 
     /* ---------- 2. Theo ID ---------- */
@@ -93,6 +116,7 @@ public class DichVuController : ControllerBase
 
     /* ---------- 3. Tạo mới ---------- */
     [HttpPost]
+    [ConfigAuthorize]
     public async Task<IActionResult> Create(
         [FromBody] ServiceCreateDto dto,
         CancellationToken ct)
@@ -127,6 +151,7 @@ public class DichVuController : ControllerBase
 
     /* ---------- 4. Cập nhật ---------- */
     [HttpPut("{id}")]
+    [ConfigAuthorize]
     public async Task<IActionResult> Update(
         string id,
         [FromBody] ServiceUpdateDto dto,
@@ -159,6 +184,7 @@ public class DichVuController : ControllerBase
 
     /* ---------- 5. Xóa mềm ---------- */
     [HttpDelete("{id}")]
+    [ConfigAuthorize]
     public async Task<IActionResult> Delete(string id, CancellationToken ct)
     {
         var service = await _ctx.DichVus
@@ -174,6 +200,7 @@ public class DichVuController : ControllerBase
 
     /* ---------- 6. Cập nhật danh sách ảnh ---------- */
     [HttpPut("{id}/images")]
+    [ConfigAuthorize]
     public async Task<IActionResult> UpdateImages(
         string id,
         [FromBody] List<ServiceImageUpdateDto> dtoList,
@@ -222,6 +249,7 @@ public class DichVuController : ControllerBase
 
     /* ---------- 7. Lấy dịch vụ theo loại ---------- */
     [HttpGet("by-type/{typeId}")]
+    [ConfigAuthorize]
     public async Task<IActionResult> GetByType(
         string typeId,
         [FromQuery] int? page = 1,

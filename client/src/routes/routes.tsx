@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import PageTitle from '../components/PageTitle';
 import PrivateRoute from './PrivateRoute';
 import ClientLayout from '../layout/ClientLayout';
-import Home from '../pages/MainPage/home';
+import Home from '../pages/ClientPages/MainPage/home';
 
 // Dashboard
 const DefaultLayout = lazy(() => import('../layout/DefaultLayout'));
@@ -20,10 +20,29 @@ const StaffListPage = lazy(() => import('../pages/Staff/StaffListPage'));
 
 // Doctor Management
 const DoctorListPage = lazy(() => import('../pages/Doctor/DoctorListPage'));
+const DoctorCreatePage = lazy(() => import('../pages/Doctor/DoctorCreatePage'));
 
 // Service Management
 const ServiceListPage = lazy(() => import('../pages/Service/ServiceListPage'));
 const ServiceTypePage = lazy(() => import('../pages/Service/ServiceTypePage'));
+const ServiceCreatePage = lazy(() => import('../pages/Service/ServiceCreatePage'));
+const ServiceDetailPage = lazy(() => import('../pages/Service/ServiceDetailPage'));
+const ServiceEditPage = lazy(() => import('../pages/Service/ServiceEditPage'));
+const ServiceTypeCreatePage = lazy(() => import('../pages/Service/ServiceTypeCreatePage'));
+const ServiceTypeEditPage = lazy(() => import('../pages/Service/ServiceTypeEditPage'));
+
+// Service Vaccine (Client)
+const ServiceVaccineListPage = lazy(() => import('../pages/ClientPages/ServiceVaccine/ServiceVaccineListPage'));
+
+// Location Management
+const LocationManagePage = lazy(() => import('../pages/Location/LocationManagePage'));
+
+// Vaccine Management
+const VaccineManagePage = lazy(() => import('../pages/VaccineManage/VaccineManagePage'));
+const VaccineDetailPage = lazy(() => import('../pages/VaccineManage/VaccineDetailPage'));
+const VaccineEditPage = lazy(() => import('../pages/VaccineManage/VaccineEditPage'));
+
+
 
 // Image Management
 const ImageManagementPage = lazy(() => import('../pages/ImageManagement'));
@@ -36,6 +55,23 @@ const Settings = lazy(() => import('../pages/Settings'));
 const Tables = lazy(() => import('../pages/Tables'));
 const Chart = lazy(() => import('../pages/Chart'));
 
+// Cart & Checkout
+const CartPage = lazy(() => import('../pages/ClientPages/Cart/CartPage'));
+const CheckoutPage = lazy(() => import('../pages/Checkout/CheckoutPage'));
+const PaymentSuccessPage = lazy(() => import('../pages/PaymentSuccess/PaymentSuccessPage'));
+
+// Orders
+const OrdersPage = lazy(() => import('../pages/ClientPages/Orders/OrdersPage'));
+const OrderDetailPage = lazy(() => import('../pages/ClientPages/Orders/OrderDetailPage'));
+
+// Admin Invoices
+const InvoiceListPage = lazy(() => import('../pages/Dashboard/InvoiceListPage'));
+const InvoiceDetailPage = lazy(() => import('../pages/Dashboard/InvoiceDetailPage'));
+
+// Appointment Management
+const AppointmentRegistrationPage = lazy(() => import('../pages/Appointment/AppointmentRegistrationPage'));
+const AppointmentApprovalPage = lazy(() => import('../pages/Appointment/AppointmentApprovalPage'));
+
 const routes = [
   {
     path: '/',
@@ -44,7 +80,61 @@ const routes = [
       {
         index: true,
         element: <Home />
-      }
+      },
+      {
+        path: 'services',
+        element: (
+          <>
+            <PageTitle title="Dịch vụ & Vaccine | HuitKIT" />
+            <ServiceVaccineListPage />
+          </>
+        )
+      },
+      {
+        path: 'cart',
+        element: (
+          <>
+            <PageTitle title="Giỏ hàng | HuitKIT" />
+            <CartPage />
+          </>
+        )
+      },
+      {
+        path: '/checkout',
+        element: (
+          <>
+            <PageTitle title="Thanh toán | HuitKIT" />
+            <CheckoutPage />
+          </>
+        )
+      },
+      {
+        path: '/payment-success',
+        element: (
+          <>
+            <PageTitle title="Kết quả thanh toán | HuitKIT" />
+            <PaymentSuccessPage />
+          </>
+        )
+      },
+      {
+        path: '/orders',
+        element: (
+          <>
+            <PageTitle title="Đơn hàng của tôi | HuitKIT" />
+            <OrdersPage />
+          </>
+        )
+      },
+      {
+        path: '/orders/:orderId',
+        element: (
+          <>
+            <PageTitle title="Chi tiết đơn hàng | HuitKIT" />
+            <OrderDetailPage />
+          </>
+        )
+      },
     ]
   },
   {
@@ -109,7 +199,7 @@ const routes = [
   },
   // Staff Management Routes
   {
-    path: '/staff',
+    path: '/dashboard/staff',
     element: <DefaultLayout />,
     children: [
       {
@@ -126,7 +216,7 @@ const routes = [
   },
   // Doctor Management Routes
   {
-    path: '/doctors',
+    path: '/dashboard/doctors',
     element: <DefaultLayout />,
     children: [
       {
@@ -138,12 +228,21 @@ const routes = [
           </PrivateRoute>
         )
       },
-      // Add more doctor routes as needed (create, edit, detail, schedules)
+      {
+        path: 'create',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Thêm bác sĩ mới | HuitKIT" />
+            <DoctorCreatePage />
+          </PrivateRoute>
+        )
+      },
+      // Add more doctor routes as needed (edit, detail, schedules)
     ]
   },
   // Service Management Routes
   {
-    path: '/services',
+    path: '/dashboard/services',
     element: <DefaultLayout />,
     children: [
       {
@@ -156,6 +255,33 @@ const routes = [
         )
       },
       {
+        path: 'create',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Thêm dịch vụ mới | HuitKIT" />
+            <ServiceCreatePage />
+          </PrivateRoute>
+        )
+      },
+      {
+        path: ':id',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Chi tiết dịch vụ | HuitKIT" />
+            <ServiceDetailPage />
+          </PrivateRoute>
+        )
+      },
+      {
+        path: ':id/edit',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Chỉnh sửa dịch vụ | HuitKIT" />
+            <ServiceEditPage />
+          </PrivateRoute>
+        )
+      },
+      {
         path: 'types',
         element: (
           <PrivateRoute>
@@ -164,12 +290,81 @@ const routes = [
           </PrivateRoute>
         )
       },
-      // Add more service routes as needed (create, edit, detail)
+      {
+        path: 'types/create',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Thêm loại dịch vụ mới | HuitKIT" />
+            <ServiceTypeCreatePage />
+          </PrivateRoute>
+        )
+      },
+      {
+        path: 'types/:id/edit',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Chỉnh sửa loại dịch vụ | HuitKIT" />
+            <ServiceTypeEditPage />
+          </PrivateRoute>
+        )
+      }
     ]
   },
+  // Location Management Routes
+  {
+    path: '/dashboard/locations',
+    element: <DefaultLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Quản lý địa điểm | HuitKIT" />
+            <LocationManagePage />
+          </PrivateRoute>
+        )
+      }
+    ]
+  },
+  // Vaccine Management Routes
+  {
+    path: '/dashboard/vaccine-manage',
+    element: <DefaultLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Quản lý Vaccine | HuitKIT" />
+            <VaccineManagePage />
+          </PrivateRoute>
+        )
+      },
+      {
+        path: 'detail/:id',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Chi tiết Vaccine | HuitKIT" />
+            <VaccineDetailPage />
+          </PrivateRoute>
+        )
+      },
+      {
+        path: 'edit/:id',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Chỉnh sửa Vaccine | HuitKIT" />
+            <VaccineEditPage />
+          </PrivateRoute>
+        )
+      },
+    ]
+  },
+
+
   // Image Management Routes
   {
-    path: '/image-management',
+    path: '/dashboard/image-management',
     element: <DefaultLayout />,
     children: [
       {
@@ -186,7 +381,7 @@ const routes = [
   },
   // Settings Routes
   {
-    path: '/settings',
+    path: '/dashboard/settings',
     element: <DefaultLayout />,
     children: [
       {
@@ -202,7 +397,7 @@ const routes = [
   },
   // Tables Routes
   {
-    path: '/tables',
+    path: '/dashboard/tables',
     element: <DefaultLayout />,
     children: [
       {
@@ -218,7 +413,7 @@ const routes = [
   },
   // Chart Routes
   {
-    path: '/chart',
+    path: '/dashboard/chart',
     element: <DefaultLayout />,
     children: [
       {
@@ -232,6 +427,66 @@ const routes = [
       }
     ]
   },
+  // Invoice Management Routes
+  {
+    path: '/dashboard/invoices',
+    element: <DefaultLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Quản lý Hóa đơn | HuitKIT" />
+            <InvoiceListPage />
+          </PrivateRoute>
+        )
+      },
+      {
+        path: ':invoiceId',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Chi tiết Hóa đơn | HuitKIT" />
+            <InvoiceDetailPage />
+          </PrivateRoute>
+        )
+      }
+    ]
+  },
+  
+  // Appointment Management Routes
+  {
+    path: '/dashboard/appointments',
+    element: <DefaultLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Quản lý Lịch hẹn | HuitKIT" />
+            <AppointmentApprovalPage />
+          </PrivateRoute>
+        )
+      }
+    ]
+  },
+  
+  // Appointment Registration Routes (for users)
+  {
+    path: '/appointment-registration',
+    element: <ClientLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <>
+            <PageTitle title="Đăng ký Lịch hẹn | HuitKIT" />
+            <AppointmentRegistrationPage />
+          </>
+        )
+      }
+    ]
+  },
+  
   {
     path: '*',
     element: <Navigate to="/dashboard" replace />

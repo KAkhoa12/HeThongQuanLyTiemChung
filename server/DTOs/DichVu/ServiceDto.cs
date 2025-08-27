@@ -30,11 +30,11 @@ namespace server.DTOs.DichVu
     );
 
     public record ServiceVaccineDto(
-        string Id,
-        string VaccineId,
-        string VaccineName,
-        int StandardDoses,
-        string? Notes
+        string MaDichVuVaccine,
+        string MaVaccine,
+        string TenVaccine,
+        int SoMuiChuan,
+        string? GhiChu
     );
 
     public record ServiceCreateDto(

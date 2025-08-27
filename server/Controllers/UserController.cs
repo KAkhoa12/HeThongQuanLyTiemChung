@@ -1,146 +1,357 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using server.DTOs.NguoiDung;
-using server.Models;
-using server.Helpers;
 using server.Filters;
-using server.DTOs.Pagination;
+using server.Helpers;
+using server.Models;
+
 namespace server.Controllers;
 
 [ApiController]
 [Route("api/users")]
-[ConfigAuthorize]
 public class UserController : ControllerBase
 {
     private readonly HeThongQuanLyTiemChungContext _ctx;
 
-    public UserController(HeThongQuanLyTiemChungContext ctx) => _ctx = ctx;
-
-    /* ---------- 1. Tất cả USER (paging) ---------- */
-    [HttpGet]
-    public async Task<IActionResult> GetAll(
-        [FromQuery] int? page = 1,
-        [FromQuery] int? pageSize = 20,
-        CancellationToken ct = default)
+    public UserController(HeThongQuanLyTiemChungContext ctx)
     {
-        var query = _ctx.NguoiDungs
-                        .Where(u => u.MaVaiTro == "VT001" && u.IsDelete == false)
-                        .OrderByDescending(u => u.NgayTao);
-
-        var paged = await query.ToPagedAsync(page!.Value, pageSize!.Value, ct);
-        var data = paged.Data
-     .Select(u => new UserInfoDto(
-         u.MaNguoiDung,
-         u.Ten,
-         u.Email,
-         u.SoDienThoai,
-         u.NgaySinh,
-         u.DiaChi,
-         u.MaVaiTroNavigation.TenVaiTro ?? "USER",
-         u.NgayTao!.Value))
-     .ToList();
-
-        return ApiResponse.Success(
-            "Lấy danh sách người dùng thành công",
-            new PagedResultDto<UserInfoDto>(
-                paged.TotalCount,
-                paged.Page,
-                paged.PageSize,
-                paged.TotalPages,
-                data));
+        _ctx = ctx;
     }
 
-    /* ---------- 2. Theo ID ---------- */
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(string id, CancellationToken ct)
+    /* ---------- 1. Lấy thông tin profile của người dùng đã đăng nhập ---------- */
+    [HttpGet("profile")]
+    [ConfigAuthorize]
+    public async Task<IActionResult> GetMyProfile(CancellationToken ct)
     {
-        var user = await _ctx.NguoiDungs
-            .FirstOrDefaultAsync(u => u.MaNguoiDung == id && u.IsDelete == false, ct);
-        if (user == null) return NotFound();
-
-        return ApiResponse.Success("Lấy thông tin người dùng thành công", new UserInfoDto(
-            user.MaNguoiDung,
-            user.Ten,
-            user.Email,
-            user.SoDienThoai,
-            user.NgaySinh,
-            user.DiaChi,
-            user.MaVaiTro,
-            user.NgayTao!.Value));
-    }
-
-    /* ---------- 3. Tạo mới ---------- */
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] UserCreateDto dto, CancellationToken ct)
-    {
-        if (await _ctx.NguoiDungs.AnyAsync(u => u.Email == dto.Email && u.IsDelete == false, ct))
-            return ApiResponse.Error("Email đã tồn tại");
-        if (await _ctx.NguoiDungs.AnyAsync(u => u.SoDienThoai == dto.SoDienThoai && u.IsDelete == false, ct))
-            return ApiResponse.Error("Số điện thoại đã tồn tại");
-
-        var user = new NguoiDung
+        try
         {
-            MaNguoiDung = Guid.NewGuid().ToString("N"),
-            Ten = dto.Ten,
-            Email = dto.Email,
-            MatKhau = BCrypt.Net.BCrypt.HashPassword(dto.MatKhau),
-            SoDienThoai = dto.SoDienThoai,
-            NgaySinh = dto.NgaySinh,
-            DiaChi = dto.DiaChi,
-            MaVaiTro = "VT001",
-            IsActive = true,
-            IsDelete = false,
-            NgayTao = DateTime.UtcNow
-        };
+            var userId = User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return ApiResponse.Error("Người dùng chưa đăng nhập", 401);
+            }
 
-        _ctx.NguoiDungs.Add(user);
-        await _ctx.SaveChangesAsync(ct);
+            var user = await _ctx.NguoiDungs
+                .Include(n => n.MaVaiTroNavigation)
+                .FirstOrDefaultAsync(n => n.MaNguoiDung == userId && n.IsDelete != true, ct);
 
-        var userDto = new UserDto(user.MaNguoiDung, user.Ten, user.Email, user.SoDienThoai,
-                        user.NgaySinh, user.DiaChi, user.MaVaiTro);
-        return ApiResponse.Success("Tạo người dùng thành công", userDto);
-    }
+            if (user == null)
+            {
+                return ApiResponse.Error("Không tìm thấy thông tin người dùng", 404);
+            }
 
-    /* ---------- 4. Cập nhật ---------- */
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(
-                                            [FromBody] UserUpdateDto dto,
-                                            CancellationToken ct)
-    {
-        var user = await _ctx.NguoiDungs
-            .FirstOrDefaultAsync(u => u.MaNguoiDung == dto.MaNguoiDung && u.IsDelete == false, ct);
-        if (user == null) return ApiResponse.Error("Không tìm thấy người dùng");
+            // Query trực tiếp từ bảng ThongTinNguoiDungs
+            var healthInfo = await _ctx.ThongTinNguoiDungs
+                .FirstOrDefaultAsync(t => t.MaNguoiDung == userId && t.IsDelete != true, ct);
+            
+            // Nếu chưa có ThongTinNguoiDung, tạo mới
+            if (healthInfo == null)
+            {
+                healthInfo = new ThongTinNguoiDung
+                {
+                    MaThongTin = Guid.NewGuid().ToString("N"),
+                    MaNguoiDung = user.MaNguoiDung,
+                    ChieuCao = null,
+                    CanNang = null,
+                    Bmi = null,
+                    NhomMau = null,
+                    BenhNen = null,
+                    DiUng = null,
+                    ThuocDangDung = null,
+                    TinhTrangMangThai = null,
+                    NgayKhamGanNhat = null,
+                    IsActive = true,
+                    IsDelete = false,
+                    NgayTao = DateTime.UtcNow,
+                    NgayCapNhat = DateTime.UtcNow
+                };
+                
+                _ctx.ThongTinNguoiDungs.Add(healthInfo);
+                await _ctx.SaveChangesAsync(ct);
+            }
 
-        user.Ten = dto.Ten ?? user.Ten;
-        user.SoDienThoai = dto.SoDienThoai ?? user.SoDienThoai;
-        user.NgaySinh = dto.NgaySinh ?? user.NgaySinh;
-        user.DiaChi = dto.DiaChi ?? user.DiaChi;
-        user.NgayCapNhat = DateTime.UtcNow;
-        await _ctx.SaveChangesAsync(ct);
-        var userDto = new UserDto(
+            var healthInfoDto = new HealthInfoDto(
+                healthInfo.MaThongTin,
+                healthInfo.ChieuCao,
+                healthInfo.CanNang,
+                healthInfo.Bmi,
+                healthInfo.NhomMau,
+                healthInfo.BenhNen,
+                healthInfo.DiUng,
+                healthInfo.ThuocDangDung,
+                healthInfo.TinhTrangMangThai,
+                healthInfo.NgayKhamGanNhat
+            );
+
+            var profile = new UserCompleteProfileDto(
                 user.MaNguoiDung,
                 user.Ten,
                 user.Email,
                 user.SoDienThoai,
                 user.NgaySinh,
                 user.DiaChi,
-                user.MaVaiTro
+                user.MaVaiTro,
+                user.NgayTao,
+                healthInfoDto
             );
-        return ApiResponse.Success("Cập nhập người dùng thành công", userDto); ;
+
+            return ApiResponse.Success("Lấy thông tin profile thành công", profile);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.Error($"Lỗi khi lấy thông tin profile: {ex.Message}", 500);
+        }
     }
 
-    /* ---------- 5. Xóa mềm ---------- */
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(string id, CancellationToken ct)
+    /* ---------- 2. Cập nhật thông tin cá nhân ---------- */
+    [HttpPut("profile")]
+    [ConfigAuthorize]
+    public async Task<IActionResult> UpdateProfile(
+        [FromBody] UserProfileUpdateDto dto,
+        CancellationToken ct)
     {
-        var user = await _ctx.NguoiDungs
-            .FirstOrDefaultAsync(u => u.MaNguoiDung == id && u.IsDelete == false, ct);
-        if (user == null) return ApiResponse.Error("Không tìm thấy người dùng");
+        try
+        {
+            var userId = User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return ApiResponse.Error("Người dùng chưa đăng nhập", 401);
+            }
 
-        user.IsDelete = true;
-        user.NgayCapNhat = DateTime.UtcNow;
-        await _ctx.SaveChangesAsync(ct);
-        return ApiResponse.Success("Xóa người dùng thành công"); ;
+            var user = await _ctx.NguoiDungs
+                .FirstOrDefaultAsync(n => n.MaNguoiDung == userId && n.IsDelete != true, ct);
+
+            if (user == null)
+            {
+                return ApiResponse.Error("Không tìm thấy thông tin người dùng", 404);
+            }
+
+            // Cập nhật thông tin nếu có
+            if (!string.IsNullOrEmpty(dto.Ten))
+                user.Ten = dto.Ten;
+            
+            if (!string.IsNullOrEmpty(dto.SoDienThoai))
+                user.SoDienThoai = dto.SoDienThoai;
+            
+            if (dto.NgaySinh.HasValue)
+                user.NgaySinh = dto.NgaySinh;
+            
+            if (!string.IsNullOrEmpty(dto.DiaChi))
+                user.DiaChi = dto.DiaChi;
+
+            user.NgayCapNhat = DateTime.UtcNow;
+
+            await _ctx.SaveChangesAsync(ct);
+
+            return ApiResponse.Success("Cập nhật thông tin cá nhân thành công", null);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.Error($"Lỗi khi cập nhật thông tin cá nhân: {ex.Message}", 500);
+        }
+    }
+
+    /* ---------- 3. Cập nhật thông tin sức khỏe ---------- */
+    [HttpPut("health-info")]
+    [ConfigAuthorize]
+    public async Task<IActionResult> UpdateHealthInfo(
+        [FromBody] HealthInfoUpdateDto dto,
+        CancellationToken ct)
+    {
+        try
+        {
+            var userId = User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return ApiResponse.Error("Người dùng chưa đăng nhập", 401);
+            }
+
+            var healthInfo = await _ctx.ThongTinNguoiDungs
+                .FirstOrDefaultAsync(t => t.MaNguoiDung == userId && t.IsDelete != true, ct);
+
+            if (healthInfo == null)
+            {
+                // Tạo mới nếu chưa có
+                healthInfo = new ThongTinNguoiDung
+                {
+                    MaThongTin = Guid.NewGuid().ToString("N"),
+                    MaNguoiDung = userId,
+                    IsActive = true,
+                    IsDelete = false,
+                    NgayTao = DateTime.UtcNow
+                };
+                _ctx.ThongTinNguoiDungs.Add(healthInfo);
+            }
+
+            // Cập nhật thông tin sức khỏe
+            if (dto.ChieuCao.HasValue)
+                healthInfo.ChieuCao = dto.ChieuCao;
+            
+            if (dto.CanNang.HasValue)
+                healthInfo.CanNang = dto.CanNang;
+            
+            if (!string.IsNullOrEmpty(dto.NhomMau))
+                healthInfo.NhomMau = dto.NhomMau;
+            
+            if (!string.IsNullOrEmpty(dto.BenhNen))
+                healthInfo.BenhNen = dto.BenhNen;
+            
+            if (!string.IsNullOrEmpty(dto.DiUng))
+                healthInfo.DiUng = dto.DiUng;
+            
+            if (!string.IsNullOrEmpty(dto.ThuocDangDung))
+                healthInfo.ThuocDangDung = dto.ThuocDangDung;
+            
+            if (dto.TinhTrangMangThai.HasValue)
+                healthInfo.TinhTrangMangThai = dto.TinhTrangMangThai;
+            
+            if (dto.NgayKhamGanNhat.HasValue)
+                healthInfo.NgayKhamGanNhat = dto.NgayKhamGanNhat;
+
+            // Tính BMI nếu có chiều cao và cân nặng
+            if (dto.ChieuCao.HasValue && dto.CanNang.HasValue)
+            {
+                var heightInMeters = dto.ChieuCao.Value / 100;
+                healthInfo.Bmi = Math.Round(dto.CanNang.Value / (heightInMeters * heightInMeters), 2);
+            }
+
+            healthInfo.NgayCapNhat = DateTime.UtcNow;
+
+            await _ctx.SaveChangesAsync(ct);
+
+            return ApiResponse.Success("Cập nhật thông tin sức khỏe thành công", null);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.Error($"Lỗi khi cập nhật thông tin sức khỏe: {ex.Message}", 500);
+        }
+    }
+
+    /* ---------- 4. Đổi mật khẩu ---------- */
+    [HttpPut("change-password")]
+    [ConfigAuthorize]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordDto dto,
+        CancellationToken ct)
+    {
+        try
+        {
+            var userId = User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return ApiResponse.Error("Người dùng chưa đăng nhập", 401);
+            }
+
+            var user = await _ctx.NguoiDungs
+                .FirstOrDefaultAsync(n => n.MaNguoiDung == userId && n.IsDelete != true, ct);
+
+            if (user == null)
+            {
+                return ApiResponse.Error("Không tìm thấy thông tin người dùng", 404);
+            }
+
+            // Kiểm tra mật khẩu cũ
+            if (user.MatKhau != dto.OldPassword)
+            {
+                return ApiResponse.Error("Mật khẩu cũ không đúng", 400);
+            }
+
+            // Cập nhật mật khẩu mới
+            user.MatKhau = dto.NewPassword;
+            user.NgayCapNhat = DateTime.UtcNow;
+
+            await _ctx.SaveChangesAsync(ct);
+
+            return ApiResponse.Success("Đổi mật khẩu thành công", null);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.Error($"Lỗi khi đổi mật khẩu: {ex.Message}", 500);
+        }
+    }
+
+    /* ---------- 5. Lấy thông tin người dùng theo ID (cho admin) ---------- */
+    [HttpGet("{id}")]
+    [ConfigAuthorize]
+    public async Task<IActionResult> GetUserById(string id, CancellationToken ct)
+    {
+        try
+        {
+            var user = await _ctx.NguoiDungs
+                .Include(n => n.MaVaiTroNavigation)
+                .FirstOrDefaultAsync(n => n.MaNguoiDung == id && n.IsDelete != true, ct);
+
+            if (user == null)
+            {
+                return ApiResponse.Error("Không tìm thấy người dùng", 404);
+            }
+
+            // Query trực tiếp từ bảng ThongTinNguoiDungs
+            var healthInfo = await _ctx.ThongTinNguoiDungs
+                .FirstOrDefaultAsync(t => t.MaNguoiDung == id && t.IsDelete != true, ct);
+            
+            // Nếu chưa có ThongTinNguoiDung, tạo mới
+            if (healthInfo == null)
+            {
+                healthInfo = new ThongTinNguoiDung
+                {
+                    MaThongTin = Guid.NewGuid().ToString("N"),
+                    MaNguoiDung = user.MaNguoiDung,
+                    ChieuCao = null,
+                    CanNang = null,
+                    Bmi = null,
+                    NhomMau = null,
+                    BenhNen = null,
+                    DiUng = null,
+                    ThuocDangDung = null,
+                    TinhTrangMangThai = null,
+                    NgayKhamGanNhat = null,
+                    IsActive = true,
+                    IsDelete = false,
+                    NgayTao = DateTime.UtcNow,
+                    NgayCapNhat = DateTime.UtcNow
+                };
+                
+                _ctx.ThongTinNguoiDungs.Add(healthInfo);
+                await _ctx.SaveChangesAsync(ct);
+            }
+
+            var healthInfoDto = new HealthInfoDto(
+                healthInfo.MaThongTin,
+                healthInfo.ChieuCao,
+                healthInfo.CanNang,
+                healthInfo.Bmi,
+                healthInfo.NhomMau,
+                healthInfo.BenhNen,
+                healthInfo.DiUng,
+                healthInfo.ThuocDangDung,
+                healthInfo.TinhTrangMangThai,
+                healthInfo.NgayKhamGanNhat
+            );
+
+            var profile = new UserCompleteProfileDto(
+                user.MaNguoiDung,
+                user.Ten,
+                user.Email,
+                user.SoDienThoai,
+                user.NgaySinh,
+                user.DiaChi,
+                user.MaVaiTro,
+                user.NgayTao,
+                healthInfoDto
+            );
+
+            return ApiResponse.Success("Lấy thông tin người dùng thành công", profile);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.Error($"Lỗi khi lấy thông tin người dùng: {ex.Message}", 500);
+        }
     }
 }
+
+// DTO cho đổi mật khẩu
+public record ChangePasswordDto(
+    string OldPassword,
+    string NewPassword
+);

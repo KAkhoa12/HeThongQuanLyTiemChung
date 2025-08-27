@@ -32,6 +32,17 @@ export interface DoctorCreateRequest {
   licenseNumber?: string;
 }
 
+export interface DoctorCreateWithUserRequest {
+  ten: string;
+  email: string;
+  matKhau: string;
+  soDienThoai?: string;
+  ngaySinh?: string;
+  diaChi?: string;
+  chuyenMon?: string;
+  soGiayPhep?: string;
+}
+
 export interface DoctorUpdateRequest {
   specialty?: string;
   licenseNumber?: string;

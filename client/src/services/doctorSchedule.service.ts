@@ -7,8 +7,7 @@ import {
   AppointmentUpdate,
   Doctor
 } from '../interfaces/doctorSchedule.interface';
-import { apiGet, apiPost, apiPut, apiDelete } from '../utils/apiHelper';
-import API_CONFIG from '../config/api.config';
+import apiService from './api.service';
 
 class DoctorScheduleService {
   /**
@@ -21,87 +20,47 @@ class DoctorScheduleService {
     dateFrom?: string,
     dateTo?: string
   ): Promise<any> {
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        pageSize: pageSize.toString()
-      });
-      
-      if (doctorId) params.append('doctorId', doctorId);
-      if (dateFrom) params.append('dateFrom', dateFrom);
-      if (dateTo) params.append('dateTo', dateTo);
+    let params: any = { page, pageSize };
+    if (doctorId) params.doctorId = doctorId;
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
 
-      const data = await apiGet(`${API_CONFIG.DOCTOR_SCHEDULE.BASE}?${params}`);
-      return data;
-    } catch (error) {
-      console.error('Get doctor schedules error:', error);
-      throw error;
-    }
+    return await apiService.get('/api/doctor-schedules', params);
   }
 
   /**
    * Lấy lịch bác sĩ theo ID
    */
   async getDoctorScheduleById(id: string): Promise<DoctorSchedule> {
-    try {
-      const data = await apiGet(`${API_CONFIG.DOCTOR_SCHEDULE.BASE}/${id}`);
-      return data;
-    } catch (error) {
-      console.error('Get doctor schedule error:', error);
-      throw error;
-    }
+    return await apiService.get(`/api/doctor-schedules/${id}`);
   }
 
   /**
    * Tạo lịch bác sĩ mới
    */
   async createDoctorSchedule(schedule: DoctorScheduleCreate): Promise<DoctorSchedule> {
-    try {
-      const data = await apiPost(`${API_CONFIG.DOCTOR_SCHEDULE.BASE}`, schedule);
-      return data.payload;
-    } catch (error) {
-      console.error('Create doctor schedule error:', error);
-      throw error;
-    }
+    return await apiService.create('/api/doctor-schedules', schedule);
   }
 
   /**
    * Cập nhật lịch bác sĩ
    */
   async updateDoctorSchedule(id: string, schedule: DoctorScheduleUpdate): Promise<DoctorSchedule> {
-    try {
-      const data = await apiPut(`${API_CONFIG.DOCTOR_SCHEDULE.BASE}/${id}`, schedule);
-      return data.payload;
-    } catch (error) {
-      console.error('Update doctor schedule error:', error);
-      throw error;
-    }
+    return await apiService.update(`/api/doctor-schedules/${id}`, schedule);
   }
 
   /**
    * Xóa lịch bác sĩ
    */
   async deleteDoctorSchedule(id: string): Promise<string> {
-    try {
-      const data = await apiDelete(`${API_CONFIG.DOCTOR_SCHEDULE.BASE}/${id}`);
-      return data.payload;
-    } catch (error) {
-      console.error('Delete doctor schedule error:', error);
-      throw error;
-    }
+    return await apiService.delete(`/api/doctor-schedules/${id}`);
   }
 
   /**
    * Lấy danh sách bác sĩ
    */
   async getDoctors(): Promise<Doctor[]> {
-    try {
-      const data = await apiGet(`${API_CONFIG.DOCTOR.BASE}`);
-      return data.payload;
-    } catch (error) {
-      console.error('Get doctors error:', error);
-      throw error;
-    }
+    return await apiService.get('/api/doctors');
   }
 
   /**
@@ -110,65 +69,55 @@ class DoctorScheduleService {
   async getAppointments(
     page: number = 1,
     pageSize: number = 10,
-    patientId?: string,
     doctorId?: string,
+    patientId?: string,
+    dateFrom?: string,
+    dateTo?: string,
     status?: string
   ): Promise<any> {
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        pageSize: pageSize.toString()
-      });
-      
-      if (patientId) params.append('patientId', patientId);
-      if (doctorId) params.append('doctorId', doctorId);
-      if (status) params.append('status', status);
+    let params: any = { page, pageSize };
+    if (doctorId) params.doctorId = doctorId;
+    if (patientId) params.patientId = patientId;
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
+    if (status) params.status = status;
 
-      const data = await apiGet(`${API_CONFIG.APPOINTMENT.BASE}?${params}`);
-      return data.payload;
-    } catch (error) {
-      console.error('Get appointments error:', error);
-      throw error;
-    }
+    return await apiService.get('/api/appointments', params);
+  }
+
+  /**
+   * Lấy lịch hẹn theo ID
+   */
+  async getAppointmentById(id: string): Promise<Appointment> {
+    return await apiService.get(`/api/appointments/${id}`);
   }
 
   /**
    * Tạo lịch hẹn mới
    */
   async createAppointment(appointment: AppointmentCreate): Promise<Appointment> {
-    try {
-      const data = await apiPost(`${API_CONFIG.APPOINTMENT.BASE}`, appointment);
-      return data.payload;
-    } catch (error) {
-      console.error('Create appointment error:', error);
-      throw error;
-    }
+    return await apiService.create('/api/appointments', appointment);
   }
 
   /**
    * Cập nhật lịch hẹn
    */
   async updateAppointment(id: string, appointment: AppointmentUpdate): Promise<Appointment> {
-    try {
-      const data = await apiPut(`${API_CONFIG.APPOINTMENT.BASE}/${id}`, appointment);
-      return data.payload;
-    } catch (error) {
-      console.error('Update appointment error:', error);
-      throw error;
-    }
+    return await apiService.update(`/api/appointments/${id}`, appointment);
   }
 
   /**
    * Hủy lịch hẹn
    */
   async cancelAppointment(id: string): Promise<string> {
-    try {
-      const data = await apiPut(`${API_CONFIG.APPOINTMENT.BASE}/${id}/cancel`, {});
-      return data.payload;
-    } catch (error) {
-      console.error('Cancel appointment error:', error);
-      throw error;
-    }
+    return await apiService.update(`/api/appointments/${id}/cancel`, {});
+  }
+
+  /**
+   * Xóa lịch hẹn
+   */
+  async deleteAppointment(id: string): Promise<string> {
+    return await apiService.delete(`/api/appointments/${id}`);
   }
 }
 

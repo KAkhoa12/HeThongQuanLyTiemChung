@@ -4,7 +4,7 @@ import ClickOutside from '../../ClickOutside';
 import UserOne from '../../../images/user/user-01.png';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { useToast } from '../../../hooks/useToast';
-
+import { API_CONFIG } from '../../../config/api.config';
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -47,7 +47,11 @@ const DropdownUser = () => {
         </span>
 
         <span className="h-12 w-12 rounded-full">
-          <img src={UserOne} alt="User" />
+          <img 
+            src={`${API_CONFIG.BASE_URL}${user?.avatarUrl}` || UserOne} 
+            alt="User" 
+            className="w-full h-full rounded-full object-cover"
+          />
         </span>
 
         <i className="ri-arrow-down-s-line"></i>

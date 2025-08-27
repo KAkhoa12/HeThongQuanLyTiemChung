@@ -9,7 +9,7 @@ public partial class DonHangChiTietVM
 
     public string MaDonHang { get; set; } = null!;
 
-    public string MaVaccine { get; set; } = null!;
+    public string? MaDichVu { get; set; }
 
     public int SoMuiChuan { get; set; }
 
@@ -20,8 +20,6 @@ public partial class DonHangChiTietVM
     public bool? IsDelete { get; set; }
 
     public bool? IsActive { get; set; }
-
-    public DateTime? NgayTao { get; set; }
 
     public DateTime? NgayCapNhat { get; set; }
 }

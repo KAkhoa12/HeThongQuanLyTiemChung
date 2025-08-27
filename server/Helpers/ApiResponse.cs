@@ -25,7 +25,6 @@ namespace server.Helpers
                 status = "error",
                 code = code,
                 message = message,
-                payload = (object)null
             })
             {
                 StatusCode = code

@@ -292,6 +292,7 @@ app.UseStaticFiles(new StaticFileOptions
         Path.Combine(builder.Environment.ContentRootPath, "media")),
     RequestPath = "/media"
 });
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -20,7 +20,7 @@ public class DichVuVaccineController : ControllerBase
     {
         // Kiểm tra dịch vụ tồn tại
         if (!await _ctx.DichVus.AnyAsync(d => d.MaDichVu == serviceId && d.IsDelete == false, ct))
-            return ApiResponse.Error("Dịch vụ không tồn tại", 404);
+            return ApiResponse.Error("Dịch vụ không tồn tại");
 
         var vaccines = await _ctx.DichVuVaccines
             .Include(dv => dv.MaVaccineNavigation)
@@ -43,27 +43,27 @@ public class DichVuVaccineController : ControllerBase
         CancellationToken ct)
     {
         // Kiểm tra dịch vụ tồn tại
-        if (!await _ctx.DichVus.AnyAsync(d => d.MaDichVu == dto.ServiceId && d.IsDelete == false, ct))
-            return ApiResponse.Error("Dịch vụ không tồn tại", 404);
+        if (!await _ctx.DichVus.AnyAsync(d => d.MaDichVu == dto.MaDichVu && d.IsDelete == false, ct))
+            return ApiResponse.Error("Dịch vụ không tồn tại");
 
         // Kiểm tra vaccine tồn tại
-        if (!await _ctx.Vaccines.AnyAsync(v => v.MaVaccine == dto.VaccineId && v.IsDelete == false, ct))
-            return ApiResponse.Error("Vaccine không tồn tại", 404);
+        if (!await _ctx.Vaccines.AnyAsync(v => v.MaVaccine == dto.MaVaccine && v.IsDelete == false, ct))
+            return ApiResponse.Error("Vaccine không tồn tại");
 
         // Kiểm tra đã tồn tại liên kết chưa
         if (await _ctx.DichVuVaccines.AnyAsync(
-            dv => dv.MaDichVu == dto.ServiceId && 
-                  dv.MaVaccine == dto.VaccineId && 
+            dv => dv.MaDichVu == dto.MaDichVu && 
+                  dv.MaVaccine == dto.MaVaccine && 
                   dv.IsDelete == false, ct))
-            return ApiResponse.Error("Vaccine đã được thêm vào dịch vụ này", 409);
+            return ApiResponse.Error("Vaccine đã được thêm vào dịch vụ này");
 
         var serviceVaccine = new DichVuVaccine
         {
             MaDichVuVaccine = Guid.NewGuid().ToString("N"),
-            MaDichVu = dto.ServiceId,
-            MaVaccine = dto.VaccineId,
-            SoMuiChuan = dto.StandardDoses,
-            GhiChu = dto.Notes,
+            MaDichVu = dto.MaDichVu,
+            MaVaccine = dto.MaVaccine,
+            SoMuiChuan = dto.SoMuiChuan,
+            GhiChu = dto.GhiChu,
             IsActive = true,
             IsDelete = false,
             NgayTao = DateTime.UtcNow
@@ -73,7 +73,7 @@ public class DichVuVaccineController : ControllerBase
         await _ctx.SaveChangesAsync(ct);
 
         return ApiResponse.Success("Thêm vaccine vào dịch vụ thành công",
-            new { serviceVaccine.MaDichVuVaccine }, 201);
+            new { serviceVaccine.MaDichVuVaccine });
     }
 
     /* ---------- 3. Cập nhật thông tin vaccine trong dịch vụ ---------- */
@@ -86,14 +86,14 @@ public class DichVuVaccineController : ControllerBase
         var serviceVaccine = await _ctx.DichVuVaccines
             .FirstOrDefaultAsync(dv => dv.MaDichVuVaccine == id && dv.IsDelete == false, ct);
         if (serviceVaccine == null)
-            return ApiResponse.Error("Không tìm thấy liên kết dịch vụ-vaccine", 404);
+            return ApiResponse.Error("Không tìm thấy liên kết dịch vụ-vaccine");
 
-        serviceVaccine.SoMuiChuan = dto.StandardDoses ?? serviceVaccine.SoMuiChuan;
-        serviceVaccine.GhiChu = dto.Notes ?? serviceVaccine.GhiChu;
+        serviceVaccine.SoMuiChuan = dto.SoMuiChuan ?? serviceVaccine.SoMuiChuan;
+        serviceVaccine.GhiChu = dto.GhiChu ?? serviceVaccine.GhiChu;
         serviceVaccine.NgayCapNhat = DateTime.UtcNow;
 
         await _ctx.SaveChangesAsync(ct);
-        return ApiResponse.Success("Cập nhật thông tin vaccine trong dịch vụ thành công", null, 200);
+        return ApiResponse.Success("Cập nhật thông tin vaccine trong dịch vụ thành công");
     }
 
     /* ---------- 4. Xóa vaccine khỏi dịch vụ ---------- */
@@ -103,24 +103,24 @@ public class DichVuVaccineController : ControllerBase
         var serviceVaccine = await _ctx.DichVuVaccines
             .FirstOrDefaultAsync(dv => dv.MaDichVuVaccine == id && dv.IsDelete == false, ct);
         if (serviceVaccine == null)
-            return ApiResponse.Error("Không tìm thấy liên kết dịch vụ-vaccine", 404);
+            return ApiResponse.Error("Không tìm thấy liên kết dịch vụ-vaccine");
 
         serviceVaccine.IsDelete = true;
         serviceVaccine.NgayCapNhat = DateTime.UtcNow;
         await _ctx.SaveChangesAsync(ct);
-        return ApiResponse.Success("Xóa vaccine khỏi dịch vụ thành công", null, 200);
+        return ApiResponse.Success("Xóa vaccine khỏi dịch vụ thành công");
     }
 }
 
 // DTOs bổ sung
 public record ServiceVaccineCreateDto(
-    string ServiceId,
-    string VaccineId,
-    int StandardDoses,
-    string? Notes
+    string MaDichVu,
+    string MaVaccine,
+    int SoMuiChuan,
+    string? GhiChu
 );
 
 public record ServiceVaccineUpdateDto(
-    int? StandardDoses = null,
-    string? Notes = null
+    int? SoMuiChuan = null,
+    string? GhiChu = null
 );

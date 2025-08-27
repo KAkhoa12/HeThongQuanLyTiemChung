@@ -4,6 +4,7 @@ using server.DTOs.BacSi;
 using server.DTOs.Pagination;
 using server.Helpers;
 using server.Models;
+using BCrypt.Net;
 
 namespace server.Controllers;
 
@@ -126,6 +127,63 @@ public class BacSiController : ControllerBase
 
         return ApiResponse.Success("Tạo bác sĩ thành công",
             new { doctor.MaBacSi }, 201);
+    }
+
+    /* ---------- 3.1. Tạo mới bác sĩ với người dùng mới ---------- */
+    [HttpPost("create-with-user")]
+    public async Task<IActionResult> CreateWithUser(
+        [FromBody] DoctorCreateWithUserDto dto,
+        CancellationToken ct)
+    {
+        // Kiểm tra email đã tồn tại
+        if (await _ctx.NguoiDungs.AnyAsync(u => u.Email == dto.Email && u.IsDelete == false, ct))
+            return ApiResponse.Error("Email đã tồn tại", 409);
+        
+        // Kiểm tra số điện thoại đã tồn tại
+        if (!string.IsNullOrEmpty(dto.SoDienThoai) && 
+            await _ctx.NguoiDungs.AnyAsync(u => u.SoDienThoai == dto.SoDienThoai && u.IsDelete == false, ct))
+            return ApiResponse.Error("Số điện thoại đã tồn tại", 409);
+
+        // Tạo người dùng mới
+        var user = new NguoiDung
+        {
+            MaNguoiDung = Guid.NewGuid().ToString("N"),
+            Ten = dto.Ten,
+            Email = dto.Email,
+            MatKhau = BCrypt.Net.BCrypt.HashPassword(dto.MatKhau),
+            SoDienThoai = dto.SoDienThoai,
+            NgaySinh = dto.NgaySinh,
+            DiaChi = dto.DiaChi,
+            MaVaiTro = "VT002", // Vai trò bác sĩ
+            IsActive = true,
+            IsDelete = false,
+            NgayTao = DateTime.UtcNow
+        };
+
+        _ctx.NguoiDungs.Add(user);
+
+        // Tạo bác sĩ mới
+        var doctor = new BacSi
+        {
+            MaBacSi = Guid.NewGuid().ToString("N"),
+            MaNguoiDung = user.MaNguoiDung,
+            ChuyenMon = dto.ChuyenMon,
+            SoGiayPhep = dto.SoGiayPhep,
+            IsActive = true,
+            IsDelete = false,
+            NgayTao = DateTime.UtcNow
+        };
+
+        _ctx.BacSis.Add(doctor);
+        await _ctx.SaveChangesAsync(ct);
+
+        return ApiResponse.Success("Tạo bác sĩ thành công",
+            new { 
+                doctorId = doctor.MaBacSi, 
+                userId = user.MaNguoiDung,
+                userName = user.Ten,
+                email = user.Email
+            }, 201);
     }
 
     /* ---------- 4. Cập nhật ---------- */

@@ -43,6 +43,17 @@ namespace server.DTOs.BacSi
         string? LicenseNumber
     );
 
+    public record DoctorCreateWithUserDto(
+        string Ten,
+        string Email,
+        string MatKhau,
+        string? SoDienThoai,
+        DateOnly? NgaySinh,
+        string? DiaChi,
+        string? ChuyenMon,
+        string? SoGiayPhep
+    );
+
     public record DoctorUpdateDto(
         string? Specialty = null,
         string? LicenseNumber = null
