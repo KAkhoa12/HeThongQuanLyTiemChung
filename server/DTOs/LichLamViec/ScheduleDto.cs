@@ -38,22 +38,22 @@ namespace server.DTOs.LichLamViec
         string Id,
         string OrderId,
         string CustomerName,
-        string VaccineId,
-        string VaccineName,
+        string? VaccineId, // Có thể null vì MaVaccine đã bị xóa
+        string? VaccineName, // Có thể null vì TenVaccine đã bị xóa
         int DoseNumber,
         DateTime AppointmentTime,
         string? Status
     );
 
     public record WorkScheduleCreateDto(
-        string DoctorId,
-        string LocationId,
-        DateOnly WorkDate,
-        TimeOnly StartTime,
-        TimeOnly EndTime,
-        int TotalSlots,
-        string? Status = "Available"
-    );
+    string MaBacSi,
+    string MaDiaDiem,
+    DateOnly NgayLam,
+    TimeOnly GioBatDau,
+    TimeOnly GioKetThuc,
+    int SoLuongCho,
+    string? TrangThai = "Available"
+);
 
     public record WorkScheduleUpdateDto(
         TimeOnly? StartTime = null,

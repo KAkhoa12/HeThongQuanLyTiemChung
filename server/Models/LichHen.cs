@@ -11,8 +11,6 @@ public partial class LichHen
 
     public string MaLichLamViec { get; set; } = null!;
 
-    public string MaVaccine { get; set; } = null!;
-
     public int MuiThu { get; set; }
 
     public DateTime NgayHen { get; set; }
@@ -32,8 +30,6 @@ public partial class LichHen
     public virtual DonHang MaDonHangNavigation { get; set; } = null!;
 
     public virtual LichLamViec MaLichLamViecNavigation { get; set; } = null!;
-
-    public virtual Vaccine MaVaccineNavigation { get; set; } = null!;
 
     public virtual ICollection<PhieuTiem> PhieuTiems { get; set; } = new List<PhieuTiem>();
 

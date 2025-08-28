@@ -1,46 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllDoctors, deleteDoctor, searchDoctors } from '../../services/doctor.service';
-import { Doctor } from '../../types/doctor.types';
-import { PagedResponse } from '../../types/staff.types';
+import { useDoctors, useDeleteDoctor, useSearchDoctors } from '../../hooks/useDoctors';
 import DefaultLayout from '../../layout/DefaultLayout';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { toast } from 'react-toastify';
 
 const DoctorListPage = () => {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [doctorList, setDoctorList] = useState<Doctor[]>([]);
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    pageSize: 10,
-  });
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSearching, setIsSearching] = useState(false);
+  const pageSize = 10;
+
+  // Hooks
+  const { data: doctorsData, loading, error, execute: fetchDoctors } = useDoctors();
+  const { data: searchData, loading: searchLoading, execute: executeSearch } = useSearchDoctors();
+  const { loading: deleting, execute: executeDelete } = useDeleteDoctor();
+
+  // Determine which data to use
+  const doctorList = isSearching ? (searchData?.data || []) : (doctorsData?.data || []);
+  const totalPages = isSearching ? (searchData?.totalPages || 1) : (doctorsData?.totalPages || 1);
+  const isLoading = isSearching ? searchLoading : loading;
 
   useEffect(() => {
-    fetchDoctorList();
-  }, [pagination.currentPage]);
-
-  const fetchDoctorList = async () => {
-    try {
-      setLoading(true);
-      const response: PagedResponse<Doctor> = await getAllDoctors(
-        pagination.currentPage,
-        pagination.pageSize
-      );
-      setDoctorList(response.data);
-      setPagination({
-        ...pagination,
-        totalPages: response.totalPages,
-        totalItems: response.totalCount,
-      });
-    } catch (error) {
-      console.error('Failed to fetch doctor list:', error);
-      toast.error('Không thể tải danh sách bác sĩ');
-    } finally {
-      setLoading(false);
+    if (!isSearching) {
+      fetchDoctors({ page: currentPage, pageSize });
     }
+  }, [currentPage, isSearching, pageSize]);
+
+  const fetchDoctorList = () => {
+    setIsSearching(false);
+    setCurrentPage(1);
+    fetchDoctors({ page: 1, pageSize });
   };
 
   const handleSearch = async () => {
@@ -49,40 +39,33 @@ const DoctorListPage = () => {
       return;
     }
 
-    try {
-      setLoading(true);
-      const response = await searchDoctors(
-        searchQuery,
-        pagination.currentPage,
-        pagination.pageSize
-      );
-      setDoctorList(response.data);
-      setPagination({
-        ...pagination,
-        totalPages: response.totalPages,
-        totalItems: response.totalCount,
-      });
-    } catch (error) {
-      console.error('Search failed:', error);
-      toast.error('Tìm kiếm thất bại');
-    } finally {
-      setLoading(false);
-    }
+    setIsSearching(true);
+    setCurrentPage(1);
+    await executeSearch({ query: searchQuery.trim(), page: 1, pageSize });
   };
 
   const handlePageChange = (page: number) => {
-    setPagination({ ...pagination, currentPage: page });
+    setCurrentPage(page);
+    if (isSearching) {
+      executeSearch({ query: searchQuery, page, pageSize });
+    } else {
+      fetchDoctors({ page, pageSize });
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa bác sĩ này?')) {
-      try {
-        await deleteDoctor(id);
+      await executeDelete(id);
+      if (!error) {
         toast.success('Xóa bác sĩ thành công');
-        fetchDoctorList();
-      } catch (error) {
-        console.error('Delete failed:', error);
-        toast.error('Không thể xóa bác sĩ');
+        // Refresh current page
+        if (isSearching) {
+          executeSearch({ query: searchQuery, page: currentPage, pageSize });
+        } else {
+          fetchDoctors({ page: currentPage, pageSize });
+        }
+      } else {
+        toast.error('Xóa bác sĩ thất bại');
       }
     }
   };
@@ -110,6 +93,7 @@ const DoctorListPage = () => {
               <button
                 className="bg-primary text-white rounded-r-md px-4 hover:bg-opacity-90"
                 onClick={handleSearch}
+                disabled={isLoading}
               >
                 Tìm
               </button>
@@ -125,15 +109,16 @@ const DoctorListPage = () => {
         </div>
 
         <div className="max-w-full overflow-x-auto">
-          {loading ? (
+          {isLoading ? (
             <div className="text-center py-10">
-              <div className="spinner-border text-primary" role="status">
-                <span className="sr-only">Loading...</span>
-              </div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-gray-600">Đang tải...</p>
             </div>
           ) : doctorList.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-lg text-gray-500">Không tìm thấy bác sĩ nào</p>
+              <p className="text-lg text-gray-500">
+                {isSearching ? 'Không tìm thấy bác sĩ nào phù hợp' : 'Không có bác sĩ nào'}
+              </p>
             </div>
           ) : (
             <table className="w-full table-auto">
@@ -195,7 +180,7 @@ const DoctorListPage = () => {
                     <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                       <div className="flex items-center space-x-3.5">
                         <Link
-                          to={`/doctors/${doctor.id}`}
+                          to={`/dashboard/doctors/${doctor.id}`}
                           className="hover:text-primary"
                           title="Xem chi tiết"
                         >
@@ -218,7 +203,7 @@ const DoctorListPage = () => {
                           </svg>
                         </Link>
                         <Link
-                          to={`/doctors/schedules/${doctor.id}`}
+                          to={`/dashboard/doctor-schedule/${doctor.id}`}
                           className="hover:text-primary"
                           title="Xem lịch làm việc"
                         >
@@ -237,7 +222,7 @@ const DoctorListPage = () => {
                           </svg>
                         </Link>
                         <Link
-                          to={`/doctors/edit/${doctor.id}`}
+                          to={`/dashboard/doctors/edit/${doctor.id}`}
                           className="hover:text-primary"
                           title="Chỉnh sửa"
                         >
@@ -261,8 +246,9 @@ const DoctorListPage = () => {
                         </Link>
                         <button
                           onClick={() => handleDelete(doctor.id)}
-                          className="hover:text-primary"
+                          className="hover:text-red-500"
                           title="Xóa"
+                          disabled={deleting}
                         >
                           <svg
                             className="fill-current"
@@ -300,16 +286,16 @@ const DoctorListPage = () => {
         </div>
 
         {/* Pagination */}
-        {pagination.totalPages > 1 && (
+        {totalPages > 1 && (
           <div className="flex justify-center mt-6 mb-4">
             <nav>
               <ul className="flex space-x-1">
                 <li>
                   <button
-                    onClick={() => handlePageChange(Math.max(1, pagination.currentPage - 1))}
-                    disabled={pagination.currentPage === 1}
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
                     className={`px-3 py-1 rounded-md ${
-                      pagination.currentPage === 1
+                      currentPage === 1
                         ? 'text-gray-400 cursor-not-allowed'
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}
@@ -317,12 +303,12 @@ const DoctorListPage = () => {
                     &laquo;
                   </button>
                 </li>
-                {[...Array(pagination.totalPages)].map((_, index) => (
+                {[...Array(totalPages)].map((_, index) => (
                   <li key={index}>
                     <button
                       onClick={() => handlePageChange(index + 1)}
                       className={`px-3 py-1 rounded-md ${
-                        pagination.currentPage === index + 1
+                        currentPage === index + 1
                           ? 'bg-primary text-white'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
@@ -334,11 +320,11 @@ const DoctorListPage = () => {
                 <li>
                   <button
                     onClick={() =>
-                      handlePageChange(Math.min(pagination.totalPages, pagination.currentPage + 1))
+                      handlePageChange(Math.min(totalPages, currentPage + 1))
                     }
-                    disabled={pagination.currentPage === pagination.totalPages}
+                    disabled={currentPage === totalPages}
                     className={`px-3 py-1 rounded-md ${
-                      pagination.currentPage === pagination.totalPages
+                      currentPage === totalPages
                         ? 'text-gray-400 cursor-not-allowed'
                         : 'text-gray-700 hover:bg-gray-100'
                     }`}

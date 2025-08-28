@@ -1,8 +1,8 @@
-import { useApi } from './useApi';
+import { useApiWithParams } from './useApi';
 import { createAppointmentFromOrder, CreateAppointmentFromOrderDto, AppointmentVM } from '../services/appointment.service';
 
 export const useCreateAppointmentFromOrder = () => {
-  const { data, loading, error, execute, reset } = useApi<AppointmentVM, CreateAppointmentFromOrderDto>(createAppointmentFromOrder);
+  const { data, loading, error, execute, reset } = useApiWithParams<AppointmentVM, CreateAppointmentFromOrderDto>(createAppointmentFromOrder, null);
 
   const appointment = data;
 

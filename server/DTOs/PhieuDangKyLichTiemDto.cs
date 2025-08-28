@@ -8,7 +8,7 @@ public class PhieuDangKyLichTiemDto
 
     public string MaKhachHang { get; set; } = null!;
 
-    public string MaDichVu { get; set; } = null!;
+    public string MaDonHang { get; set; } = null!;
 
     public string MaBacSi { get; set; } = null!;
 
@@ -29,7 +29,7 @@ public class CreatePhieuDangKyLichTiemDto
 {
     public string MaKhachHang { get; set; } = null!;
 
-    public string MaDichVu { get; set; } = null!;
+    public string MaDonHang { get; set; } = null!;
 
     public string MaBacSi { get; set; } = null!;
 

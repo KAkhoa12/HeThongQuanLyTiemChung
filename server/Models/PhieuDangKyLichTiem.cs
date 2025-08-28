@@ -9,7 +9,7 @@ public partial class PhieuDangKyLichTiem
 
     public string MaKhachHang { get; set; } = null!;
 
-    public string MaDichVu { get; set; } = null!;
+    public string MaDonHang { get; set; } = null!;
 
     public string MaBacSi { get; set; } = null!;
 
@@ -35,6 +35,6 @@ public partial class PhieuDangKyLichTiem
 
     // Navigation properties
     public virtual NguoiDung MaKhachHangNavigation { get; set; } = null!;
-    public virtual DichVu MaDichVuNavigation { get; set; } = null!;
+    public virtual DonHang MaDonHangNavigation { get; set; } = null!;
     public virtual BacSi MaBacSiNavigation { get; set; } = null!;
 } 

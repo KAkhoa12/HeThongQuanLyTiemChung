@@ -32,7 +32,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
         {
             var query = from p in _context.PhieuDangKyLichTiems
                         join kh in _context.NguoiDungs on p.MaKhachHang equals kh.MaNguoiDung
-                        join dv in _context.DichVus on p.MaDichVu equals dv.MaDichVu
+                        join dh in _context.DonHangs on p.MaDonHang equals dh.MaDonHang
                         join bs in _context.BacSis on p.MaBacSi equals bs.MaBacSi
                         join nd in _context.NguoiDungs on bs.MaNguoiDung equals nd.MaNguoiDung
                         where p.IsDelete != true && p.IsActive == true
@@ -40,7 +40,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
                         {
                             MaPhieuDangKy = p.MaPhieuDangKy,
                             MaKhachHang = p.MaKhachHang,
-                            MaDichVu = p.MaDichVu,
+                            MaDonHang = p.MaDonHang,
                             MaBacSi = p.MaBacSi,
                             NgayDangKy = p.NgayDangKy,
                             NgayHenTiem = p.NgayHenTiem,
@@ -55,7 +55,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
                             TenKhachHang = kh.Ten,
                             SoDienThoaiKhachHang = kh.SoDienThoai,
                             EmailKhachHang = kh.Email,
-                            TenDichVu = dv.Ten,
+                            MaDonHangDisplay = dh.MaDonHang,
                             TenBacSi = nd.Ten
                         };
 
@@ -142,7 +142,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
         {
             var phieuDangKy = await (from p in _context.PhieuDangKyLichTiems
                                     join kh in _context.NguoiDungs on p.MaKhachHang equals kh.MaNguoiDung
-                                    join dv in _context.DichVus on p.MaDichVu equals dv.MaDichVu
+                                    join dh in _context.DonHangs on p.MaDonHang equals dh.MaDonHang
                                     join bs in _context.BacSis on p.MaBacSi equals bs.MaBacSi
                                     join nd in _context.NguoiDungs on bs.MaNguoiDung equals nd.MaNguoiDung
                                     where p.MaPhieuDangKy == id && p.IsDelete != true && p.IsActive == true
@@ -150,7 +150,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
                                     {
                                         MaPhieuDangKy = p.MaPhieuDangKy,
                                         MaKhachHang = p.MaKhachHang,
-                                        MaDichVu = p.MaDichVu,
+                                        MaDonHang = p.MaDonHang,
                                         MaBacSi = p.MaBacSi,
                                         NgayDangKy = p.NgayDangKy,
                                         NgayHenTiem = p.NgayHenTiem,
@@ -165,7 +165,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
                                         TenKhachHang = kh.Ten,
                                         SoDienThoaiKhachHang = kh.SoDienThoai,
                                         EmailKhachHang = kh.Email,
-                                        TenDichVu = dv.Ten,
+                                        MaDonHangDisplay = dh.MaDonHang,
                                         TenBacSi = nd.Ten
                                     }).FirstOrDefaultAsync(ct);
 
@@ -237,7 +237,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
             {
                 MaPhieuDangKy = Guid.NewGuid().ToString(),
                 MaKhachHang = order.MaNguoiDung,
-                MaDichVu = createDto.ServiceId,
+                MaDonHang = createDto.OrderId,
                 MaBacSi = createDto.DoctorId,
                 NgayDangKy = DateTime.Now,
                 NgayHenTiem = createDto.AppointmentDate.ToDateTime(TimeOnly.MinValue),
@@ -289,7 +289,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
             {
                 MaPhieuDangKy = Guid.NewGuid().ToString(),
                 MaKhachHang = createDto.MaKhachHang,
-                MaDichVu = createDto.MaDichVu,
+                MaDonHang = createDto.MaDonHang,
                 MaBacSi = createDto.MaBacSi,
                 NgayDangKy = DateTime.Now,
                 NgayHenTiem = createDto.NgayHenTiem,
@@ -441,7 +441,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
         {
             var query = from p in _context.PhieuDangKyLichTiems
                         join kh in _context.NguoiDungs on p.MaKhachHang equals kh.MaNguoiDung
-                        join dv in _context.DichVus on p.MaDichVu equals dv.MaDichVu
+                        join dh in _context.DonHangs on p.MaDonHang equals dh.MaDonHang
                         join bs in _context.BacSis on p.MaBacSi equals bs.MaBacSi
                         join nd in _context.NguoiDungs on bs.MaNguoiDung equals nd.MaNguoiDung
                         where p.MaKhachHang == customerId && p.IsDelete != true && p.IsActive == true
@@ -449,7 +449,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
                         {
                             MaPhieuDangKy = p.MaPhieuDangKy,
                             MaKhachHang = p.MaKhachHang,
-                            MaDichVu = p.MaDichVu,
+                            MaDonHang = p.MaDonHang,
                             MaBacSi = p.MaBacSi,
                             NgayDangKy = p.NgayDangKy,
                             NgayHenTiem = p.NgayHenTiem,
@@ -464,7 +464,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
                             TenKhachHang = kh.Ten,
                             SoDienThoaiKhachHang = kh.SoDienThoai,
                             EmailKhachHang = kh.Email,
-                            TenDichVu = dv.Ten,
+                            MaDonHangDisplay = dh.MaDonHang,
                             TenBacSi = nd.Ten
                         };
 
@@ -487,7 +487,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
         {
             var query = from p in _context.PhieuDangKyLichTiems
                         join kh in _context.NguoiDungs on p.MaKhachHang equals kh.MaNguoiDung
-                        join dv in _context.DichVus on p.MaDichVu equals dv.MaDichVu
+                        join dh in _context.DonHangs on p.MaDonHang equals dh.MaDonHang
                         join bs in _context.BacSis on p.MaBacSi equals bs.MaBacSi
                         join nd in _context.NguoiDungs on bs.MaNguoiDung equals nd.MaNguoiDung
                         where p.MaBacSi == doctorId && p.IsDelete != true && p.IsActive == true
@@ -495,7 +495,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
                         {
                             MaPhieuDangKy = p.MaPhieuDangKy,
                             MaKhachHang = p.MaKhachHang,
-                            MaDichVu = p.MaDichVu,
+                            MaDonHang = p.MaDonHang,
                             MaBacSi = p.MaBacSi,
                             NgayDangKy = p.NgayDangKy,
                             NgayHenTiem = p.NgayHenTiem,
@@ -510,7 +510,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
                             TenKhachHang = kh.Ten,
                             SoDienThoaiKhachHang = kh.SoDienThoai,
                             EmailKhachHang = kh.Email,
-                            TenDichVu = dv.Ten,
+                            MaDonHangDisplay = dh.MaDonHang,
                             TenBacSi = nd.Ten
                         };
 
@@ -530,7 +530,6 @@ public class PhieuDangKyLichTiemController : ControllerBase
     {
         public string OrderId { get; set; } = null!;
         public string DoctorId { get; set; } = null!;
-        public string ServiceId { get; set; } = null!;
         public string ScheduleId { get; set; } = null!;
         public DateOnly AppointmentDate { get; set; }
         public string AppointmentTime { get; set; } = null!;

@@ -36,7 +36,6 @@ export interface AvailableSlot {
 export interface CreateAppointmentFromOrderDto {
   orderId: string;
   doctorId: string;
-  serviceId: string;
   scheduleId: string;
   appointmentDate: string; // DateOnly format: "YYYY-MM-DD"
   appointmentTime: string; // TimeOnly format: "HH:mm"

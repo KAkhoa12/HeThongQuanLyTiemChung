@@ -146,14 +146,41 @@ export const deleteSchedule = async (id: string): Promise<void> => {
  * Get schedule availability
  */
 export const getScheduleAvailability = async (
-  doctorId: string,
-  date: string,
-  locationId?: string
+  fromDate?: string,
+  toDate?: string,
+  locationId?: string,
+  doctorId?: string
 ): Promise<ScheduleAvailability[]> => {
-  let params: any = { date };
+  let params: any = {};
+  if (fromDate) params.fromDate = fromDate;
+  if (toDate) params.toDate = toDate;
   if (locationId) params.locationId = locationId;
+  if (doctorId) params.doctorId = doctorId;
   
-  return await apiService.get(`/api/schedules/availability/${doctorId}`, params);
+  return await apiService.get('/api/schedules/availability', params);
+};
+
+/**
+ * Get schedules by doctor and location
+ */
+export const getSchedulesByDoctorAndLocation = async (
+  doctorId: string,
+  locationId: string,
+  fromDate?: string,
+  toDate?: string,
+  page: number = 1,
+  pageSize: number = 20
+): Promise<PagedResponse<WorkSchedule>> => {
+  const queryParams = new URLSearchParams();
+  queryParams.append('doctorId', doctorId);
+  queryParams.append('locationId', locationId);
+  queryParams.append('page', page.toString());
+  queryParams.append('pageSize', pageSize.toString());
+  
+  if (fromDate) queryParams.append('fromDate', fromDate);
+  if (toDate) queryParams.append('toDate', toDate);
+  
+  return await apiService.get(`/api/schedules/by-doctor-location?${queryParams.toString()}`);
 };
 
 /**

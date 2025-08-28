@@ -111,7 +111,50 @@ public class OrderController : ControllerBase
         if (order == null)
             return ApiResponse.Error("Không tìm thấy đơn hàng", 404);
 
-        return ApiResponse.Success("Lấy thông tin đơn hàng thành công", order);
+        // Tạo DTO để tránh circular reference
+        var orderDto = new
+        {
+            order.MaDonHang,
+            order.MaNguoiDung,
+            order.MaDiaDiemYeuThich,
+            order.NgayDat,
+            order.TongTienGoc,
+            order.TongTienThanhToan,
+            order.TrangThaiDon,
+            order.GhiChu,
+            order.NgayTao,
+            order.NgayCapNhat,
+            order.IsActive,
+            order.IsDelete,
+            DonHangChiTiets = order.DonHangChiTiets?.Select(dct => new
+            {
+                dct.MaDonHangChiTiet,
+                dct.MaDonHang,
+                dct.MaDichVu,
+                dct.SoMuiChuan,
+                dct.ThanhTien,
+                dct.IsActive,
+                dct.IsDelete,
+                DichVu = dct.MaDichVuNavigation != null ? new
+                {
+                    dct.MaDichVuNavigation.MaDichVu,
+                    dct.MaDichVuNavigation.Ten,
+                    dct.MaDichVuNavigation.MoTa,
+                    dct.MaDichVuNavigation.Gia,
+                    dct.MaDichVuNavigation.MaLoaiDichVu
+                } : null
+            }).ToList(),
+            DiaDiemYeuThich = order.MaDiaDiemYeuThichNavigation != null ? new
+            {
+                order.MaDiaDiemYeuThichNavigation.MaDiaDiem,
+                order.MaDiaDiemYeuThichNavigation.Ten,
+                order.MaDiaDiemYeuThichNavigation.DiaChi,
+                order.MaDiaDiemYeuThichNavigation.SoDienThoai,
+                order.MaDiaDiemYeuThichNavigation.Email
+            } : null
+        };
+
+        return ApiResponse.Success("Lấy thông tin đơn hàng thành công", orderDto);
     }
 
     /* ---------- 3. Cập nhật trạng thái đơn hàng ---------- */

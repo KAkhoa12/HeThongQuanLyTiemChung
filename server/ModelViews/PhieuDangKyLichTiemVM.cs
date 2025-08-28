@@ -8,7 +8,7 @@ public class PhieuDangKyLichTiemVM
 
     public string MaKhachHang { get; set; } = null!;
 
-    public string MaDichVu { get; set; } = null!;
+    public string MaDonHang { get; set; } = null!;
 
     public string MaBacSi { get; set; } = null!;
 
@@ -34,7 +34,7 @@ public class PhieuDangKyLichTiemVM
 
     // Additional properties for display
     public string? TenKhachHang { get; set; }
-    public string? TenDichVu { get; set; }
+    public string? MaDonHangDisplay { get; set; }
     public string? TenBacSi { get; set; }
     public string? SoDienThoaiKhachHang { get; set; }
     public string? EmailKhachHang { get; set; }

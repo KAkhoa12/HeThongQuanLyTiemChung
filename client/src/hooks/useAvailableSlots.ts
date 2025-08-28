@@ -1,4 +1,4 @@
-import { useApi } from './useApi';
+import { useApiWithParams } from './useApi';
 import { getAvailableSlots, AvailableSlot } from '../services/appointment.service';
 
 interface AvailableSlotsParams {
@@ -9,7 +9,9 @@ interface AvailableSlotsParams {
 }
 
 export const useAvailableSlots = () => {
-  const { data, loading, error, execute, reset } = useApi<AvailableSlot[], AvailableSlotsParams>(getAvailableSlots);
+  const { data, loading, error, execute, reset } = useApiWithParams<AvailableSlot[], AvailableSlotsParams>(
+    async (params) => getAvailableSlots(params.doctorId, params.locationId, params.fromDate, params.toDate), null
+  );
 
   const availableSlots = data || [];
 

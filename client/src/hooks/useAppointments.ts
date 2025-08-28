@@ -1,8 +1,8 @@
-import { useApi } from './useApi';
+import { useApiWithParams } from './useApi';
 import { getAllAppointments, AppointmentListParams, AppointmentListResponse } from '../services/appointment.service';
 
 export const useAppointments = () => {
-  const { data, loading, error, execute, reset } = useApi<AppointmentListResponse, AppointmentListParams>(getAllAppointments);
+  const { data, loading, error, execute, reset } = useApiWithParams<AppointmentListResponse, AppointmentListParams>(getAllAppointments, null);
 
   const appointments = data?.data || [];
   const totalCount = data?.totalCount || 0;

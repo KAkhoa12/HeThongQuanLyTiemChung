@@ -1,4 +1,4 @@
-import { useApi } from './useApi';
+import { useApiWithParams } from './useApi';
 import { approveAppointment, ApproveAppointmentDto, AppointmentVM } from '../services/appointment.service';
 
 interface ApproveAppointmentParams {
@@ -7,8 +7,8 @@ interface ApproveAppointmentParams {
 }
 
 export const useApproveAppointment = () => {
-  const { data, loading, error, execute, reset } = useApi<AppointmentVM, ApproveAppointmentParams>((params) => 
-    approveAppointment(params.id, params.data)
+  const { data, loading, error, execute, reset } = useApiWithParams<AppointmentVM, ApproveAppointmentParams>((params) => 
+    approveAppointment(params.id, params.data), null
   );
 
   const appointment = data;

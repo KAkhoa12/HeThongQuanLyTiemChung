@@ -21,6 +21,7 @@ const StaffListPage = lazy(() => import('../pages/Staff/StaffListPage'));
 // Doctor Management
 const DoctorListPage = lazy(() => import('../pages/Doctor/DoctorListPage'));
 const DoctorCreatePage = lazy(() => import('../pages/Doctor/DoctorCreatePage'));
+const DoctorEditPage = lazy(() => import('../pages/Doctor/DoctorEditPage'));
 
 // Service Management
 const ServiceListPage = lazy(() => import('../pages/Service/ServiceListPage'));
@@ -49,6 +50,8 @@ const ImageManagementPage = lazy(() => import('../pages/ImageManagement'));
 
 // Doctor Schedule Management
 const DoctorSchedulePage = lazy(() => import('../pages/DoctorSchedule'));
+const DoctorScheduleCreate = lazy(() => import('../pages/DoctorSchedule/DoctorScheduleCreatePage'));
+const DoctorScheduleAppointment = lazy(() => import('../pages/DoctorSchedule/DoctorScheduleAppointmentPage'));
 
 // Other Pages
 const Settings = lazy(() => import('../pages/Settings'));
@@ -71,6 +74,7 @@ const InvoiceDetailPage = lazy(() => import('../pages/Dashboard/InvoiceDetailPag
 // Appointment Management
 const AppointmentRegistrationPage = lazy(() => import('../pages/Appointment/AppointmentRegistrationPage'));
 const AppointmentApprovalPage = lazy(() => import('../pages/Appointment/AppointmentApprovalPage'));
+const AppointmentRegistrationFromInvoice = lazy(() => import('../pages/Appointment/AppointmentRegistrationFromInvoice'));
 
 const routes = [
   {
@@ -194,6 +198,24 @@ const routes = [
             <DoctorSchedulePage />
           </PrivateRoute>
         )
+      },
+      {
+        path: 'doctor-schedule/create',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Tạo Lịch Làm Việc | HuitKIT" />
+            <DoctorScheduleCreate />
+          </PrivateRoute>
+        )
+      },
+      {
+        path: 'doctor-schedule/appointment',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Đăng Ký Lịch Hẹn | HuitKIT" />
+            <DoctorScheduleAppointment />
+          </PrivateRoute>
+        )
       }
     ]
   },
@@ -237,7 +259,16 @@ const routes = [
           </PrivateRoute>
         )
       },
-      // Add more doctor routes as needed (edit, detail, schedules)
+      {
+        path: 'edit/:id',
+        element: (
+          <PrivateRoute>
+            <PageTitle title="Chỉnh sửa thông tin bác sĩ | HuitKIT" />
+            <DoctorEditPage />
+          </PrivateRoute>
+        )
+      },
+      // Add more doctor routes as needed (detail, schedules)
     ]
   },
   // Service Management Routes
@@ -485,6 +516,23 @@ const routes = [
         )
       }
     ]
+  },
+
+  // Appointment Registration from Invoice (Protected)
+  {
+    path: '/appointment/register-from-invoice/:orderId',
+    element: <DefaultLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+      <PrivateRoute>
+        <PageTitle title="Đăng ký Lịch tiêm từ Hóa đơn | HuitKIT" />
+        <AppointmentRegistrationFromInvoice />
+      </PrivateRoute>
+    )
+    }
+  ]
   },
   
   {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Doctor, DoctorSchedule, AppointmentCreate } from '../../interfaces/doctorSchedule.interface';
-import doctorScheduleService from '../../services/doctorSchedule.service';
+import { useCreateAppointment } from '../../hooks';
 import { useToast } from '../../hooks/useToast';
 
 interface AppointmentFormProps {
@@ -28,8 +28,10 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
     appointmentTime: '',
     notes: ''
   });
-  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Hooks API
+  const { execute: createAppointment, loading, error } = useCreateAppointment();
   const { showSuccess, showError } = useToast();
 
   // Filter available schedules for selected date and doctor
@@ -114,16 +116,13 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
       return;
     }
 
-    setLoading(true);
     try {
-      const newAppointment = await doctorScheduleService.createAppointment(formData);
+      const newAppointment = await createAppointment(formData);
       onAppointmentCreated(newAppointment);
       showSuccess('Đăng ký lịch hẹn thành công', 'Đăng ký lịch hẹn thành công');
     } catch (error) {
       showError('Không thể đăng ký lịch hẹn', 'Không thể đăng ký lịch hẹn');
       console.error('Create appointment error:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -169,6 +168,13 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
           Ngày đã chọn: {formatDate(selectedDate)}
         </p>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-red-800 dark:text-red-200">{error}</p>
+        </div>
+      )}
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">

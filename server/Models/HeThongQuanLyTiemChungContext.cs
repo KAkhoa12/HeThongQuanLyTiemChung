@@ -738,10 +738,6 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("maLichLamViec");
-            entity.Property(e => e.MaVaccine)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("maVaccine");
             entity.Property(e => e.MuiThu).HasColumnName("muiThu");
             entity.Property(e => e.NgayCapNhat)
                 .HasColumnType("datetime")
@@ -765,11 +761,6 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasForeignKey(d => d.MaLichLamViec)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__LichHen__maLichL__51300E55");
-
-            entity.HasOne(d => d.MaVaccineNavigation).WithMany(p => p.LichHens)
-                .HasForeignKey(d => d.MaVaccine)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__LichHen__maVacci__5224328E");
         });
 
         modelBuilder.Entity<LichLamViec>(entity =>
@@ -1392,10 +1383,10 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("maKhachHang");
-            entity.Property(e => e.MaDichVu)
+            entity.Property(e => e.MaDonHang)
                 .HasMaxLength(100)
                 .IsUnicode(false)
-                .HasColumnName("maDichVu");
+                .HasColumnName("maDonHang");
             entity.Property(e => e.MaBacSi)
                 .HasMaxLength(100)
                 .IsUnicode(false)
@@ -1432,10 +1423,10 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__PhieuDan__maKha__NewConstraint1");
 
-            entity.HasOne(d => d.MaDichVuNavigation).WithMany()
-                .HasForeignKey(d => d.MaDichVu)
+            entity.HasOne(d => d.MaDonHangNavigation).WithMany(p => p.PhieuDangKyLichTiems)
+                .HasForeignKey(d => d.MaDonHang)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PhieuDan__maDic__NewConstraint2");
+                .HasConstraintName("FK__PhieuDan__maDon__NewConstraint2");
 
             entity.HasOne(d => d.MaBacSiNavigation).WithMany()
                 .HasForeignKey(d => d.MaBacSi)

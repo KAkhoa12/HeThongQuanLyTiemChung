@@ -21,7 +21,7 @@ const InvoiceDetailPage: React.FC = () => {
     if (invoiceId) {
       fetchInvoiceById(invoiceId);
     }
-  }, [invoiceId, fetchInvoiceById]);
+  }, [invoiceId]);
 
   const handleUpdateOrderStatus = async (newStatus: string) => {
     if (!invoice) return;
@@ -121,6 +121,10 @@ const InvoiceDetailPage: React.FC = () => {
     );
   }
 
+  // Debug logging
+  console.log('Invoice data:', invoice);
+  console.log('donHangChiTiets:', invoice.donHangChiTiets);
+
   return (
     <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
       {/* Header */}
@@ -190,8 +194,19 @@ const InvoiceDetailPage: React.FC = () => {
                                  <div className="flex justify-between">
                        <span className="text-gray-600 dark:text-gray-400">Tổng tiền:</span>
                        <span className="text-lg font-bold text-primary">
-                         {formatCurrency(invoice.tongTienThanhToan)}
-                       </span>
+                        {(() => {
+                          try {
+                            if (invoice.tongTienThanhToan && typeof invoice.tongTienThanhToan === 'number') {
+                              return formatCurrency(invoice.tongTienThanhToan);
+                            } else {
+                              return 'N/A';
+                            }
+                          } catch (error) {
+                            console.error('Error formatting amount:', error);
+                            return 'N/A';
+                          }
+                        })()}
+                      </span>
                      </div>
           </div>
 
@@ -294,7 +309,7 @@ const InvoiceDetailPage: React.FC = () => {
       <div className="mt-6 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="border-b border-stroke px-6 py-4 dark:border-strokedark">
           <h3 className="text-lg font-semibold text-black dark:text-white">
-            Chi tiết sản phẩm
+            Chi tiết dịch vụ đi kèm
           </h3>
         </div>
         
@@ -317,40 +332,90 @@ const InvoiceDetailPage: React.FC = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody>
-                                 {invoice.donHangChiTiets.map((item: any, index: number) => (
-                   <tr key={index} className="border-b border-[#eee] dark:border-strokedark">
-                     <td className="py-4 px-4">
-                       <h5 className="font-medium text-black dark:text-white">
-                         {item.maDichVuNavigation?.tenDichVu || 'Không có tên'}
-                       </h5>
-                     </td>
-                     <td className="py-4 px-4 text-center">
-                       <span className="text-black dark:text-white">
-                         {item.soMuiChuan}
-                       </span>
-                     </td>
-                     <td className="py-4 px-4 text-right">
-                       <span className="text-black dark:text-white">
-                         {formatCurrency(item.donGiaMui)}
-                       </span>
-                     </td>
-                     <td className="py-4 px-4 text-right">
-                       <span className="font-medium text-black dark:text-white">
-                         {formatCurrency(item.thanhTien)}
-                       </span>
-                     </td>
-                   </tr>
-                 ))}
+                            <tbody>
+                {invoice.donHangChiTiets && Array.isArray(invoice.donHangChiTiets) && invoice.donHangChiTiets.length > 0 ? (
+                  invoice.donHangChiTiets.map((item: any, index: number) => (
+                    <tr key={index} className="border-b border-[#eee] dark:border-strokedark">
+                      <td className="py-4 px-4">
+                        <h5 className="font-medium text-black dark:text-white">
+                          {item.dichVu?.ten ? String(item.dichVu.ten) : 'N/A'}
+                        </h5>
+                        {item.dichVu?.moTa && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {String(item.dichVu.moTa)}
+                          </p>
+                        )}
+                      </td> 
+                      <td className="py-4 px-4 text-center">
+                        <span className="text-black dark:text-white">
+                          {item.soMuiChuan ? String(item.soMuiChuan) : '0'}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <span className="text-black dark:text-white">
+                          {(() => {
+                            try {
+                              if (item.dichVu?.gia && typeof item.dichVu.gia === 'number') {
+                                return formatCurrency(item.dichVu.gia);
+                              } else if (item.thanhTien && item.soMuiChuan && 
+                                        typeof item.thanhTien === 'number' && 
+                                        typeof item.soMuiChuan === 'number') {
+                                return formatCurrency(item.thanhTien / item.soMuiChuan);
+                              } else {
+                                return 'N/A';
+                              }
+                            } catch (error) {
+                              console.error('Error formatting price:', error);
+                              return 'N/A';
+                            }
+                          })()}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <span className="font-medium text-black dark:text-white">
+                          {(() => {
+                            try {
+                              if (item.thanhTien && typeof item.thanhTien === 'number') {
+                                return formatCurrency(item.thanhTien);
+                              } else {
+                                return 'N/A';
+                              }
+                            } catch (error) {
+                              console.error('Error formatting total:', error);
+                              return 'N/A';
+                            }
+                          })()}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-gray-500">
+                      Không có sản phẩm nào trong đơn hàng
+                    </td>
+                  </tr>
+                )}
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-primary">
                   <td colSpan={3} className="py-4 px-4 text-right font-bold text-lg">
                     Tổng cộng:
                   </td>
-                                     <td className="py-4 px-4 text-right font-bold text-lg text-primary">
-                     {formatCurrency(invoice.tongTienThanhToan)}
-                   </td>
+                  <td className="py-4 px-4 text-right font-bold text-lg text-primary">
+                    {(() => {
+                      try {
+                        if (invoice.tongTienThanhToan && typeof invoice.tongTienThanhToan === 'number') {
+                          return formatCurrency(invoice.tongTienThanhToan);
+                        } else {
+                          return 'N/A';
+                        }
+                      } catch (error) {
+                        console.error('Error formatting total amount:', error);
+                        return 'N/A';
+                      }
+                    })()}
+                  </td>
                 </tr>
               </tfoot>
             </table>

@@ -31,8 +31,6 @@ public partial class Vaccine
 
     public virtual ICollection<DichVuVaccine> DichVuVaccines { get; set; } = new List<DichVuVaccine>();
 
-    public virtual ICollection<LichHen> LichHens { get; set; } = new List<LichHen>();
-
     public virtual ICollection<LichTiemChuan> LichTiemChuans { get; set; } = new List<LichTiemChuan>();
 
     public virtual ICollection<LoVaccine> LoVaccines { get; set; } = new List<LoVaccine>();

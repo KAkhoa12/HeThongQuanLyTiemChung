@@ -1,9 +1,9 @@
-import { useApi } from './useApi';
+import { useApiWithParams } from './useApi';
 import { getAllOrders, getOrderById, updateOrderStatus, OrderDetail } from '../services/order.service';
 
 // Hook để lấy danh sách đơn hàng
 export const useOrders = () => {
-  const { data, loading, error, execute, reset } = useApi(getAllOrders);
+  const { data, loading, error, execute, reset } = useApiWithParams(getAllOrders, null);
   
   // Xử lý data từ API mới (không có pagination từ backend)
   const orders = data || [];
@@ -23,7 +23,7 @@ export const useOrders = () => {
 
 // Hook để lấy đơn hàng theo ID
 export const useOrder = (orderId?: string) => {
-  const { data, loading, error, execute, reset } = useApi(getOrderById);
+  const { data, loading, error, execute, reset } = useApiWithParams(getOrderById, null);
   
   const fetchOrder = (id: string) => {
     execute(id);
@@ -40,10 +40,12 @@ export const useOrder = (orderId?: string) => {
 
 // Hook để cập nhật trạng thái đơn hàng
 export const useUpdateOrderStatus = () => {
-  const { data, loading, error, execute, reset } = useApi(updateOrderStatus);
+  const { data, loading, error, execute, reset } = useApiWithParams<boolean, { orderId: string; status: string }>(
+    async ({ orderId, status }) => updateOrderStatus(orderId, status), null
+  );
   
   const updateStatus = (orderId: string, status: string) => {
-    execute(orderId, status);
+    execute({ orderId, status });
   };
   
   return {

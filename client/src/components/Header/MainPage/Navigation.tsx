@@ -163,14 +163,8 @@ const Navigation = () => {
                   <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Hồ sơ cá nhân
                   </Link>
-                  <Link to="/appointments" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Lịch hẹn của tôi
-                  </Link>
                   <Link to="/cart" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     Giỏ hàng của tôi
-                  </Link>
-                  <Link to="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    Cài đặt
                   </Link>
                   <button
                     onClick={handleLogout}

@@ -1,8 +1,8 @@
-import { useApi } from './useApi';
+import { useApiWithParams } from './useApi';
 import { deleteAppointment } from '../services/appointment.service';
 
 export const useDeleteAppointment = () => {
-  const { data, loading, error, execute, reset } = useApi<boolean, string>(deleteAppointment);
+  const { data, loading, error, execute, reset } = useApiWithParams<boolean, string>(deleteAppointment, null);
 
   const isDeleted = data;
 

@@ -326,7 +326,7 @@ namespace server.Controllers
                         .AnyAsync(dh => dh.MaDichVu == id, ct);
 
                 var isUsedInAppointments = await _context.LichHens
-                    .AnyAsync(lh => lh.MaVaccine == id, ct);
+                    .AnyAsync(lh => lh.MaDonHang == id, ct);
 
                 var isUsedInSchedules = await _context.LichTiemChuans
                     .AnyAsync(ltc => ltc.MaVaccine == id, ct);
@@ -405,7 +405,7 @@ namespace server.Controllers
                     MaVaccine = id,
                     Ten = vaccine.Ten,
                     SoLuongSuDung = await _context.PhieuTiems.CountAsync(pt => pt.MaVaccine == id, ct),
-                    SoLuongLichHen = await _context.LichHens.CountAsync(lh => lh.MaVaccine == id, ct),
+                    SoLuongLichHen = await _context.LichHens.CountAsync(lh => lh.MaDonHang == id, ct),
                     SoLuongLichTiemChuan = await _context.LichTiemChuans.CountAsync(ltc => ltc.MaVaccine == id, ct),
                     SoLuongLoVaccine = await _context.LoVaccines.CountAsync(lv => lv.MaVaccine == id, ct),
                     SoLuongDichVu = await _context.DichVuVaccines.CountAsync(dv => dv.MaVaccine == id, ct),

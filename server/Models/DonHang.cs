@@ -35,6 +35,8 @@ public partial class DonHang
 
     public virtual ICollection<LichHen> LichHens { get; set; } = new List<LichHen>();
 
+    public virtual ICollection<PhieuDangKyLichTiem> PhieuDangKyLichTiems { get; set; } = new List<PhieuDangKyLichTiem>();
+
     public virtual DiaDiem? MaDiaDiemYeuThichNavigation { get; set; }
 
     public virtual NguoiDung MaNguoiDungNavigation { get; set; } = null!;

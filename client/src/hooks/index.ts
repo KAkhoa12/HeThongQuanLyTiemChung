@@ -11,6 +11,12 @@ export { default as useLocalStorage } from './useLocalStorage';
 export { useInvoice } from './useInvoice';
 export { useOrders, useOrder, useUpdateOrderStatus } from './useOrders';
 
+// Doctor Hooks
+export { useDoctors, useAllDoctors, useDoctor } from './useDoctors';
+
+// Location Hooks
+export { useLocations, useAllLocations, useLocation } from './useLocations';
+
 // Appointment Hooks
 export { useAppointments } from './useAppointments';
 export { useAppointment } from './useAppointment';
@@ -23,6 +29,17 @@ export { useDeleteAppointment } from './useDeleteAppointment';
 export { useAppointmentsByCustomer } from './useAppointmentsByCustomer';
 export { useAppointmentsByDoctor } from './useAppointmentsByDoctor';
 export { useAppointmentManagement } from './useAppointmentManagement';
+
+// Schedule Hooks
+export { 
+  useSchedules, 
+  useSchedule, 
+  useCreateSchedule, 
+  useUpdateSchedule, 
+  useDeleteSchedule,
+  useScheduleAvailability,
+  useSchedulesByDoctorAndLocation
+} from './useSchedules';
 
 // Re-export fireToast để backward compatibility
 export { default as fireToast } from './fireToast'; 

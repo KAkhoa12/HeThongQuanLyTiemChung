@@ -26,18 +26,19 @@ public class LichLamViecController : ControllerBase
         [FromQuery] int? pageSize = 20,
         CancellationToken ct = default)
     {
-        // Mặc định lấy lịch từ ngày hiện tại đến 30 ngày sau
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        fromDate ??= today;
-        toDate ??= today.AddDays(30);
-
+        // Mặc định lấy tất cả lịch làm việc (không giới hạn ngày)
         var query = _ctx.LichLamViecs
             .Include(l => l.MaBacSiNavigation)
                 .ThenInclude(b => b.MaNguoiDungNavigation)
             .Include(l => l.MaDiaDiemNavigation)
-            .Where(l => l.IsDelete == false &&
-                       l.NgayLam >= fromDate &&
-                       l.NgayLam <= toDate);
+            .Where(l => l.IsDelete == false);
+
+        // Chỉ lọc theo ngày nếu có truyền vào
+        if (fromDate.HasValue)
+            query = query.Where(l => l.NgayLam >= fromDate.Value);
+        
+        if (toDate.HasValue)
+            query = query.Where(l => l.NgayLam <= toDate.Value);
 
         // Lọc theo địa điểm nếu có
         if (!string.IsNullOrEmpty(locationId))
@@ -49,6 +50,17 @@ public class LichLamViecController : ControllerBase
 
         // Sắp xếp theo ngày và giờ
         query = query.OrderBy(l => l.NgayLam).ThenBy(l => l.GioBatDau);
+
+        // Debug: Log số lượng lịch trước khi phân trang
+        var totalCount = await query.CountAsync(ct);
+        Console.WriteLine($"[DEBUG] Tổng số lịch làm việc: {totalCount}");
+        
+        // Debug: Log một số lịch mẫu
+        var sampleSchedules = await query.Take(5).ToListAsync(ct);
+        foreach (var schedule in sampleSchedules)
+        {
+            Console.WriteLine($"[DEBUG] Lịch: ID={schedule.MaLichLamViec}, Ngày={schedule.NgayLam}, Bác sĩ={schedule.MaBacSi}, Địa điểm={schedule.MaDiaDiem}");
+        }
 
         var paged = await query.ToPagedAsync(page!.Value, pageSize!.Value, ct);
 
@@ -76,6 +88,44 @@ public class LichLamViecController : ControllerBase
                 data));
     }
 
+    /* ---------- 1.1. Tất cả lịch làm việc (không phân trang) - để debug ---------- */
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllWithoutPaging(
+        CancellationToken ct = default)
+    {
+        var schedules = await _ctx.LichLamViecs
+            .Include(l => l.MaBacSiNavigation)
+                .ThenInclude(b => b.MaNguoiDungNavigation)
+            .Include(l => l.MaDiaDiemNavigation)
+            .Where(l => l.IsDelete == false)
+            .OrderBy(l => l.NgayLam)
+            .ThenBy(l => l.GioBatDau)
+            .ToListAsync(ct);
+
+        Console.WriteLine($"[DEBUG] GetAllWithoutPaging: Tìm thấy {schedules.Count} lịch làm việc");
+        
+        foreach (var schedule in schedules.Take(10)) // Log 10 lịch đầu tiên
+        {
+            Console.WriteLine($"[DEBUG] Lịch: ID={schedule.MaLichLamViec}, Ngày={schedule.NgayLam}, Bác sĩ={schedule.MaBacSi}, Địa điểm={schedule.MaDiaDiem}, IsDelete={schedule.IsDelete}");
+        }
+
+        var data = schedules.Select(l => new WorkScheduleDto(
+            l.MaLichLamViec,
+            l.MaBacSi,
+            l.MaBacSiNavigation?.MaNguoiDungNavigation?.Ten ?? "Không xác định",
+            l.MaDiaDiem,
+            l.MaDiaDiemNavigation?.Ten ?? "Không xác định",
+            l.NgayLam,
+            l.GioBatDau,
+            l.GioKetThuc,
+            l.SoLuongCho,
+            l.DaDat ?? 0,
+            l.TrangThai,
+            l.NgayTao ?? DateTime.MinValue)).ToList();
+
+        return ApiResponse.Success("Lấy tất cả lịch làm việc thành công", data);
+    }
+
     /* ---------- 2. Theo ID ---------- */
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(
@@ -100,14 +150,13 @@ public class LichLamViecController : ControllerBase
             appointments = await _ctx.LichHens
                 .Include(lh => lh.MaDonHangNavigation)
                     .ThenInclude(dh => dh.MaNguoiDungNavigation)
-                .Include(lh => lh.MaVaccineNavigation)
                 .Where(lh => lh.MaLichLamViec == id && lh.IsDelete == false)
                 .Select(lh => new AppointmentSlotDto(
                     lh.MaLichHen,
                     lh.MaDonHang,
                     lh.MaDonHangNavigation.MaNguoiDungNavigation.Ten,
-                    lh.MaVaccine,
-                    lh.MaVaccineNavigation.Ten,
+                    null, // MaVaccine đã bị xóa
+                    null, // TenVaccine đã bị xóa
                     lh.MuiThu,
                     lh.NgayHen,
                     lh.TrangThai))
@@ -136,57 +185,100 @@ public class LichLamViecController : ControllerBase
     }
 
     /* ---------- 3. Tạo mới ---------- */
-    [HttpPost]
-    public async Task<IActionResult> Create(
-        [FromBody] WorkScheduleCreateDto dto,
-        CancellationToken ct)
+    // ... existing code ...
+
+[HttpPost]
+public async Task<IActionResult> Create(
+    [FromBody] WorkScheduleCreateDto dto,
+    CancellationToken ct)
+{
+    // Kiểm tra bác sĩ tồn tại
+    if (!await _ctx.BacSis.AnyAsync(b => b.MaBacSi == dto.MaBacSi && b.IsDelete == false, ct))
+        return ApiResponse.Error("Không tìm thấy bác sĩ", 404);
+
+    // Kiểm tra địa điểm tồn tại
+    if (!await _ctx.DiaDiems.AnyAsync(d => d.MaDiaDiem == dto.MaDiaDiem && d.IsDelete == false, ct))
+        return ApiResponse.Error("Không tìm thấy địa điểm", 404);
+
+    // Kiểm tra thời gian hợp lệ
+    if (dto.GioKetThuc <= dto.GioBatDau)
+        return ApiResponse.Error("Thời gian kết thúc phải sau thời gian bắt đầu", 400);
+
+    // Debug: Log thông tin lịch đang tạo
+    Console.WriteLine($"[DEBUG] Đang tạo lịch: Bác sĩ={dto.MaBacSi}, Ngày={dto.NgayLam}, Giờ={dto.GioBatDau}-{dto.GioKetThuc}");
+    
+    // Kiểm tra trùng lịch của bác sĩ (cho phép lịch liền kề)
+    var existingSchedules = await _ctx.LichLamViecs
+        .Where(l => l.MaBacSi == dto.MaBacSi &&
+                   l.IsDelete == false &&
+                   l.NgayLam == dto.NgayLam)
+        .ToListAsync(ct);
+        
+    Console.WriteLine($"[DEBUG] Tìm thấy {existingSchedules.Count} lịch hiện có trong ngày {dto.NgayLam}");
+    
+    // Debug: Log tất cả lịch hiện có
+    foreach (var existing in existingSchedules)
     {
-        // Kiểm tra bác sĩ tồn tại
-        if (!await _ctx.BacSis.AnyAsync(b => b.MaBacSi == dto.DoctorId && b.IsDelete == false, ct))
-            return ApiResponse.Error("Không tìm thấy bác sĩ", 404);
-
-        // Kiểm tra địa điểm tồn tại
-        if (!await _ctx.DiaDiems.AnyAsync(d => d.MaDiaDiem == dto.LocationId && d.IsDelete == false, ct))
-            return ApiResponse.Error("Không tìm thấy địa điểm", 404);
-
-        // Kiểm tra thời gian hợp lệ
-        if (dto.EndTime <= dto.StartTime)
-            return ApiResponse.Error("Thời gian kết thúc phải sau thời gian bắt đầu", 400);
-
-        // Kiểm tra trùng lịch của bác sĩ
-        var hasConflict = await _ctx.LichLamViecs
-            .AnyAsync(l => l.MaBacSi == dto.DoctorId &&
-                          l.IsDelete == false &&
-                          l.NgayLam == dto.WorkDate &&
-                          ((l.GioBatDau <= dto.StartTime && l.GioKetThuc > dto.StartTime) ||
-                           (l.GioBatDau < dto.EndTime && l.GioKetThuc >= dto.EndTime) ||
-                           (l.GioBatDau >= dto.StartTime && l.GioKetThuc <= dto.EndTime)), ct);
-
-        if (hasConflict)
-            return ApiResponse.Error("Bác sĩ đã có lịch làm việc trong khoảng thời gian này", 409);
-
-        var schedule = new LichLamViec
-        {
-            MaLichLamViec = Guid.NewGuid().ToString("N"),
-            MaBacSi = dto.DoctorId,
-            MaDiaDiem = dto.LocationId,
-            NgayLam = dto.WorkDate,
-            GioBatDau = dto.StartTime,
-            GioKetThuc = dto.EndTime,
-            SoLuongCho = dto.TotalSlots,
-            DaDat = 0,
-            TrangThai = dto.Status,
-            IsActive = true,
-            IsDelete = false,
-            NgayTao = DateTime.UtcNow
-        };
-
-        _ctx.LichLamViecs.Add(schedule);
-        await _ctx.SaveChangesAsync(ct);
-
-        return ApiResponse.Success("Tạo lịch làm việc thành công",
-            new { schedule.MaLichLamViec }, 201);
+        Console.WriteLine($"[DEBUG] Lịch hiện có: ID={existing.MaLichLamViec}, Giờ={existing.GioBatDau}-{existing.GioKetThuc}");
     }
+    
+    // Kiểm tra conflict chi tiết hơn - Logic mới chính xác hơn
+    var conflictingSchedules = new List<LichLamViec>();
+    foreach (var existing in existingSchedules)
+    {
+        // Logic conflict: Lịch mới chồng lấn với lịch cũ
+        // Lịch mới bắt đầu trước khi lịch cũ kết thúc VÀ lịch mới kết thúc sau khi lịch cũ bắt đầu
+        var isConflict = (dto.GioBatDau < existing.GioKetThuc && dto.GioKetThuc > existing.GioBatDau);
+        
+        Console.WriteLine($"[DEBUG] So sánh: Lịch hiện có {existing.GioBatDau}-{existing.GioKetThuc} vs Lịch mới {dto.GioBatDau}-{dto.GioKetThuc}");
+        Console.WriteLine($"[DEBUG] Điều kiện 1: {dto.GioBatDau} < {existing.GioKetThuc} = {dto.GioBatDau < existing.GioKetThuc}");
+        Console.WriteLine($"[DEBUG] Điều kiện 2: {dto.GioKetThuc} > {existing.GioBatDau} = {dto.GioKetThuc > existing.GioBatDau}");
+        Console.WriteLine($"[DEBUG] Kết quả: {isConflict}");
+        
+        if (isConflict)
+        {
+            conflictingSchedules.Add(existing);
+        }
+    }
+    
+    var hasConflict = conflictingSchedules.Any();
+
+    if (hasConflict)
+    {
+        Console.WriteLine($"[DEBUG] PHÁT HIỆN CONFLICT! Số lịch conflict: {conflictingSchedules.Count}");
+        foreach (var conflict in conflictingSchedules)
+        {
+            Console.WriteLine($"[DEBUG] Lịch conflict: ID={conflict.MaLichLamViec}, Giờ={conflict.GioBatDau}-{conflict.GioKetThuc}");
+        }
+        return ApiResponse.Error("Bác sĩ đã có lịch làm việc trong khoảng thời gian này", 409);
+    }
+
+    var schedule = new LichLamViec
+    {
+        MaLichLamViec = Guid.NewGuid().ToString("N"),
+        MaBacSi = dto.MaBacSi,
+        MaDiaDiem = dto.MaDiaDiem,
+        NgayLam = dto.NgayLam,
+        GioBatDau = dto.GioBatDau,
+        GioKetThuc = dto.GioKetThuc,
+        SoLuongCho = dto.SoLuongCho,
+        TrangThai = dto.TrangThai,
+        DaDat = 0,
+        IsActive = true,
+        IsDelete = false,
+        NgayTao = DateTime.UtcNow
+    };
+
+    _ctx.LichLamViecs.Add(schedule);
+    await _ctx.SaveChangesAsync(ct);
+    
+    Console.WriteLine($"[DEBUG] TẠO LỊCH THÀNH CÔNG! ID={schedule.MaLichLamViec}");
+
+    return ApiResponse.Success("Tạo lịch làm việc thành công",
+        new { schedule.MaLichLamViec }, 201);
+}
+
+// ... existing code ...
 
     /* ---------- 4. Cập nhật ---------- */
     [HttpPut("{id}")]
@@ -212,8 +304,11 @@ public class LichLamViecController : ControllerBase
         if (dto.TotalSlots != null && dto.TotalSlots < (schedule.DaDat ?? 0))
             return ApiResponse.Error("Số lượng chỗ không thể nhỏ hơn số chỗ đã đặt", 400);
 
-        // Kiểm tra trùng lịch nếu có cập nhật thời gian
-        if (dto.StartTime != null || dto.EndTime != null)
+        // Kiểm tra trùng lịch chỉ khi thời gian thực sự thay đổi
+        var startTimeChanged = dto.StartTime != null && dto.StartTime != schedule.GioBatDau;
+        var endTimeChanged = dto.EndTime != null && dto.EndTime != schedule.GioKetThuc;
+        
+        if (startTimeChanged || endTimeChanged)
         {
             var startTime = dto.StartTime ?? schedule.GioBatDau;
             var endTime = dto.EndTime ?? schedule.GioKetThuc;
@@ -222,10 +317,7 @@ public class LichLamViecController : ControllerBase
                 .AnyAsync(l => l.MaBacSi == schedule.MaBacSi &&
                               l.IsDelete == false &&
                               l.MaLichLamViec != id &&
-                              l.NgayLam == schedule.NgayLam &&
-                              ((l.GioBatDau <= startTime && l.GioKetThuc > startTime) ||
-                               (l.GioBatDau < endTime && l.GioKetThuc >= endTime) ||
-                               (l.GioBatDau >= startTime && l.GioKetThuc <= endTime)), ct);
+                              (l.GioBatDau < endTime && l.GioKetThuc > startTime), ct);
 
             if (hasConflict)
                 return ApiResponse.Error("Bác sĩ đã có lịch làm việc trong khoảng thời gian này", 409);

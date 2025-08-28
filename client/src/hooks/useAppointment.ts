@@ -1,8 +1,8 @@
-import { useApi } from './useApi';
+import { useApiWithParams } from './useApi';
 import { getAppointmentById, AppointmentVM } from '../services/appointment.service';
 
 export const useAppointment = () => {
-  const { data, loading, error, execute, reset } = useApi<AppointmentVM, string>(getAppointmentById);
+  const { data, loading, error, execute, reset } = useApiWithParams<AppointmentVM, string>(getAppointmentById, null);
 
   const appointment = data;
 

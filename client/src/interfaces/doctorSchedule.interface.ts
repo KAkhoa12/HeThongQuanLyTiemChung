@@ -13,20 +13,23 @@ export interface DoctorSchedule {
   updatedAt: string;
 }
 
+// Interface cho tạo lịch làm việc - khớp với WorkScheduleCreateDto
 export interface DoctorScheduleCreate {
-  doctorId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  maxPatients: number;
+  maBacSi: string;           // Khớp với MaBacSi
+  maDiaDiem: string;         // Khớp với MaDiaDiem  
+  ngayLam: string;           // Khớp với NgayLam
+  gioBatDau: string;         // Khớp với GioBatDau
+  gioKetThuc: string;        // Khớp với GioKetThuc
+  soLuongCho: number;        // Khớp với SoLuongCho
+  trangThai?: string;        // Khớp với TrangThai
 }
 
+// Interface cho cập nhật lịch làm việc - khớp với WorkScheduleUpdateDto
 export interface DoctorScheduleUpdate {
-  startTime?: string;
-  endTime?: string;
-  maxPatients?: number;
-  isAvailable?: boolean;
-  status?: 'available' | 'full' | 'cancelled';
+  startTime?: string;         // Khớp với StartTime
+  endTime?: string;           // Khớp với EndTime
+  totalSlots?: number;        // Khớp với TotalSlots
+  status?: string;            // Khớp với Status
 }
 
 export interface Appointment {
@@ -85,4 +88,66 @@ export interface CalendarEvent {
     maxPatients?: number;
     currentPatients?: number;
   };
+} 
+
+// Interface cho lịch hẹn - khớp với AppointmentSlotDto
+export interface AppointmentSlot {
+  id: string;
+  orderId: string;
+  customerName: string;
+  vaccineId?: string;        // Có thể null
+  vaccineName?: string;      // Có thể null
+  doseNumber: number;
+  appointmentTime: string;
+  status?: string;
+}
+
+// Interface cho chi tiết lịch làm việc - khớp với WorkScheduleDetailDto
+export interface DoctorScheduleDetail {
+  id: string;
+  doctorId: string;
+  doctorName: string;
+  doctorSpecialty?: string;
+  doctorImageUrl?: string;
+  locationId: string;
+  locationName: string;
+  locationAddress?: string;
+  workDate: string;
+  startTime: string;
+  endTime: string;
+  totalSlots: number;
+  bookedSlots: number;
+  status?: string;
+  createdAt: string;
+  appointments?: AppointmentSlot[];
+}
+
+// Interface cho lịch trống - khớp với ScheduleAvailabilityDto
+export interface ScheduleAvailability {
+  date: string;
+  availableTimeSlots: TimeSlot[];
+}
+
+// Interface cho khung giờ - khớp với TimeSlotDto
+export interface TimeSlot {
+  scheduleId: string;
+  startTime: string;
+  endTime: string;
+  availableSlots: number;
+}
+
+// Interface cho danh sách lịch làm việc - khớp với WorkScheduleDto
+export interface WorkSchedule {
+  id: string;
+  doctorId: string;
+  doctorName: string;
+  locationId: string;
+  locationName: string;
+  workDate: string;
+  startTime: string;
+  endTime: string;
+  totalSlots: number;
+  bookedSlots: number;
+  status?: string;
+  createdAt: string;
 } 

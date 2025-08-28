@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaEye, FaSearch, FaFilter, FaDownload } from 'react-icons/fa';
+import { FaEye, FaSearch, FaFilter, FaDownload, FaCalendarPlus } from 'react-icons/fa';
 import { useInvoice } from '../../hooks';
 
 
@@ -250,9 +250,19 @@ const InvoiceListPage: React.FC = () => {
                         <Link
                           to={`/dashboard/invoices/${invoice.maDonHang}`}
                           className="hover:text-primary"
+                          title="Xem chi tiết"
                         >
                           <FaEye className="h-5 w-5" />
                         </Link>
+                        {invoice.trangThaiDon === 'PAID' && (
+                          <Link
+                            to={`/appointment/register-from-invoice/${invoice.maDonHang}`}
+                            className="hover:text-green-600"
+                            title="Đăng ký lịch tiêm"
+                          >
+                            <FaCalendarPlus className="h-5 w-5" />
+                          </Link>
+                        )}
                       </div>
                     </td>
                   </tr>
