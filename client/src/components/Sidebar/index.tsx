@@ -86,7 +86,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     pathname.includes('profile') && 'bg-graydark dark:bg-meta-4'
                   }`}
                 >
-                  <i className="ri-layout-grid-line"></i>
+                  <i className="ri-home-line"></i>
                   Trang chủ
                 </NavLink>
               </li>
@@ -113,7 +113,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             : setSidebarExpanded(true);
                         }}
                       >
-                        <i className="ri-layout-grid-line"></i>
+                        <i className="ri-dashboard-2-line"></i>
                         Dashboard
                         <i className={` ri-arrow-down-s-line absolute right-4 top-1/2 -translate-y-1/2 fill-current ${
                             open && 'rotate-180'

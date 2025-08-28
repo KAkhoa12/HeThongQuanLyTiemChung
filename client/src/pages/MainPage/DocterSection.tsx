@@ -4,8 +4,7 @@ const DocterSection = () => {
         <div className="container section-title" data-aos="fade-up">
           <h2>Doctors</h2>
           <p>
-            Necessitatibus eius consequatur ex aliquid fuga eum quidem sint
-            consectetur velit
+
           </p>
         </div>
 
@@ -21,10 +20,10 @@ const DocterSection = () => {
                   />
                 </div>
                 <div className="member-info">
-                  <h4>Walter White</h4>
-                  <span>Chief Medical Officer</span>
+                  <h4></h4>
+                  <span></span>
                   <p>
-                    Explicabo voluptatem mollitia et repellat qui dolorum quasi
+
                   </p>
                   <div className="social">
                     <a href="">
@@ -55,11 +54,10 @@ const DocterSection = () => {
                   />
                 </div>
                 <div className="member-info">
-                  <h4>Sarah Jhonson</h4>
-                  <span>Anesthesiologist</span>
+                  <h4></h4>
+                  <span></span>
                   <p>
-                    Aut maiores voluptates amet et quis praesentium qui senda
-                    para
+
                   </p>
                   <div className="social">
                     <a href="">
@@ -90,10 +88,10 @@ const DocterSection = () => {
                   />
                 </div>
                 <div className="member-info">
-                  <h4>William Anderson</h4>
-                  <span>Cardiology</span>
+                  <h4></h4>
+                  <span></span>
                   <p>
-                    Quisquam facilis cum velit laborum corrupti fuga rerum quia
+
                   </p>
                   <div className="social">
                     <a href="">
@@ -124,11 +122,10 @@ const DocterSection = () => {
                   />
                 </div>
                 <div className="member-info">
-                  <h4>Amanda Jepson</h4>
-                  <span>Neurosurgeon</span>
+                  <h4></h4>
+                  <span></span>
                   <p>
-                    Dolorum tempora officiis odit laborum officiis et et
-                    accusamus
+
                   </p>
                   <div className="social">
                     <a href="">

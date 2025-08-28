@@ -2,10 +2,8 @@ const ContactSection = () => {
     return (
         <section id="contact" className="contact section">
         <div className="container section-title" data-aos="fade-up">
-          <h2>Contact</h2>
-          <p>
-            Necessitatibus eius consequatur ex aliquid fuga eum quidem sint
-            consectetur velit
+          <h2>Liên hệ</h2>
+          <p>            
           </p>
         </div>
 
@@ -30,8 +28,8 @@ const ContactSection = () => {
               >
                 <i className="bi bi-geo-alt flex-shrink-0"></i>
                 <div>
-                  <h3>Location</h3>
-                  <p>A108 Adam Street, New York, NY 535022</p>
+                  <h3>Địa chỉ</h3>
+                  <p>231/33 Lê Trọng Tấn</p>
                 </div>
               </div>
 
@@ -42,8 +40,8 @@ const ContactSection = () => {
               >
                 <i className="bi bi-telephone flex-shrink-0"></i>
                 <div>
-                  <h3>Call Us</h3>
-                  <p>+1 5589 55488 55</p>
+                  <h3>Liên Hệ Chúng Tôi</h3>
+                  <p>+8 123 987 467</p>
                 </div>
               </div>
 
@@ -54,7 +52,7 @@ const ContactSection = () => {
               >
                 <i className="bi bi-envelope flex-shrink-0"></i>
                 <div>
-                  <h3>Email Us</h3>
+                  <h3>Nhập email</h3>
                   <p>info@example.com</p>
                 </div>
               </div>
@@ -113,10 +111,10 @@ const ContactSection = () => {
                     <div className="loading">Loading</div>
                     <div className="error-message"></div>
                     <div className="sent-message">
-                      Your message has been sent. Thank you!
+                      Tin nhắn của bạn đã được chuyển đến chúng tôi. Xin cảm ơn!
                     </div>
 
-                    <button type="submit">Send Message</button>
+                    <button type="submit">Gửi tin nhắn</button>
                   </div>
                 </div>
               </form>
