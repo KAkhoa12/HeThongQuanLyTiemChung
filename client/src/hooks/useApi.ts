@@ -74,7 +74,7 @@ export function useApi<T>(
         console.error('API Error:', error);
       }
     },
-    [apiFunction]
+    [] // Remove apiFunction dependency
   );
 
   const reset = useCallback(() => {
@@ -126,7 +126,7 @@ export function useApiWithParams<T, P>(
         console.error('API Error:', error);
       }
     },
-    [apiFunction]
+    [] // Remove apiFunction dependency
   );
 
   const reset = useCallback(() => {

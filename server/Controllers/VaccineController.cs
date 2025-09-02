@@ -322,23 +322,16 @@ namespace server.Controllers
                 var isUsedInServices = await _context.DichVuVaccines
                     .AnyAsync(dv => dv.MaVaccine == id, ct);
 
-                    var isUsedInOrders = await _context.DonHangChiTiets
-                        .AnyAsync(dh => dh.MaDichVu == id, ct);
-
-                var isUsedInAppointments = await _context.LichHens
-                    .AnyAsync(lh => lh.MaDonHang == id, ct);
-
                 var isUsedInSchedules = await _context.LichTiemChuans
                     .AnyAsync(ltc => ltc.MaVaccine == id, ct);
 
                 var isUsedInBatches = await _context.LoVaccines
                     .AnyAsync(lv => lv.MaVaccine == id, ct);
 
-                var isUsedInInjectionRecords = await _context.PhieuTiems
-                    .AnyAsync(pt => pt.MaVaccine == id, ct);
+                var isUsedInInjectionRecords = await _context.ChiTietPhieuTiems
+                    .AnyAsync(ctpt => ctpt.MaVaccine == id, ct);
 
-                if (isUsedInServices || isUsedInOrders || isUsedInAppointments || 
-                    isUsedInSchedules || isUsedInBatches || isUsedInInjectionRecords)
+                if (isUsedInServices || isUsedInSchedules || isUsedInBatches || isUsedInInjectionRecords)
                 {
                     return ApiResponse.Error("Không thể xóa vaccine vì đang được sử dụng trong hệ thống");
                 }
@@ -404,12 +397,10 @@ namespace server.Controllers
                 {
                     MaVaccine = id,
                     Ten = vaccine.Ten,
-                    SoLuongSuDung = await _context.PhieuTiems.CountAsync(pt => pt.MaVaccine == id, ct),
-                    SoLuongLichHen = await _context.LichHens.CountAsync(lh => lh.MaDonHang == id, ct),
+                    SoLuongSuDung = await _context.ChiTietPhieuTiems.CountAsync(ctpt => ctpt.MaVaccine == id, ct),
                     SoLuongLichTiemChuan = await _context.LichTiemChuans.CountAsync(ltc => ltc.MaVaccine == id, ct),
                     SoLuongLoVaccine = await _context.LoVaccines.CountAsync(lv => lv.MaVaccine == id, ct),
-                    SoLuongDichVu = await _context.DichVuVaccines.CountAsync(dv => dv.MaVaccine == id, ct),
-                    SoLuongDonHang = await _context.DonHangChiTiets.CountAsync(dh => dh.MaDichVu == id, ct)
+                    SoLuongDichVu = await _context.DichVuVaccines.CountAsync(dv => dv.MaVaccine == id, ct)
                 };
 
                 return ApiResponse.Success("Lấy thông tin sử dụng vaccine thành công", usage);

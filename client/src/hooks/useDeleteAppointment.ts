@@ -1,16 +1,9 @@
 import { useApiWithParams } from './useApi';
-import { deleteAppointment } from '../services/appointment.service';
+import { phieuDangKyLichTiemService } from '../services/phieuDangKyLichTiem.service';
 
 export const useDeleteAppointment = () => {
-  const { data, loading, error, execute, reset } = useApiWithParams<boolean, string>(deleteAppointment, null);
-
-  const isDeleted = data;
-
-  return {
-    isDeleted,
-    loading,
-    error,
-    execute,
-    reset
-  };
+  return useApiWithParams<boolean, string>(
+    async (id) => phieuDangKyLichTiemService.delete(id),
+    null
+  );
 }; 

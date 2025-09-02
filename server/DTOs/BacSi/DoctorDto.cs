@@ -8,6 +8,7 @@ namespace server.DTOs.BacSi
         string? Email,
         string? Specialty,
         string? LicenseNumber,
+        string? MaDiaDiem,
         string? ImageUrl,
         DateTime CreatedAt
     );
@@ -20,6 +21,7 @@ namespace server.DTOs.BacSi
         string? Email,
         string? Specialty,
         string? LicenseNumber,
+        string? MaDiaDiem,
         string? ImageUrl,
         DateTime CreatedAt,
         List<DoctorScheduleSummaryDto> UpcomingSchedules
@@ -40,7 +42,8 @@ namespace server.DTOs.BacSi
     public record DoctorCreateDto(
         string UserId,
         string? Specialty,
-        string? LicenseNumber
+        string? LicenseNumber,
+        string? MaDiaDiem
     );
 
     public record DoctorCreateWithUserDto(
@@ -51,11 +54,13 @@ namespace server.DTOs.BacSi
         DateOnly? NgaySinh,
         string? DiaChi,
         string? ChuyenMon,
-        string? SoGiayPhep
+        string? SoGiayPhep,
+        string? MaDiaDiem
     );
 
     public record DoctorUpdateDto(
         string? Specialty = null,
-        string? LicenseNumber = null
+        string? LicenseNumber = null,
+        string? MaDiaDiem = null
     );
 }

@@ -30,6 +30,7 @@ public class DichVuVaccineController : ControllerBase
                 dv.MaVaccine,
                 dv.MaVaccineNavigation.Ten,
                 dv.SoMuiChuan,
+                dv.ThuTu, // Now nullable in DTO
                 dv.GhiChu))
             .ToListAsync(ct);
 
@@ -63,6 +64,7 @@ public class DichVuVaccineController : ControllerBase
             MaDichVu = dto.MaDichVu,
             MaVaccine = dto.MaVaccine,
             SoMuiChuan = dto.SoMuiChuan,
+            ThuTu = dto.ThuTu,
             GhiChu = dto.GhiChu,
             IsActive = true,
             IsDelete = false,
@@ -89,6 +91,7 @@ public class DichVuVaccineController : ControllerBase
             return ApiResponse.Error("Không tìm thấy liên kết dịch vụ-vaccine");
 
         serviceVaccine.SoMuiChuan = dto.SoMuiChuan ?? serviceVaccine.SoMuiChuan;
+        serviceVaccine.ThuTu = dto.ThuTu ?? serviceVaccine.ThuTu;
         serviceVaccine.GhiChu = dto.GhiChu ?? serviceVaccine.GhiChu;
         serviceVaccine.NgayCapNhat = DateTime.UtcNow;
 
@@ -117,10 +120,12 @@ public record ServiceVaccineCreateDto(
     string MaDichVu,
     string MaVaccine,
     int SoMuiChuan,
+    int? ThuTu,
     string? GhiChu
 );
 
 public record ServiceVaccineUpdateDto(
     int? SoMuiChuan = null,
+    int? ThuTu = null,
     string? GhiChu = null
 );

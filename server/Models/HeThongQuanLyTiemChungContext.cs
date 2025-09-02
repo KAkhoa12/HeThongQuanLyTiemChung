@@ -31,6 +31,8 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
 
     public virtual DbSet<ChiTietXuat> ChiTietXuats { get; set; }
 
+    public virtual DbSet<ChiTietPhieuTiem> ChiTietPhieuTiems { get; set; }
+
     public virtual DbSet<DiaDiem> DiaDiems { get; set; }
 
     public virtual DbSet<DichVu> DichVus { get; set; }
@@ -279,6 +281,10 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("maNguoiDung");
+            entity.Property(e => e.MaDiaDiem)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("maDiaDiem");
             entity.Property(e => e.NgayCapNhat)
                 .HasColumnType("datetime")
                 .HasColumnName("ngayCapNhat");
@@ -293,6 +299,10 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasForeignKey<BacSi>(d => d.MaNguoiDung)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__BacSi__maNguoiDu__5CD6CB2B");
+
+            entity.HasOne(d => d.MaDiaDiemNavigation).WithMany()
+                .HasForeignKey(d => d.MaDiaDiem)
+                .HasConstraintName("FK__BacSi__maDiaDiem__NewConstraint");
         });
 
         modelBuilder.Entity<ChiTietNhap>(entity =>
@@ -515,6 +525,7 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("ngayTao");
             entity.Property(e => e.SoMuiChuan).HasColumnName("soMuiChuan");
+            entity.Property(e => e.ThuTu).HasColumnName("thuTu");
 
             entity.HasOne(d => d.MaDichVuNavigation).WithMany(p => p.DichVuVaccines)
                 .HasForeignKey(d => d.MaDichVu)
@@ -675,6 +686,9 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("maKhuyenMai");
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .HasColumnName("code");
             entity.Property(e => e.DieuKienToiThieu)
                 .HasColumnType("decimal(12, 2)")
                 .HasColumnName("dieuKienToiThieu");
@@ -684,6 +698,9 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
             entity.Property(e => e.GiamToiDa)
                 .HasColumnType("decimal(12, 2)")
                 .HasColumnName("giamToiDa");
+            entity.Property(e => e.GiaTriToiThieu)
+                .HasColumnType("decimal(12, 2)")
+                .HasColumnName("giaTriToiThieu");
             entity.Property(e => e.IsActive).HasColumnName("isActive");
             entity.Property(e => e.IsDelete).HasColumnName("isDelete");
             entity.Property(e => e.LoaiGiam)
@@ -734,11 +751,10 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("maDonHang");
-            entity.Property(e => e.MaLichLamViec)
+            entity.Property(e => e.MaDiaDiem)
                 .HasMaxLength(100)
                 .IsUnicode(false)
-                .HasColumnName("maLichLamViec");
-            entity.Property(e => e.MuiThu).HasColumnName("muiThu");
+                .HasColumnName("maDiaDiem");
             entity.Property(e => e.NgayCapNhat)
                 .HasColumnType("datetime")
                 .HasColumnName("ngayCapNhat");
@@ -757,10 +773,9 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__LichHen__maDonHa__503BEA1C");
 
-            entity.HasOne(d => d.MaLichLamViecNavigation).WithMany(p => p.LichHens)
-                .HasForeignKey(d => d.MaLichLamViec)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__LichHen__maLichL__51300E55");
+            entity.HasOne(d => d.MaDiaDiemNavigation).WithMany(p => p.LichHens)
+                .HasForeignKey(d => d.MaDiaDiem)
+                .HasConstraintName("FK__LichHen__maDiaDiem__NewConstraint");
         });
 
         modelBuilder.Entity<LichLamViec>(entity =>
@@ -984,6 +999,9 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
             entity.Property(e => e.Ten)
                 .HasMaxLength(100)
                 .HasColumnName("ten");
+            entity.Property(e => e.GioiTinh)
+                .HasMaxLength(10)
+                .HasColumnName("gioiTinh");
 
             entity.HasOne(d => d.MaAnhNavigation).WithMany(p => p.NguoiDungs)
                 .HasForeignKey(d => d.MaAnh)
@@ -1269,20 +1287,18 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("maBacSi");
-            entity.Property(e => e.MaLichHen)
+            entity.Property(e => e.MaDichVu)
                 .HasMaxLength(100)
                 .IsUnicode(false)
-                .HasColumnName("maLichHen");
-            entity.Property(e => e.MaLo)
+                .HasColumnName("maDichVu");
+            entity.Property(e => e.MaNguoiDung)
                 .HasMaxLength(100)
                 .IsUnicode(false)
-                .HasColumnName("maLo");
-            entity.Property(e => e.MaVaccine)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("maVaccine");
+                .HasColumnName("maNguoiDung");
+            entity.Property(e => e.TrangThai)
+                .HasMaxLength(20)
+                .HasColumnName("trangThai");
             entity.Property(e => e.MoTaPhanUng).HasColumnName("moTaPhanUng");
-            entity.Property(e => e.MuiThuThucTe).HasColumnName("muiThuThucTe");
             entity.Property(e => e.NgayCapNhat)
                 .HasColumnType("datetime")
                 .HasColumnName("ngayCapNhat");
@@ -1300,20 +1316,53 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasForeignKey(d => d.MaBacSi)
                 .HasConstraintName("FK__PhieuTiem__maBac__5AB9788F");
 
-            entity.HasOne(d => d.MaLichHenNavigation).WithMany(p => p.PhieuTiems)
-                .HasForeignKey(d => d.MaLichHen)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PhieuTiem__maLic__57DD0BE4");
+            entity.HasOne(d => d.MaDichVuNavigation).WithMany()
+                .HasForeignKey(d => d.MaDichVu)
+                .HasConstraintName("FK__PhieuTiem__maDic__NewConstraint");
 
-            entity.HasOne(d => d.MaLoNavigation).WithMany(p => p.PhieuTiems)
-                .HasForeignKey(d => d.MaLo)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PhieuTiem__maLo__59C55456");
+            entity.HasOne(d => d.MaNguoiDungNavigation).WithMany()
+                .HasForeignKey(d => d.MaNguoiDung)
+                .HasConstraintName("FK__PhieuTiem__maNguoiDung__NewConstraint");
+        });
 
-            entity.HasOne(d => d.MaVaccineNavigation).WithMany(p => p.PhieuTiems)
+        modelBuilder.Entity<ChiTietPhieuTiem>(entity =>
+        {
+            entity.HasKey(e => e.MaChiTietPhieuTiem).HasName("PK__ChiTietP__NewKey");
+
+            entity.ToTable("ChiTietPhieuTiem");
+
+            entity.Property(e => e.MaChiTietPhieuTiem)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("maChiTietPhieuTiem");
+            entity.Property(e => e.MaPhieuTiem)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("maPhieuTiem");
+            entity.Property(e => e.MaVaccine)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("maVaccine");
+            entity.Property(e => e.MuiTiemThucTe).HasColumnName("muiTiemThucTe");
+            entity.Property(e => e.ThuTu).HasColumnName("thuTu");
+            entity.Property(e => e.IsActive).HasColumnName("isActive");
+            entity.Property(e => e.IsDelete).HasColumnName("isDelete");
+            entity.Property(e => e.NgayCapNhat)
+                .HasColumnType("datetime")
+                .HasColumnName("ngayCapNhat");
+            entity.Property(e => e.NgayTao)
+                .HasColumnType("datetime")
+                .HasColumnName("ngayTao");
+
+            entity.HasOne(d => d.MaPhieuTiemNavigation).WithMany(p => p.ChiTietPhieuTiems)
+                .HasForeignKey(d => d.MaPhieuTiem)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__ChiTietPh__maPhi__NewConstraint1");
+
+            entity.HasOne(d => d.MaVaccineNavigation).WithMany()
                 .HasForeignKey(d => d.MaVaccine)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PhieuTiem__maVac__58D1301D");
+                .HasConstraintName("FK__ChiTietPh__maVac__NewConstraint2");
         });
 
         modelBuilder.Entity<PhieuXuat>(entity =>
@@ -1383,23 +1432,13 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("maKhachHang");
-            entity.Property(e => e.MaDonHang)
+            entity.Property(e => e.MaDichVu)
                 .HasMaxLength(100)
                 .IsUnicode(false)
-                .HasColumnName("maDonHang");
-            entity.Property(e => e.MaBacSi)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("maBacSi");
+                .HasColumnName("maDichVu");
             entity.Property(e => e.NgayDangKy)
                 .HasColumnType("datetime")
                 .HasColumnName("ngayDangKy");
-            entity.Property(e => e.NgayHenTiem)
-                .HasColumnType("datetime")
-                .HasColumnName("ngayHenTiem");
-            entity.Property(e => e.GioHenTiem)
-                .HasMaxLength(10)
-                .HasColumnName("gioHenTiem");
             entity.Property(e => e.TrangThai)
                 .HasMaxLength(20)
                 .HasColumnName("trangThai");
@@ -1423,15 +1462,10 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__PhieuDan__maKha__NewConstraint1");
 
-            entity.HasOne(d => d.MaDonHangNavigation).WithMany(p => p.PhieuDangKyLichTiems)
-                .HasForeignKey(d => d.MaDonHang)
+            entity.HasOne(d => d.MaDichVuNavigation).WithMany()
+                .HasForeignKey(d => d.MaDichVu)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PhieuDan__maDon__NewConstraint2");
-
-            entity.HasOne(d => d.MaBacSiNavigation).WithMany()
-                .HasForeignKey(d => d.MaBacSi)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__PhieuDan__maBac__NewConstraint3");
+                .HasConstraintName("FK__PhieuDan__maDichVu__NewConstraint2");
         });
 
         modelBuilder.Entity<QuanLy>(entity =>

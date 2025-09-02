@@ -54,6 +54,7 @@ namespace server.Controllers
                 SoDienThoai = dto.SoDienThoai,
                 NgaySinh = dto.NgaySinh,
                 DiaChi = dto.DiaChi,
+                GioiTinh = dto.GioiTinh,
                 IsActive = true,
                 IsDelete = false,
                 NgayTao = DateTime.UtcNow,
@@ -92,6 +93,7 @@ namespace server.Controllers
                 user.SoDienThoai,
                 user.NgaySinh,
                 user.DiaChi,
+                user.GioiTinh,
                 user.MaVaiTro
             );
             // 3. Trả về 201 Created
@@ -141,8 +143,8 @@ namespace server.Controllers
 
                 // Tìm và vô hiệu hóa tất cả session của user
                 var activeSessions = await _context.PhienDangNhaps
-                    .Where(p => p.MaNguoiDung == userId && 
-                               p.IsActive == true && 
+                    .Where(p => p.MaNguoiDung == userId &&
+                               p.IsActive == true &&
                                p.IsDelete == false)
                     .ToListAsync(ct);
 
@@ -225,18 +227,36 @@ namespace server.Controllers
             if (user == null)
                 return ApiResponse.Error("Không tìm thấy người dùng", 404);
 
-            // 3. Map sang DTO
-            var dto = new UserInfoDto(
-                user.MaNguoiDung,
-                user.Ten,
-                user.Email,
-                user.SoDienThoai,
-                user.NgaySinh,
-                user.DiaChi,
-                user.MaVaiTroNavigation?.TenVaiTro ?? "USER",
-                user.NgayTao!.Value, 
-                user.MaAnhNavigation?.UrlAnh ?? "/media/f599588d483a491c8a70e8b9e9d5292b.png"
-            );
+            // 3. Lấy danh sách quyền từ vai trò (VaiTroQuyen)
+            var vaiTroPermissions = await _context.VaiTroQuyens
+                .Where(vq => vq.MaVaiTro == user.MaVaiTro && vq.IsActive == true && vq.IsDelete == false)
+                .Select(vq => vq.MaQuyen)
+                .ToListAsync(ct);
+
+            // 4. Lấy danh sách quyền riêng lẻ của người dùng (NguoiDungQuyen)
+            var nguoiDungPermissions = await _context.NguoiDungQuyens
+                .Where(ndq => ndq.MaNguoiDung == user.MaNguoiDung && ndq.IsActive == true && ndq.IsDelete == false)
+                .Select(ndq => ndq.MaQuyen)
+                .ToListAsync(ct);
+
+            // 5. Kết hợp tất cả quyền (loại bỏ trùng lặp)
+            var allPermissions = vaiTroPermissions.Union(nguoiDungPermissions).ToList();
+
+            var dto = new UserInfoWithPermissionsDto
+            {
+                MaNguoiDung = user.MaNguoiDung,
+                Ten = user.Ten,
+                Email = user.Email,
+                SoDienThoai = user.SoDienThoai,
+                NgaySinh = user.NgaySinh,
+                DiaChi = user.DiaChi,
+                Role = user.MaVaiTroNavigation?.TenVaiTro ?? user.MaVaiTro,
+                MoTaVaiTro = user.MaVaiTroNavigation?.MoTa,
+                RegisteredAt = user.NgayTao!.Value,
+                AvatarUrl = user.MaAnhNavigation?.UrlAnh ?? "/media/f599588d483a491c8a70e8b9e9d5292b.png",
+                Permissions = allPermissions
+            };
+
 
             return ApiResponse.Success("Lấy thông tin thành công", dto);
         }
@@ -245,23 +265,16 @@ namespace server.Controllers
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            // Lấy danh sách quyền của user
-            var userPermissions = await _context.VaiTroQuyens
-                .Where(vq => vq.MaVaiTro == user.MaVaiTro && vq.IsActive == true && vq.IsDelete == false)
-                .Select(vq => vq.MaQuyen)
-                .ToListAsync(ct);
+
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.MaNguoiDung),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.NameIdentifier, user.MaNguoiDung),
-                new Claim("userId", user.MaNguoiDung), // Thêm userId claim để controllers có thể sử dụng
+                new Claim("userId", user.MaNguoiDung),
                 new Claim(ClaimTypes.Role, user.MaVaiTro)
             };
-            foreach (var permission in userPermissions)
-            {
-                claims.Add(new Claim("Permission", permission));
-            }
+
             var accessTokenExpiry = DateTime.UtcNow.AddMinutes(GetAccessTokenExpiryInMinutes());
             var jwt = new JwtSecurityToken(
                 issuer: _config["Jwt:Issuer"],

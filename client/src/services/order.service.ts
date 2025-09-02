@@ -41,6 +41,27 @@ export interface OrderDetail {
   isDelete: boolean;
   donHangChiTiets: OrderDetailItem[];
   maDiaDiemYeuThichNavigation?: LocationInfo;
+  // ✅ Thêm thông tin khuyến mãi
+  donHangKhuyenMais?: DonHangKhuyenMaiInfo[];
+}
+
+// ✅ Interface cho thông tin khuyến mãi
+export interface DonHangKhuyenMaiInfo {
+  maDonHangKhuyenMai: string;
+  maDonHang: string;
+  maKhuyenMai: string;
+  giamGiaGoc: number;
+  giamGiaThucTe: number;
+  ngayApDung: string;
+  khuyenMai?: KhuyenMaiInfo;
+}
+
+// ✅ Interface cho thông tin khuyến mãi
+export interface KhuyenMaiInfo {
+  code: string;
+  tenKhuyenMai: string;
+  loaiGiam: string;
+  giaTriGiam: number;
 }
 
 export interface OrderDetailItem {
@@ -185,4 +206,11 @@ export const convertCartToOrder = (cartItems: any[], customerInfo: any): OrderCr
     preferredLocationId: customerInfo.preferredLocationId,
     items: items
   };
+};
+
+/**
+ * Cập nhật số tiền được giảm trong đơn hàng
+ */
+export const updateOrderDiscount = async (orderId: string, discountAmount: number): Promise<any> => {
+  return await apiService.update(`/api/orders/${orderId}/discount`, { discountAmount });
 }; 

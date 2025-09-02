@@ -11,9 +11,15 @@ const Header = (props: {
     <header className="sticky top-0 z-999 flex w-full bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">
       <div className="flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
         <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
-          <Link className="block flex-shrink-0 lg:hidden" to="/">
-            <img src={LogoIcon} alt="Logo" />
-          </Link>
+          
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => props.setSidebarOpen(!props.sidebarOpen)}
+            className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-700 hover:bg-gray-600 text-white transition-colors duration-200"
+            aria-label="Toggle Sidebar"
+          >
+            <i className="ri-menu-line"></i>
+          </button>
         </div>
 
         <div className="hidden sm:block">

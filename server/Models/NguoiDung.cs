@@ -21,6 +21,8 @@ public partial class NguoiDung
 
     public string? DiaChi { get; set; }
 
+    public string? GioiTinh { get; set; }
+
     public bool? IsDelete { get; set; }
 
     public bool? IsActive { get; set; }

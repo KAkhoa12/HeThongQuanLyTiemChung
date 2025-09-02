@@ -179,6 +179,12 @@ public class MoMoPaymentController : ControllerBase
             var ipnUrl = _configuration["MoMo:IpnUrl"] ?? $"{_configuration["BaseUrl"]}/api/payments/momo/callback";
             var requestType = "payWithMethod";
             var extraData = "";
+            
+            // Thêm thông tin khuyến mãi vào extraData nếu có
+            if (!string.IsNullOrEmpty(dto.PromotionCode) && dto.DiscountAmount.HasValue)
+            {
+                extraData = $"promotionCode={dto.PromotionCode}&discountAmount={dto.DiscountAmount}";
+            }
 
             // Validation
             if (string.IsNullOrEmpty(orderId) || string.IsNullOrEmpty(amount) || string.IsNullOrEmpty(orderInfo))

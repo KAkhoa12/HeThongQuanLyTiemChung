@@ -191,23 +191,51 @@ const InvoiceDetailPage: React.FC = () => {
                </span>
              </div>
             
-                                 <div className="flex justify-between">
-                       <span className="text-gray-600 dark:text-gray-400">Tổng tiền:</span>
-                       <span className="text-lg font-bold text-primary">
-                        {(() => {
-                          try {
-                            if (invoice.tongTienThanhToan && typeof invoice.tongTienThanhToan === 'number') {
-                              return formatCurrency(invoice.tongTienThanhToan);
-                            } else {
-                              return 'N/A';
-                            }
-                          } catch (error) {
-                            console.error('Error formatting amount:', error);
-                            return 'N/A';
-                          }
-                        })()}
-                      </span>
-                     </div>
+                                             <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Tổng tiền gốc:</span>
+              <span className="text-lg font-bold text-gray-800">
+               {(() => {
+                 try {
+                   if (invoice.tongTienGoc && typeof invoice.tongTienGoc === 'number') {
+                     return formatCurrency(invoice.tongTienGoc);
+                   } else {
+                     return 'N/A';
+                   }
+                 } catch (error) {
+                   console.error('Error formatting amount:', error);
+                   return 'N/A';
+                 }
+               })()}
+             </span>
+            </div>
+            
+            {/* ✅ Hiển thị thông tin khuyến mãi nếu có */}
+            {invoice.donHangKhuyenMais && invoice.donHangKhuyenMais.length > 0 && (
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Mã khuyến mãi:</span>
+                <span className="font-semibold text-green-600">
+                  {invoice.donHangKhuyenMais[0]?.khuyenMai?.code || 'N/A'}
+                </span>
+              </div>
+            )}
+            
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Tổng tiền thanh toán:</span>
+              <span className="text-lg font-bold text-primary">
+               {(() => {
+                 try {
+                   if (invoice.tongTienThanhToan && typeof invoice.tongTienThanhToan === 'number') {
+                     return formatCurrency(invoice.tongTienThanhToan);
+                   } else {
+                     return 'N/A';
+                   }
+                 } catch (error) {
+                   console.error('Error formatting amount:', error);
+                   return 'N/A';
+                 }
+               })()}
+             </span>
+            </div>
           </div>
 
           {/* Status Update Buttons */}

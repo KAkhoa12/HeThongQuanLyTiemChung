@@ -2,7 +2,8 @@ import authService from './auth.service';
 import API_CONFIG from '../config/api.config';
 
 class ApiService {
-  async get<T>(endpoint: string, params: Record<string, any> = {}): Promise<T> {
+  async get<T>(endpoint: string, params: Record<string, any> = {}): Promise<T> {  
+    console.log("API GET:", endpoint, "params:", params);
     return this.request<T>('GET', endpoint, params);
   }
 
@@ -32,7 +33,6 @@ class ApiService {
     data: any = {},
     retried: boolean = false
   ): Promise<T> {
-    const url = `${API_CONFIG.BASE_URL}${endpoint}`;
     const token = authService.getToken();
     
     const headers: Record<string, string> = {
@@ -64,6 +64,8 @@ class ApiService {
       options.body = JSON.stringify(data);
     }
     
+    const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+    
     try {
       const response = await fetch(url, options);
       
@@ -85,11 +87,8 @@ class ApiService {
         throw new Error(result.message || 'Có lỗi xảy ra');
       }
       
-      if (result && typeof result === 'object' && 'payload' in result) {
-        return result.payload as T;
-      }
-      
-      return result as T;
+      // Trả về toàn bộ response để hook có thể xử lý lỗi
+      return result.payload as T;
     } catch (error) {
       console.error(`API ${method} request error:`, error);
       throw error;

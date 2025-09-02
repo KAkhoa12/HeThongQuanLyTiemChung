@@ -226,7 +226,13 @@ public class LoVaccineController : ControllerBase
         if (await _ctx.ChiTietThanhLies.AnyAsync(ct => ct.MaLo == id && ct.IsDelete == false, ct))
             return ApiResponse.Error("Không thể xóa lô vaccine đang được sử dụng trong phiếu thanh lý", 400);
 
-        if (await _ctx.PhieuTiems.AnyAsync(pt => pt.MaLo == id, ct))
+        // Check if this vaccine batch is being used in any injection records
+        var vaccineInBatch = await _ctx.LoVaccines
+            .Where(lv => lv.MaLo == id)
+            .Select(lv => lv.MaVaccine)
+            .FirstOrDefaultAsync(ct);
+            
+        if (vaccineInBatch != null && await _ctx.ChiTietPhieuTiems.AnyAsync(ctpt => ctpt.MaVaccine == vaccineInBatch, ct))
             return ApiResponse.Error("Không thể xóa lô vaccine đang được sử dụng trong phiếu tiêm", 400);
 
         loVaccine.IsDelete = true;

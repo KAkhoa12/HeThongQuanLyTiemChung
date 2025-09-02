@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using server.DTOs.NguoiDung;
+using server.DTOs.Pagination;
 using server.Filters;
 using server.Helpers;
 using server.Models;
@@ -33,6 +34,8 @@ public class UserController : ControllerBase
 
             var user = await _ctx.NguoiDungs
                 .Include(n => n.MaVaiTroNavigation)
+                .Include(n => n.BacSi)
+                .Include(n => n.QuanLy)
                 .FirstOrDefaultAsync(n => n.MaNguoiDung == userId && n.IsDelete != true, ct);
 
             if (user == null)
@@ -83,6 +86,46 @@ public class UserController : ControllerBase
                 healthInfo.NgayKhamGanNhat
             );
 
+            // Tạo thông tin theo vai trò
+            object? roleInfo = null;
+            switch (user.MaVaiTro)
+            {
+                case "VT001": // USER
+                    roleInfo = new UserHealthInfoDto(
+                        healthInfo.MaThongTin,
+                        healthInfo.ChieuCao,
+                        healthInfo.CanNang,
+                        healthInfo.Bmi,
+                        healthInfo.NhomMau,
+                        healthInfo.BenhNen,
+                        healthInfo.DiUng,
+                        healthInfo.ThuocDangDung,
+                        healthInfo.TinhTrangMangThai,
+                        healthInfo.NgayKhamGanNhat
+                    );
+                    break;
+                    
+                case "VT002": // DOCTOR
+                    if (user.BacSi != null)
+                    {
+                        roleInfo = new BacSiInfoDto(
+                            user.BacSi.MaBacSi,
+                            user.BacSi.ChuyenMon,
+                            user.BacSi.SoGiayPhep
+                        );
+                    }
+                    break;
+                    
+                case "VT003": // MANAGER
+                    if (user.QuanLy != null)
+                    {
+                        roleInfo = new QuanLyInfoDto(
+                            user.QuanLy.MaQuanLy
+                        );
+                    }
+                    break;
+            }
+
             var profile = new UserCompleteProfileDto(
                 user.MaNguoiDung,
                 user.Ten,
@@ -92,7 +135,8 @@ public class UserController : ControllerBase
                 user.DiaChi,
                 user.MaVaiTro,
                 user.NgayTao,
-                healthInfoDto
+                user.MaAnh,
+                roleInfo
             );
 
             return ApiResponse.Success("Lấy thông tin profile thành công", profile);
@@ -119,6 +163,8 @@ public class UserController : ControllerBase
             }
 
             var user = await _ctx.NguoiDungs
+                .Include(n => n.BacSi)
+                .Include(n => n.QuanLy)
                 .FirstOrDefaultAsync(n => n.MaNguoiDung == userId && n.IsDelete != true, ct);
 
             if (user == null)
@@ -126,7 +172,7 @@ public class UserController : ControllerBase
                 return ApiResponse.Error("Không tìm thấy thông tin người dùng", 404);
             }
 
-            // Cập nhật thông tin nếu có
+            // Cập nhật thông tin cơ bản
             if (!string.IsNullOrEmpty(dto.Ten))
                 user.Ten = dto.Ten;
             
@@ -139,7 +185,40 @@ public class UserController : ControllerBase
             if (!string.IsNullOrEmpty(dto.DiaChi))
                 user.DiaChi = dto.DiaChi;
 
+            // Cập nhật ảnh đại diện nếu có
+            if (!string.IsNullOrEmpty(dto.MaAnh))
+                user.MaAnh = dto.MaAnh;
+
             user.NgayCapNhat = DateTime.UtcNow;
+
+            // Cập nhật thông tin theo vai trò
+            switch (user.MaVaiTro)
+            {
+                case "VT002": // DOCTOR
+                    if (user.BacSi != null && dto.BacSiInfo != null)
+                    {
+                        user.BacSi.ChuyenMon = dto.BacSiInfo.ChuyenMon ?? user.BacSi.ChuyenMon;
+                        user.BacSi.SoGiayPhep = dto.BacSiInfo.SoGiayPhep ?? user.BacSi.SoGiayPhep;
+                        user.BacSi.NgayCapNhat = DateTime.UtcNow;
+                    }
+                    break;
+                    
+                case "VT003": // MANAGER
+                    // Manager có thể có thông tin bác sĩ (nếu trước đó là bác sĩ)
+                    if (user.BacSi != null && dto.BacSiInfo != null)
+                    {
+                        user.BacSi.ChuyenMon = dto.BacSiInfo.ChuyenMon ?? user.BacSi.ChuyenMon;
+                        user.BacSi.SoGiayPhep = dto.BacSiInfo.SoGiayPhep ?? user.BacSi.SoGiayPhep;
+                        user.BacSi.NgayCapNhat = DateTime.UtcNow;
+                    }
+                    // Manager không có thông tin riêng trong bảng QuanLy, chỉ là vai trò
+                    break;
+                    
+                case "VT001": // USER
+                default:
+                    // User thường chỉ cập nhật thông tin cơ bản
+                    break;
+            }
 
             await _ctx.SaveChangesAsync(ct);
 
@@ -270,7 +349,76 @@ public class UserController : ControllerBase
         }
     }
 
-    /* ---------- 5. Lấy thông tin người dùng theo ID (cho admin) ---------- */
+    /* ---------- 5. Lấy danh sách tất cả người dùng (cho admin) ---------- */
+    [HttpGet]
+    [ConfigAuthorize]
+    public async Task<IActionResult> GetUsers(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null,
+        [FromQuery] string? roleId = null,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var query = _ctx.NguoiDungs
+                .Include(n => n.MaVaiTroNavigation)
+                .Where(n => n.IsDelete != true);
+
+            // Apply search filter
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(n => 
+                    n.Ten.Contains(search) || 
+                    n.Email.Contains(search) || 
+                    n.SoDienThoai.Contains(search) ||
+                    n.MaVaiTroNavigation.TenVaiTro.Contains(search)
+                );
+            }
+
+            // Apply role filter
+            if (!string.IsNullOrEmpty(roleId))
+            {
+                query = query.Where(n => n.MaVaiTro == roleId);
+            }
+
+            var totalCount = await query.CountAsync(ct);
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            var users = await query
+                .OrderBy(n => n.Ten)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(n => new UserDto(
+                    n.MaNguoiDung,
+                    n.Ten,
+                    n.Email,
+                    n.SoDienThoai,
+                    n.NgaySinh,
+                    n.DiaChi,
+                    n.GioiTinh,
+                    n.MaVaiTro
+                ))
+                .ToListAsync(ct);
+
+            var result = new PagedResultDto<UserDto>
+            (            
+                totalCount,
+                page,
+                pageSize,
+                totalPages,
+                users
+            );
+
+            return ApiResponse.Success("Lấy danh sách người dùng thành công", result);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.Error($"Lỗi khi lấy danh sách người dùng: {ex.Message}", 500);
+        }
+    }
+
+    /* ---------- 6. Lấy thông tin người dùng theo ID (cho admin) ---------- */
     [HttpGet("{id}")]
     [ConfigAuthorize]
     public async Task<IActionResult> GetUserById(string id, CancellationToken ct)
@@ -329,6 +477,46 @@ public class UserController : ControllerBase
                 healthInfo.NgayKhamGanNhat
             );
 
+            // Tạo thông tin theo vai trò
+            object? roleInfo = null;
+            switch (user.MaVaiTro)
+            {
+                case "VT001": // USER
+                    roleInfo = new UserHealthInfoDto(
+                        healthInfo.MaThongTin,
+                        healthInfo.ChieuCao,
+                        healthInfo.CanNang,
+                        healthInfo.Bmi,
+                        healthInfo.NhomMau,
+                        healthInfo.BenhNen,
+                        healthInfo.DiUng,
+                        healthInfo.ThuocDangDung,
+                        healthInfo.TinhTrangMangThai,
+                        healthInfo.NgayKhamGanNhat
+                    );
+                    break;
+                    
+                case "VT002": // DOCTOR
+                    if (user.BacSi != null)
+                    {
+                        roleInfo = new BacSiInfoDto(
+                            user.BacSi.MaBacSi,
+                            user.BacSi.ChuyenMon,
+                            user.BacSi.SoGiayPhep
+                        );
+                    }
+                    break;
+                    
+                case "VT003": // MANAGER
+                    if (user.QuanLy != null)
+                    {
+                        roleInfo = new QuanLyInfoDto(
+                            user.QuanLy.MaQuanLy
+                        );
+                    }
+                    break;
+            }
+
             var profile = new UserCompleteProfileDto(
                 user.MaNguoiDung,
                 user.Ten,
@@ -338,7 +526,8 @@ public class UserController : ControllerBase
                 user.DiaChi,
                 user.MaVaiTro,
                 user.NgayTao,
-                healthInfoDto
+                user.MaAnh,
+                roleInfo
             );
 
             return ApiResponse.Success("Lấy thông tin người dùng thành công", profile);

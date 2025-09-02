@@ -7,17 +7,15 @@ public partial class PhieuTiem
 {
     public string MaPhieuTiem { get; set; } = null!;
 
-    public string MaLichHen { get; set; } = null!;
-
-    public string MaVaccine { get; set; } = null!;
-
-    public string MaLo { get; set; } = null!;
-
-    public int? MuiThuThucTe { get; set; }
-
     public DateTime? NgayTiem { get; set; }
 
     public string? MaBacSi { get; set; }
+
+    public string? MaDichVu { get; set; }
+
+    public string? MaNguoiDung { get; set; }
+
+    public string? TrangThai { get; set; }
 
     public string? PhanUng { get; set; }
 
@@ -33,9 +31,9 @@ public partial class PhieuTiem
 
     public virtual BacSi? MaBacSiNavigation { get; set; }
 
-    public virtual LichHen MaLichHenNavigation { get; set; } = null!;
+    public virtual DichVu? MaDichVuNavigation { get; set; }
 
-    public virtual LoVaccine MaLoNavigation { get; set; } = null!;
+    public virtual NguoiDung? MaNguoiDungNavigation { get; set; }
 
-    public virtual Vaccine MaVaccineNavigation { get; set; } = null!;
+    public virtual ICollection<ChiTietPhieuTiem> ChiTietPhieuTiems { get; set; } = new List<ChiTietPhieuTiem>();
 }

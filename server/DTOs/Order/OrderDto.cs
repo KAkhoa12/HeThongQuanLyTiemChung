@@ -39,7 +39,9 @@ namespace server.DTOs.Order
         string OrderInfo,
         string CustomerName,
         string CustomerPhone,
-        string CustomerEmail
+        string CustomerEmail,
+        string? PromotionCode = null,
+        decimal? DiscountAmount = null
     );
 
     public record MoMoPaymentResponseDto(
@@ -56,5 +58,10 @@ namespace server.DTOs.Order
         string Status,
         string Message,
         string Signature
+    );
+
+    // ✅ DTO để cập nhật số tiền giảm trong đơn hàng
+    public record UpdateOrderDiscountDto(
+        decimal DiscountAmount
     );
 } 

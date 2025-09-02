@@ -1,23 +1,9 @@
 import { useApiWithParams } from './useApi';
-import { updateAppointment, UpdateAppointmentDto, AppointmentVM } from '../services/appointment.service';
-
-interface UpdateAppointmentParams {
-  id: string;
-  data: UpdateAppointmentDto;
-}
+import { phieuDangKyLichTiemService, PhieuDangKyLichTiem, UpdatePhieuDangKyLichTiemDto } from '../services/phieuDangKyLichTiem.service';
 
 export const useUpdateAppointment = () => {
-  const { data, loading, error, execute, reset } = useApiWithParams<AppointmentVM, UpdateAppointmentParams>((params) => 
-    updateAppointment(params.id, params.data), null
+  return useApiWithParams<PhieuDangKyLichTiem, { id: string; data: UpdatePhieuDangKyLichTiemDto }>(
+    async ({ id, data }) => phieuDangKyLichTiemService.update(id, data),
+    null
   );
-
-  const appointment = data;
-
-  return {
-    appointment,
-    loading,
-    error,
-    execute,
-    reset
-  };
 }; 

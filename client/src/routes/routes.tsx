@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import PageTitle from '../components/PageTitle';
 import PrivateRoute from './PrivateRoute';
+import PermissionRoute from './PermissionRoute';
 import ClientLayout from '../layout/ClientLayout';
 import Home from '../pages/ClientPages/MainPage/home';
 
@@ -48,6 +49,10 @@ const VaccineEditPage = lazy(() => import('../pages/VaccineManage/VaccineEditPag
 // Image Management
 const ImageManagementPage = lazy(() => import('../pages/ImageManagement'));
 
+// Vaccination Management
+const PhieuDangKyTiemChungPage = lazy(() => import('../pages/Vaccination/PhieuDangKyTiemChungPage'));
+const LichSuTiemPage = lazy(() => import('../pages/Vaccination/LichSuTiemPage'));
+
 // Doctor Schedule Management
 const DoctorSchedulePage = lazy(() => import('../pages/DoctorSchedule'));
 const DoctorScheduleCreate = lazy(() => import('../pages/DoctorSchedule/DoctorScheduleCreatePage'));
@@ -55,8 +60,8 @@ const DoctorScheduleAppointment = lazy(() => import('../pages/DoctorSchedule/Doc
 
 // Other Pages
 const Settings = lazy(() => import('../pages/Settings'));
-const Tables = lazy(() => import('../pages/Tables'));
 const Chart = lazy(() => import('../pages/Chart'));
+const Unauthorized = lazy(() => import('../pages/Unauthorized'));
 
 // Cart & Checkout
 const CartPage = lazy(() => import('../pages/ClientPages/Cart/CartPage'));
@@ -72,9 +77,17 @@ const InvoiceListPage = lazy(() => import('../pages/Dashboard/InvoiceListPage'))
 const InvoiceDetailPage = lazy(() => import('../pages/Dashboard/InvoiceDetailPage'));
 
 // Appointment Management
-const AppointmentRegistrationPage = lazy(() => import('../pages/Appointment/AppointmentRegistrationPage'));
 const AppointmentApprovalPage = lazy(() => import('../pages/Appointment/AppointmentApprovalPage'));
 const AppointmentRegistrationFromInvoice = lazy(() => import('../pages/Appointment/AppointmentRegistrationFromInvoice'));
+const DoctorAppointmentManagementPage = lazy(() => import('../pages/Doctor/DoctorAppointmentManagementPage'));
+
+// KhuyenMai Management
+const KhuyenMaiPage = lazy(() => import('../pages/KhuyenMai/KhuyenMaiPage'));
+const LoaiKhuyenMaiPage = lazy(() => import('../pages/KhuyenMai/LoaiKhuyenMaiPage'));
+
+// Quyen Management
+const VaiTroQuyenPage = lazy(() => import('../pages/QuyenManage/VaiTroQuyenPage'));
+const NguoiDungQuyenPage = lazy(() => import('../pages/QuyenManage/NguoiDungQuyenPage'));
 
 const routes = [
   {
@@ -227,10 +240,10 @@ const routes = [
       {
         index: true,
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['NguoiDung']}>
             <PageTitle title="Quản lý nhân viên | HuitKIT" />
             <StaffListPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       // Add more staff routes as needed (create, edit, detail)
@@ -244,31 +257,40 @@ const routes = [
       {
         index: true,
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['BacSi']}>
             <PageTitle title="Quản lý bác sĩ | HuitKIT" />
             <DoctorListPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       {
         path: 'create',
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['BacSi']}>
             <PageTitle title="Thêm bác sĩ mới | HuitKIT" />
             <DoctorCreatePage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       {
         path: 'edit/:id',
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['BacSi']}>
             <PageTitle title="Chỉnh sửa thông tin bác sĩ | HuitKIT" />
             <DoctorEditPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       // Add more doctor routes as needed (detail, schedules)
+      {
+        path: 'appointments',
+        element: (
+          <PermissionRoute requiredPermissions={['LichHen,PhieuDangKyLichTiem']}>
+            <PageTitle title="Quản lý lịch hẹn bác sĩ | HuitKIT" />
+            <DoctorAppointmentManagementPage />
+          </PermissionRoute>
+        )
+      }
     ]
   },
   // Service Management Routes
@@ -279,64 +301,64 @@ const routes = [
       {
         index: true,
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['DichVu']}>
             <PageTitle title="Quản lý dịch vụ | HuitKIT" />
             <ServiceListPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       {
         path: 'create',
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['DichVu']}>
             <PageTitle title="Thêm dịch vụ mới | HuitKIT" />
             <ServiceCreatePage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       {
         path: ':id',
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['DichVu']}>
             <PageTitle title="Chi tiết dịch vụ | HuitKIT" />
             <ServiceDetailPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       {
         path: ':id/edit',
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['DichVu']}>
             <PageTitle title="Chỉnh sửa dịch vụ | HuitKIT" />
             <ServiceEditPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       {
         path: 'types',
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['LoaiDichVu']}>
             <PageTitle title="Quản lý loại dịch vụ | HuitKIT" />
             <ServiceTypePage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       {
         path: 'types/create',
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['LoaiDichVu']}>
             <PageTitle title="Thêm loại dịch vụ mới | HuitKIT" />
             <ServiceTypeCreatePage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       {
         path: 'types/:id/edit',
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['LoaiDichVu']}>
             <PageTitle title="Chỉnh sửa loại dịch vụ | HuitKIT" />
             <ServiceTypeEditPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       }
     ]
@@ -349,10 +371,10 @@ const routes = [
       {
         index: true,
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['DiaDiem']}>
             <PageTitle title="Quản lý địa điểm | HuitKIT" />
             <LocationManagePage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       }
     ]
@@ -365,28 +387,28 @@ const routes = [
       {
         index: true,
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['Vaccine']}>
             <PageTitle title="Quản lý Vaccine | HuitKIT" />
             <VaccineManagePage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       {
         path: 'detail/:id',
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['Vaccine']}>
             <PageTitle title="Chi tiết Vaccine | HuitKIT" />
             <VaccineDetailPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       {
         path: 'edit/:id',
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['Vaccine']}>
             <PageTitle title="Chỉnh sửa Vaccine | HuitKIT" />
             <VaccineEditPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
     ]
@@ -401,10 +423,10 @@ const routes = [
       {
         index: true,
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['NguonAnh']}>
             <PageTitle title="Quản lý Ảnh | HuitKIT" />
             <ImageManagementPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       // Add more image management routes as needed
@@ -421,22 +443,6 @@ const routes = [
           <PrivateRoute>
             <PageTitle title="Settings | HuitKIT" />
             <Settings />
-          </PrivateRoute>
-        )
-      }
-    ]
-  },
-  // Tables Routes
-  {
-    path: '/dashboard/tables',
-    element: <DefaultLayout />,
-    children: [
-      {
-        index: true,
-        element: (
-          <PrivateRoute>
-            <PageTitle title="Tables | HuitKIT" />
-            <Tables />
           </PrivateRoute>
         )
       }
@@ -466,19 +472,19 @@ const routes = [
       {
         index: true,
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['DonHang']}>
             <PageTitle title="Quản lý Hóa đơn | HuitKIT" />
             <InvoiceListPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       },
       {
         path: ':invoiceId',
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['DonHang']}>
             <PageTitle title="Chi tiết Hóa đơn | HuitKIT" />
             <InvoiceDetailPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       }
     ]
@@ -492,31 +498,15 @@ const routes = [
       {
         index: true,
         element: (
-          <PrivateRoute>
+          <PermissionRoute requiredPermissions={['LichHen']}>
             <PageTitle title="Quản lý Lịch hẹn | HuitKIT" />
             <AppointmentApprovalPage />
-          </PrivateRoute>
+          </PermissionRoute>
         )
       }
     ]
   },
   
-  // Appointment Registration Routes (for users)
-  {
-    path: '/appointment-registration',
-    element: <ClientLayout />,
-    children: [
-      {
-        index: true,
-        element: (
-          <>
-            <PageTitle title="Đăng ký Lịch hẹn | HuitKIT" />
-            <AppointmentRegistrationPage />
-          </>
-        )
-      }
-    ]
-  },
 
   // Appointment Registration from Invoice (Protected)
   {
@@ -533,6 +523,95 @@ const routes = [
     )
     }
   ]
+  },
+
+  // KhuyenMai Management Routes
+  {
+    path: '/dashboard/khuyen-mai',
+    element: <DefaultLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <PermissionRoute requiredPermissions={['KhuyenMai']}>
+            <PageTitle title="Quản lý Khuyến mãi | HuitKIT" />
+            <KhuyenMaiPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'loai',
+        element: (
+          <PermissionRoute requiredPermissions={['LoaiKhuyenMai']}>
+            <PageTitle title="Quản lý Loại khuyến mãi | HuitKIT" />
+            <LoaiKhuyenMaiPage />
+          </PermissionRoute>
+        )
+      }
+    ]
+  },
+
+  // Quyen Management Routes
+  {
+    path: '/dashboard/quyen',
+    element: <DefaultLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <PermissionRoute requiredPermissions={['VaiTroQuyen']}>
+            <PageTitle title="Quản lý phân quyền vai trò | HuitKIT" />
+            <VaiTroQuyenPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'nguoi-dung',
+        element: (
+          <PermissionRoute requiredPermissions={['NguoiDungQuyen']}>
+            <PageTitle title="Quản lý phân quyền người dùng | HuitKIT" />
+            <NguoiDungQuyenPage />
+          </PermissionRoute>
+        )
+      }
+    ]
+  },
+  
+  // Vaccination Management Routes
+  {
+    path: '/dashboard/vaccination',
+    element: <DefaultLayout />,
+    children: [
+      {
+        path: 'registration',
+        element: (
+          <PermissionRoute requiredPermissions={['PhieuDangKyLichTiem']}>
+            <PageTitle title="Phiếu đăng ký tiêm chủng | HuitKIT" />
+            <PhieuDangKyTiemChungPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'history',
+        element: (
+          <PermissionRoute requiredPermissions={['LichSuTiem']}>
+            <PageTitle title="Lịch sử tiêm chủng | HuitKIT" />
+            <LichSuTiemPage />
+          </PermissionRoute>
+        )
+      }
+    ]
+  },
+  
+  // Unauthorized Page
+  {
+    path: '/unauthorized',
+    element: (
+      <>
+        <PageTitle title="Không có quyền truy cập | HuitKIT" />
+        <Unauthorized />
+      </>
+    )
   },
   
   {

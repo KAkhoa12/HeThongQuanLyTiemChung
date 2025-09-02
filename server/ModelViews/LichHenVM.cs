@@ -9,11 +9,9 @@ public partial class LichHenVM
 
     public string MaDonHang { get; set; } = null!;
 
-    public string MaLichLamViec { get; set; } = null!;
+    public string MaDiaDiem { get; set; } = null!;
 
     public string MaVaccine { get; set; } = null!;
-
-    public int MuiThu { get; set; }
 
     public DateTime NgayHen { get; set; }
 

@@ -7,4 +7,4 @@ export { default as ServiceSearchFilter } from './ServiceSearchFilter';
 export { default as ServiceModal } from './ServiceModal';
 export { default as ServiceStatistics } from './ServiceStatistics';
 export { default as ServiceEmptyState } from './ServiceEmptyState';
-export { default as ServiceLoading } from './ServiceLoading'; 
+export { default as ServiceLoading } from './ServiceLoading';

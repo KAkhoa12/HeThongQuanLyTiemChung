@@ -1,16 +1,9 @@
 import { useApiWithParams } from './useApi';
-import { getAppointmentsByCustomer, AppointmentVM } from '../services/appointment.service';
+import { phieuDangKyLichTiemService, PhieuDangKyLichTiem } from '../services/phieuDangKyLichTiem.service';
 
-export const useAppointmentsByCustomer = () => {
-  const { data, loading, error, execute, reset } = useApiWithParams<AppointmentVM[], string>(getAppointmentsByCustomer, null);
-
-  const appointments = data || [];
-
-  return {
-    appointments,
-    loading,
-    error,
-    execute,
-    reset
-  };
+export const useAppointmentsByCustomer = (customerId: string | null) => {
+  return useApiWithParams<PhieuDangKyLichTiem[], string>(
+    async (customerId) => phieuDangKyLichTiemService.getByCustomer(customerId),
+    null
+  );
 }; 

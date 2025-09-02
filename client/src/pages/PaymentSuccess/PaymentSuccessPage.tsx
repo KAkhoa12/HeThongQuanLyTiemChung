@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+
 import { FaCheckCircle, FaTimesCircle, FaSpinner, FaHome, FaReceipt, FaWhatsapp } from 'react-icons/fa';
-import { updateOrderStatus } from '../../services/order.service';
+import { updateOrderStatus, updateOrderDiscount } from '../../services/order.service';
+import { createDonHangKhuyenMai } from '../../services/donHangKhuyenMai.service';
+import { useToast } from '../../hooks';
 
 interface PaymentResult {
   partnerCode: string;
@@ -18,6 +20,8 @@ interface PaymentResult {
   responseTime: string;
   extraData: string;
   signature: string;
+  promotionCode?: string;
+  discountAmount?: string;
 }
 
 const PaymentSuccessPage: React.FC = () => {
@@ -26,13 +30,21 @@ const PaymentSuccessPage: React.FC = () => {
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
-
+  const [hasProcessed, setHasProcessed] = useState(false); // ✅ Flag để tránh gọi API 2 lần
+  const { showSuccess, showError, showWarning } = useToast();
+  
   useEffect(() => {
-    processPaymentResult();
-  }, [searchParams]);
+    // ✅ Chỉ gọi 1 lần duy nhất khi component mount
+    if (!hasProcessed) {
+      setHasProcessed(true);
+      processPaymentResult();
+    }
+  }, [hasProcessed]);
 
   const processPaymentResult = async () => {
     try {
+      console.log('🔄 [PaymentSuccessPage] Bắt đầu xử lý kết quả thanh toán...');
+      
       // Lấy thông tin từ URL params
       const result: PaymentResult = {
         partnerCode: searchParams.get('partnerCode') || '',
@@ -47,8 +59,30 @@ const PaymentSuccessPage: React.FC = () => {
         payType: searchParams.get('payType') || '',
         responseTime: searchParams.get('responseTime') || '',
         extraData: searchParams.get('extraData') || '',
-        signature: searchParams.get('signature') || ''
+        signature: searchParams.get('signature') || '',
+        // ✅ BỎ 2 dòng này - chỉ lấy từ extraData để tránh gọi API 2 lần
+        // promotionCode: searchParams.get('promotionCode') || undefined,
+        // discountAmount: searchParams.get('discountAmount') || undefined
       };
+
+          // ✅ CHỈ lấy thông tin khuyến mãi từ extraData của MoMo để tránh gọi API 2 lần
+    // extraData chứa thông tin khuyến mãi được gửi từ CheckoutPage khi tạo thanh toán
+    const extraData = searchParams.get('extraData') || '';
+    if (extraData) {
+      try {
+        const extraDataParams = new URLSearchParams(extraData);
+        const promoCode = extraDataParams.get('promotionCode');
+        const discountAmt = extraDataParams.get('discountAmount');
+        
+        if (promoCode && discountAmt) {
+          result.promotionCode = promoCode;
+          result.discountAmount = discountAmt;
+          console.log('✅ Lấy thông tin khuyến mãi từ extraData:', { promoCode, discountAmt });
+        }
+      } catch (error) {
+        console.error('❌ Lỗi khi xử lý extraData:', error);
+      }
+    }
 
       setPaymentResult(result);
 
@@ -56,28 +90,71 @@ const PaymentSuccessPage: React.FC = () => {
       const success = result.resultCode === '0';
       setIsSuccess(success);
 
-      // Nếu thanh toán thành công, cập nhật trạng thái đơn hàng
+      // Nếu thanh toán thành công, cập nhật trạng thái đơn hàng và tạo DonHangKhuyenMai
       if (success) {
         try {
           // Cập nhật trạng thái đơn hàng thành "PAID"
           // Sử dụng orderId từ URL params (đây là maDonHang từ database)
           await updateOrderStatus(result.orderId, "PAID");
-          toast.success('Thanh toán thành công! Đơn hàng đã được cập nhật! 🎉');
+          showSuccess('Thành công','Thanh toán thành công! Đơn hàng đã được cập nhật! 🎉');
+          
+          // ✅ Cập nhật số tiền được giảm trong DonHang nếu có khuyến mãi
+          if (result.promotionCode && result.discountAmount) {
+            try {
+              const discountAmount = parseFloat(result.discountAmount);
+              console.log('🔄 Cập nhật số tiền giảm trong đơn hàng:', discountAmount);
+              
+              // Gọi API cập nhật số tiền giảm trong DonHang
+              await updateOrderDiscount(result.orderId, discountAmount);
+              
+              console.log('✅ Cập nhật số tiền giảm thành công!');
+            } catch (discountError) {
+              console.error('❌ Lỗi khi cập nhật số tiền giảm:', discountError);
+              showWarning('Lỗi','Thanh toán thành công nhưng không thể cập nhật số tiền giảm');
+            }
+          }
+          
+                  // ✅ CHỈ tạo DonHangKhuyenMai 1 lần nếu có thông tin khuyến mãi từ extraData
+        if (result.promotionCode && result.discountAmount) {
+          try {
+            console.log('🔄 Bắt đầu tạo bản ghi DonHangKhuyenMai:', {
+              maDonHang: result.orderId,
+              maKhuyenMai: result.promotionCode,
+              giamGia: result.discountAmount
+            });
+            
+            const discountAmount = parseFloat(result.discountAmount);
+            await createDonHangKhuyenMai({
+              maDonHang: result.orderId,
+              maKhuyenMai: result.promotionCode,
+              giamGiaGoc: discountAmount,
+              giamGiaThucTe: discountAmount
+            });
+            
+            console.log('✅ Tạo bản ghi DonHangKhuyenMai thành công!');
+            showSuccess('Thành công','Đã ghi nhận việc sử dụng mã khuyến mãi! 🎁');
+          } catch (promotionError) {
+            console.error('❌ Lỗi khi tạo bản ghi khuyến mãi:', promotionError);
+            showWarning('Lỗi','Thanh toán thành công nhưng không thể ghi nhận mã khuyến mãi');
+          }
+        } else {
+          console.log('ℹ️ Không có thông tin khuyến mãi, bỏ qua việc tạo DonHangKhuyenMai');
+        }
           
           // Clear cart sau khi thanh toán thành công
           localStorage.removeItem('vaccineCart');
         } catch (updateError) {
           console.error('Lỗi khi cập nhật trạng thái đơn hàng:', updateError);
-          toast.warning('Thanh toán thành công nhưng không thể cập nhật trạng thái đơn hàng');
+          showWarning('Lỗi','Thanh toán thành công nhưng không thể cập nhật trạng thái đơn hàng');
         }
-      } else {
-        toast.error(`Thanh toán thất bại: ${result.message}`);
+      } else { 
+        showError('Lỗi','Thanh toán thất bại: ' + result.message);
       }
-
+ 
       setLoading(false);
     } catch (error) {
       console.error('Lỗi khi xử lý kết quả thanh toán:', error);
-      toast.error('Có lỗi xảy ra khi xử lý kết quả thanh toán');
+      showError('Lỗi','Có lỗi xảy ra khi xử lý kết quả thanh toán');
       setLoading(false);
     }
   };

@@ -108,6 +108,7 @@ public class DichVuController : ControllerBase
                     v.MaVaccine,
                     v.MaVaccineNavigation.Ten,
                     v.SoMuiChuan,
+                    v.ThuTu,
                     v.GhiChu))
                 .ToList());
 

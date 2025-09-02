@@ -33,7 +33,11 @@ public partial class DiaDiem
 
     public virtual ICollection<AnhDiaDiem> AnhDiaDiems { get; set; } = new List<AnhDiaDiem>();
 
+    public virtual ICollection<BacSi> BacSis { get; set; } = new List<BacSi>();
+
     public virtual ICollection<DonHang> DonHangs { get; set; } = new List<DonHang>();
+
+    public virtual ICollection<LichHen> LichHens { get; set; } = new List<LichHen>();
 
     public virtual ICollection<LichLamViec> LichLamViecs { get; set; } = new List<LichLamViec>();
 

@@ -6,7 +6,8 @@ namespace server.DTOs.Auth
         string MatKhau,
         string? SoDienThoai,
         DateOnly? NgaySinh,
-        string? DiaChi);
+        string? DiaChi,
+        string? GioiTinh);
 
     public record LoginDto(string Email, string MatKhau);
 

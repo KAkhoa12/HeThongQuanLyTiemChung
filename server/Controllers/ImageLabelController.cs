@@ -7,7 +7,7 @@ using server.Helpers;
 namespace server.Controllers;
 
 [ApiController]
-[Route("api/image_labels")]
+[Route("api/image-labels")]
 public class ImageLabelController : ControllerBase
 {
     private readonly HeThongQuanLyTiemChungContext _ctx;

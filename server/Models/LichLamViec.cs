@@ -31,8 +31,6 @@ public partial class LichLamViec
 
     public DateTime? NgayCapNhat { get; set; }
 
-    public virtual ICollection<LichHen> LichHens { get; set; } = new List<LichHen>();
-
     public virtual BacSi MaBacSiNavigation { get; set; } = null!;
 
     public virtual DiaDiem MaDiaDiemNavigation { get; set; } = null!;

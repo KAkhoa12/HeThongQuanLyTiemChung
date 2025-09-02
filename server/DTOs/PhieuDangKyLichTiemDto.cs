@@ -10,13 +10,7 @@ public class PhieuDangKyLichTiemDto
 
     public string MaDonHang { get; set; } = null!;
 
-    public string MaBacSi { get; set; } = null!;
-
     public DateTime NgayDangKy { get; set; }
-
-    public DateTime NgayHenTiem { get; set; }
-
-    public string GioHenTiem { get; set; } = null!;
 
     public string TrangThai { get; set; } = null!;
 
@@ -29,22 +23,16 @@ public class CreatePhieuDangKyLichTiemDto
 {
     public string MaKhachHang { get; set; } = null!;
 
-    public string MaDonHang { get; set; } = null!;
+    public string MaDichVu { get; set; } = null!;
 
-    public string MaBacSi { get; set; } = null!;
 
-    public DateTime NgayHenTiem { get; set; }
-
-    public string GioHenTiem { get; set; } = null!;
 
     public string? GhiChu { get; set; }
 }
 
 public class UpdatePhieuDangKyLichTiemDto
 {
-    public DateTime? NgayHenTiem { get; set; }
 
-    public string? GioHenTiem { get; set; }
 
     public string? GhiChu { get; set; }
 }

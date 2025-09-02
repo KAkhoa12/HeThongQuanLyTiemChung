@@ -6,7 +6,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useToast } from '../../hooks/useToast';
 
 const SignIn: React.FC = () => {
-  const [email, setEmail] = useState<string>('admin1@example.com');
+  const [email, setEmail] = useState<string>('manager@example.com');
   const [password, setPassword] = useState<string>('nguyenvana');
   
   const navigate = useNavigate();

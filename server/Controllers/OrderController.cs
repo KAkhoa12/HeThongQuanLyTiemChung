@@ -106,6 +106,9 @@ public class OrderController : ControllerBase
             .Include(d => d.DonHangChiTiets.Where(dct => dct.IsDelete != true))
                 .ThenInclude(dct => dct.MaDichVuNavigation)
             .Include(d => d.MaDiaDiemYeuThichNavigation)
+            // ✅ Thêm include cho thông tin khuyến mãi
+            .Include(d => d.DonHangKhuyenMais.Where(dhkm => dhkm.IsDelete != true))
+                .ThenInclude(dhkm => dhkm.MaKhuyenMaiNavigation)
             .FirstOrDefaultAsync(d => d.MaDonHang == id && d.IsDelete != true, ct);
 
         if (order == null)
@@ -151,7 +154,24 @@ public class OrderController : ControllerBase
                 order.MaDiaDiemYeuThichNavigation.DiaChi,
                 order.MaDiaDiemYeuThichNavigation.SoDienThoai,
                 order.MaDiaDiemYeuThichNavigation.Email
-            } : null
+            } : null,
+            // ✅ Thêm thông tin khuyến mãi
+            DonHangKhuyenMais = order.DonHangKhuyenMais?.Select(dhkm => new
+            {
+                dhkm.MaDonHangKhuyenMai,
+                dhkm.MaDonHang,
+                dhkm.MaKhuyenMai,
+                dhkm.GiamGiaGoc,
+                dhkm.GiamGiaThucTe,
+                dhkm.NgayApDung,
+                KhuyenMai = dhkm.MaKhuyenMaiNavigation != null ? new
+                {
+                    dhkm.MaKhuyenMaiNavigation.Code,
+                    dhkm.MaKhuyenMaiNavigation.TenKhuyenMai,
+                    dhkm.MaKhuyenMaiNavigation.LoaiGiam,
+                    dhkm.MaKhuyenMaiNavigation.GiaTriGiam
+                } : null
+            }).ToList()
         };
 
         return ApiResponse.Success("Lấy thông tin đơn hàng thành công", orderDto);
@@ -177,7 +197,42 @@ public class OrderController : ControllerBase
         return ApiResponse.Success("Cập nhật trạng thái đơn hàng thành công", null);
     }
 
-    /* ---------- 4. Xóa đơn hàng (soft delete) ---------- */
+    /* ---------- 4. Cập nhật số tiền giảm trong đơn hàng ---------- */
+    [HttpPut("{id}/discount")]
+    public async Task<IActionResult> UpdateOrderDiscount(
+        string id, 
+        [FromBody] UpdateOrderDiscountDto dto,
+        CancellationToken ct)
+    {
+        try
+        {
+            var order = await _ctx.DonHangs
+                .FirstOrDefaultAsync(d => d.MaDonHang == id && d.IsDelete != true, ct);
+
+            if (order == null)
+                return ApiResponse.Error("Không tìm thấy đơn hàng", 404);
+
+            // Cập nhật số tiền thanh toán sau khi giảm giá
+            order.TongTienThanhToan = Math.Max(0, order.TongTienGoc - dto.DiscountAmount);
+            order.NgayCapNhat = DateTime.UtcNow;
+
+            await _ctx.SaveChangesAsync(ct);
+            
+            return ApiResponse.Success("Cập nhật số tiền giảm thành công", new
+            {
+                MaDonHang = order.MaDonHang,
+                TongTienGoc = order.TongTienGoc,
+                SoTienGiam = dto.DiscountAmount,
+                TongTienThanhToan = order.TongTienThanhToan
+            });
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.Error($"Lỗi khi cập nhật số tiền giảm: {ex.Message}", 500);
+        }
+    }
+
+    /* ---------- 5. Xóa đơn hàng (soft delete) ---------- */
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteOrder(string id, CancellationToken ct)
     {
@@ -210,6 +265,9 @@ public class OrderController : ControllerBase
         var orders = await _ctx.DonHangs
             .Where(d => d.IsDelete != true && d.MaNguoiDung == userId)
             .OrderByDescending(d => d.NgayTao)
+            // ✅ Thêm include cho thông tin khuyến mãi
+            .Include(d => d.DonHangKhuyenMais.Where(dhkm => dhkm.IsDelete != true))
+                .ThenInclude(dhkm => dhkm.MaKhuyenMaiNavigation)
             .Select(d => new
             {
                 d.MaDonHang,
@@ -249,7 +307,24 @@ public class OrderController : ControllerBase
                     d.MaDiaDiemYeuThichNavigation.MaDiaDiem,
                     d.MaDiaDiemYeuThichNavigation.Ten,
                     d.MaDiaDiemYeuThichNavigation.DiaChi
-                } : null
+                } : null,
+                // ✅ Thêm thông tin khuyến mãi
+                DonHangKhuyenMais = d.DonHangKhuyenMais.Select(dhkm => new
+                {
+                    dhkm.MaDonHangKhuyenMai,
+                    dhkm.MaDonHang,
+                    dhkm.MaKhuyenMai,
+                    dhkm.GiamGiaGoc,
+                    dhkm.GiamGiaThucTe,
+                    dhkm.NgayApDung,
+                    KhuyenMai = dhkm.MaKhuyenMaiNavigation != null ? new
+                    {
+                        dhkm.MaKhuyenMaiNavigation.Code,
+                        dhkm.MaKhuyenMaiNavigation.TenKhuyenMai,
+                        dhkm.MaKhuyenMaiNavigation.LoaiGiam,
+                        dhkm.MaKhuyenMaiNavigation.GiaTriGiam
+                    } : null
+                }).ToList()
             })
             .ToListAsync(ct);
 

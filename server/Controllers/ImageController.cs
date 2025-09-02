@@ -28,13 +28,20 @@ public class ImageController : ControllerBase
     public async Task<IActionResult> UploadMany(
         [FromForm] List<IFormFile> files,
         [FromForm] string? altText,
-        [FromForm] string maNhan,
+        [FromForm] string? maNhan,
         CancellationToken ct = default)
     {
         if (files == null || files.Count == 0)
             return ApiResponse.Error("Không có file nào!");
         if (maNhan == null || maNhan.Trim() == "")
-            return ApiResponse.Error("Không có mã nhãn!");
+        {
+            var nhanKhac = _ctx.NhanAnhs.FirstOrDefault(n => n.TenNhan == "Khác");
+            if (nhanKhac == null)
+            {
+                return ApiResponse.Error("Không tìm thấy nhãn Khác!");
+            }
+            maNhan = nhanKhac.MaNhan;
+        }
 
         var mediaPath = Path.Combine(_env.ContentRootPath, "media");
         Directory.CreateDirectory(mediaPath);

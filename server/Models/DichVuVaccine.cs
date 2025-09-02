@@ -13,6 +13,8 @@ public partial class DichVuVaccine
 
     public int SoMuiChuan { get; set; }
 
+    public int? ThuTu { get; set; }
+
     public string? GhiChu { get; set; }
 
     public bool? IsDelete { get; set; }

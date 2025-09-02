@@ -34,6 +34,7 @@ namespace server.DTOs.DichVu
         string MaVaccine,
         string TenVaccine,
         int SoMuiChuan,
+        int? ThuTu,
         string? GhiChu
     );
 

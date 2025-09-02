@@ -9,15 +9,9 @@ public partial class PhieuDangKyLichTiem
 
     public string MaKhachHang { get; set; } = null!;
 
-    public string MaDonHang { get; set; } = null!;
-
-    public string MaBacSi { get; set; } = null!;
+    public string MaDichVu { get; set; } = null!;
 
     public DateTime NgayDangKy { get; set; }
-
-    public DateTime NgayHenTiem { get; set; }
-
-    public string GioHenTiem { get; set; } = null!;
 
     public string TrangThai { get; set; } = null!; // "Chờ duyệt", "Đã duyệt", "Từ chối", "Hoàn thành"
 
@@ -35,6 +29,5 @@ public partial class PhieuDangKyLichTiem
 
     // Navigation properties
     public virtual NguoiDung MaKhachHangNavigation { get; set; } = null!;
-    public virtual DonHang MaDonHangNavigation { get; set; } = null!;
-    public virtual BacSi MaBacSiNavigation { get; set; } = null!;
+    public virtual DichVu MaDichVuNavigation { get; set; } = null!;
 } 

@@ -46,6 +46,9 @@ export { default as phieuThanhLyService } from './phieuThanhLy.service';
 export { default as loVaccineService } from './loVaccine.service';
 export { default as tonKhoLoService } from './tonKhoLo.service';
 
+// DonHangKhuyenMai service exports
+export * from './donHangKhuyenMai.service';
+
 // Re-export types for convenience
 export type { 
   Service, 
@@ -124,4 +127,51 @@ export type {
   TonKhoLoUpdateDto,
   TonKhoSummaryDto,
   TonKhoLoQueryParams
-} from './tonKhoLo.service'; 
+} from './tonKhoLo.service';
+
+// KhuyenMai service exports
+export {
+  getAllKhuyenMais,
+  getKhuyenMaiById,
+  createKhuyenMai,
+  updateKhuyenMai,
+  deleteKhuyenMai,
+  validateKhuyenMaiCode,
+  type KhuyenMaiDto,
+  type CreateKhuyenMaiDto,
+  type UpdateKhuyenMaiDto
+} from './khuyenMai.service';
+
+// LoaiKhuyenMai service exports
+export {
+  getAllLoaiKhuyenMais,
+  getAllLoaiKhuyenMaisActive,
+  getLoaiKhuyenMaiById,
+  createLoaiKhuyenMai,
+  updateLoaiKhuyenMai,
+  deleteLoaiKhuyenMai,
+  getKhuyenMaisByLoai,
+  type LoaiKhuyenMaiDto,
+  type CreateLoaiKhuyenMaiDto,
+  type UpdateLoaiKhuyenMaiDto
+} from './loaiKhuyenMai.service';
+
+// PhieuDangKyLichTiem service exports
+export { 
+  phieuDangKyLichTiemService,
+  type PhieuDangKyLichTiem,
+  type CreatePhieuDangKyLichTiemDto,
+  type CreateAppointmentFromOrderDto,
+  type UpdatePhieuDangKyLichTiemDto,
+  type ApproveAppointmentDto,
+  type PhieuDangKyLichTiemResponse
+} from './phieuDangKyLichTiem.service';
+
+// PhieuTiem service exports
+export { 
+  default as phieuTiemService,
+  type PhieuTiem,
+  type PhieuTiemCreateDto,
+  type PhieuTiemUpdateDto,
+  type PhieuTiemResponse
+} from './phieuTiem.service'; 

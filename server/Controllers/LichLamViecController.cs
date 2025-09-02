@@ -150,14 +150,14 @@ public class LichLamViecController : ControllerBase
             appointments = await _ctx.LichHens
                 .Include(lh => lh.MaDonHangNavigation)
                     .ThenInclude(dh => dh.MaNguoiDungNavigation)
-                .Where(lh => lh.MaLichLamViec == id && lh.IsDelete == false)
+                .Where(lh => lh.MaDiaDiem == schedule.MaDiaDiem && lh.IsDelete == false)
                 .Select(lh => new AppointmentSlotDto(
                     lh.MaLichHen,
                     lh.MaDonHang,
                     lh.MaDonHangNavigation.MaNguoiDungNavigation.Ten,
                     null, // MaVaccine đã bị xóa
                     null, // TenVaccine đã bị xóa
-                    lh.MuiThu,
+                    1, // DoseNumber - mặc định là 1 vì MuiThu đã bị xóa
                     lh.NgayHen,
                     lh.TrangThai))
                 .ToListAsync(ct);
@@ -338,13 +338,14 @@ public async Task<IActionResult> Create(
     public async Task<IActionResult> Delete(string id, CancellationToken ct)
     {
         var schedule = await _ctx.LichLamViecs
-            .Include(l => l.LichHens.Where(lh => lh.IsDelete == false))
             .FirstOrDefaultAsync(l => l.MaLichLamViec == id && l.IsDelete == false, ct);
         if (schedule == null)
             return ApiResponse.Error("Không tìm thấy lịch làm việc", 404);
 
-        // Kiểm tra có lịch hẹn không
-        if (schedule.LichHens.Any())
+        // Kiểm tra có lịch hẹn không (kiểm tra theo địa điểm)
+        var hasAppointments = await _ctx.LichHens
+            .AnyAsync(lh => lh.MaDiaDiem == schedule.MaDiaDiem && lh.IsDelete == false, ct);
+        if (hasAppointments)
             return ApiResponse.Error("Không thể xóa lịch làm việc đã có lịch hẹn", 400);
 
         schedule.IsDelete = true;

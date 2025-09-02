@@ -1,9 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaEye, FaSearch, FaFilter, FaDownload, FaCalendarPlus } from 'react-icons/fa';
-import { useInvoice } from '../../hooks';
-
-
+import {
+  FaEye,
+  FaSearch,
+  FaFilter,
+  FaDownload,
+  FaCalendarPlus,
+} from 'react-icons/fa';
+import { useAuthInit, useInvoice } from '../../hooks';
 
 const InvoiceListPage: React.FC = () => {
   const {
@@ -17,9 +21,9 @@ const InvoiceListPage: React.FC = () => {
     setStatusFilter,
     setCurrentPage,
     resetFilters,
-    fetchInvoices
+    fetchInvoices,
   } = useInvoice();
-
+  const { user } = useAuthInit();
   const handleSearch = () => {
     setCurrentPage(1);
     fetchInvoices();
@@ -32,20 +36,40 @@ const InvoiceListPage: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap: { [key: string]: { text: string; className: string } } = {
-      'PENDING': { text: 'Chờ xử lý', className: 'bg-yellow-100 text-yellow-800' },
-      'CONFIRMED': { text: 'Đã xác nhận', className: 'bg-blue-100 text-blue-800' },
-      'SHIPPING': { text: 'Đang giao', className: 'bg-purple-100 text-purple-800' },
-      'DELIVERED': { text: 'Đã giao', className: 'bg-green-100 text-green-800' },
-      'CANCELLED': { text: 'Đã hủy', className: 'bg-red-100 text-red-800' },
-      'PAID': { text: 'Đã thanh toán', className: 'bg-green-100 text-green-800' },
-      'PAYMENT_PENDING': { text: 'Chờ thanh toán', className: 'bg-orange-100 text-orange-800' },
-      'PAYMENT_FAILED': { text: 'Thanh toán thất bại', className: 'bg-red-100 text-red-800' }
+      PENDING: {
+        text: 'Chờ xử lý',
+        className: 'bg-yellow-100 text-yellow-800',
+      },
+      CONFIRMED: {
+        text: 'Đã xác nhận',
+        className: 'bg-blue-100 text-blue-800',
+      },
+      SHIPPING: {
+        text: 'Đang giao',
+        className: 'bg-purple-100 text-purple-800',
+      },
+      DELIVERED: { text: 'Đã giao', className: 'bg-green-100 text-green-800' },
+      CANCELLED: { text: 'Đã hủy', className: 'bg-red-100 text-red-800' },
+      PAID: { text: 'Đã thanh toán', className: 'bg-green-100 text-green-800' },
+      PAYMENT_PENDING: {
+        text: 'Chờ thanh toán',
+        className: 'bg-orange-100 text-orange-800',
+      },
+      PAYMENT_FAILED: {
+        text: 'Thanh toán thất bại',
+        className: 'bg-red-100 text-red-800',
+      },
     };
 
-    const statusInfo = statusMap[status] || { text: status, className: 'bg-gray-100 text-gray-800' };
-    
+    const statusInfo = statusMap[status] || {
+      text: status,
+      className: 'bg-gray-100 text-gray-800',
+    };
+
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}
+      >
         {statusInfo.text}
       </span>
     );
@@ -54,7 +78,7 @@ const InvoiceListPage: React.FC = () => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
-      currency: 'VND'
+      currency: 'VND',
     }).format(amount);
   };
 
@@ -64,7 +88,7 @@ const InvoiceListPage: React.FC = () => {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
@@ -81,23 +105,6 @@ const InvoiceListPage: React.FC = () => {
     return match ? match[1].trim() : 'Không có';
   };
 
-  const extractCustomerEmail = (ghiChu?: string): string => {
-    if (!ghiChu) return 'Không có';
-    const match = ghiChu.match(/Email: ([^,]+)/);
-    return match ? match[1].trim() : 'Không có';
-  };
-
-  const extractCustomerAddress = (ghiChu?: string): string => {
-    if (!ghiChu) return 'Không có';
-    const match = ghiChu.match(/Địa chỉ: (.+)/);
-    return match ? match[1].trim() : 'Không có';
-  };
-
-  const exportInvoices = () => {
-    // TODO: Implement export functionality
-    console.log('Export invoices');
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -112,13 +119,6 @@ const InvoiceListPage: React.FC = () => {
         <h2 className="text-title-md2 font-semibold text-black dark:text-white">
           Quản lý Hóa đơn mua hàng
         </h2>
-        <button
-          onClick={exportInvoices}
-          className="inline-flex items-center justify-center rounded-md bg-primary py-2 px-10 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10"
-        >
-          <FaDownload className="mr-2" />
-          Xuất Excel
-        </button>
       </div>
 
       {/* Search and Filter */}
@@ -158,16 +158,16 @@ const InvoiceListPage: React.FC = () => {
           Tìm kiếm
         </button>
 
-                 <button
-           onClick={() => {
-             resetFilters();
-             fetchInvoices();
-           }}
-           className="inline-flex items-center justify-center rounded-md bg-gray-500 py-2 px-6 text-center font-medium text-white hover:bg-opacity-90"
-         >
-           <FaFilter className="mr-2" />
-           Làm mới
-         </button>
+        <button
+          onClick={() => {
+            resetFilters();
+            fetchInvoices();
+          }}
+          className="inline-flex items-center justify-center rounded-md bg-gray-500 py-2 px-6 text-center font-medium text-white hover:bg-opacity-90"
+        >
+          <FaFilter className="mr-2" />
+          Làm mới
+        </button>
       </div>
 
       {/* Invoice Table */}
@@ -182,12 +182,16 @@ const InvoiceListPage: React.FC = () => {
                 <th className="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
                   Ngày tạo
                 </th>
-                <th className="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                  Khách hàng
-                </th>
-                <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
-                  Số điện thoại
-                </th>
+                {user?.role === 'MANAGER' || user?.role === 'DOCTOR' && (
+                  <>
+                    <th className="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
+                      Khách hàng
+                    </th>
+                    <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
+                      Số điện thoại
+                    </th>
+                  </>
+                )}
                 <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
                   Tổng tiền
                 </th>
@@ -211,7 +215,10 @@ const InvoiceListPage: React.FC = () => {
                 </tr>
               ) : (
                 invoices.map((invoice) => (
-                  <tr key={invoice.maDonHang} className="border-b border-[#eee] dark:border-strokedark">
+                  <tr
+                    key={invoice.maDonHang}
+                    className="border-b border-[#eee] dark:border-strokedark"
+                  >
                     <td className="py-5 px-4 pl-9 xl:pl-11">
                       <h5 className="font-medium text-black dark:text-white">
                         {invoice.maDonHang}
@@ -222,29 +229,35 @@ const InvoiceListPage: React.FC = () => {
                         {formatDate(invoice.ngayTao)}
                       </p>
                     </td>
-                                         <td className="py-5 px-4">
-                       <p className="text-black dark:text-white">
-                         {extractCustomerName(invoice.ghiChu)}
-                       </p>
-                     </td>
-                     <td className="py-5 px-4">
-                       <p className="text-black dark:text-white">
-                         {extractCustomerPhone(invoice.ghiChu)}
-                       </p>
-                     </td>
-                     <td className="py-5 px-4">
-                       <p className="text-black dark:text-white font-medium">
-                         {formatCurrency(invoice.tongTienThanhToan)}
-                       </p>
-                     </td>
+                    {user?.role === 'MANAGER' || user?.role === 'DOCTOR' && (
+                      <>
+                        <td className="py-5 px-4">
+                          <p className="text-black dark:text-white">
+                            {extractCustomerName(invoice.ghiChu)}
+                          </p>
+                        </td>
+                        <td className="py-5 px-4">
+                          <p className="text-black dark:text-white">
+                            {extractCustomerPhone(invoice.ghiChu)}
+                          </p>
+                        </td>
+                      </>
+                    )}
+                    <td className="py-5 px-4">
+                      <p className="text-black dark:text-white font-medium">
+                        {formatCurrency(invoice.tongTienThanhToan)}
+                      </p>
+                    </td>
                     <td className="py-5 px-4">
                       {getStatusBadge(invoice.trangThaiDon)}
                     </td>
-                                         <td className="py-5 px-4">
-                       <p className="text-black dark:text-white">
-                         {invoice.trangThaiDon === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}
-                       </p>
-                     </td>
+                    <td className="py-5 px-4">
+                      <p className="text-black dark:text-white">
+                        {invoice.trangThaiDon === 'PAID'
+                          ? 'Đã thanh toán'
+                          : 'Chưa thanh toán'}
+                      </p>
+                    </td>
                     <td className="py-5 px-4">
                       <div className="flex items-center space-x-3.5">
                         <Link
@@ -277,14 +290,14 @@ const InvoiceListPage: React.FC = () => {
       {totalPages > 1 && (
         <div className="mt-6 flex items-center justify-center">
           <div className="flex space-x-2">
-                         <button
-               onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
-               disabled={currentPage === 1}
-               className="px-3 py-2 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-             >
-               Trước
-             </button>
-            
+            <button
+              onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-2 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+            >
+              Trước
+            </button>
+
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
@@ -298,14 +311,16 @@ const InvoiceListPage: React.FC = () => {
                 {page}
               </button>
             ))}
-            
-                         <button
-               onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
-               disabled={currentPage === totalPages}
-               className="px-3 py-2 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
-             >
-               Sau
-             </button>
+
+            <button
+              onClick={() =>
+                setCurrentPage(Math.min(currentPage + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 rounded border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+            >
+              Sau
+            </button>
           </div>
         </div>
       )}
@@ -313,4 +328,4 @@ const InvoiceListPage: React.FC = () => {
   );
 };
 
-export default InvoiceListPage; 
+export default InvoiceListPage;

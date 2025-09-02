@@ -38,8 +38,11 @@ export interface UserInfo {
   soDienThoai?: string;
   ngaySinh?: string;
   diaChi?: string;
-  vaiTro: string;
-  ngayTao: string;
+  role: string;
+  moTaVaiTro: string;
+  registeredAt: string;
+  avatarUrl?: string;
+  permissions: string[];
 }
 
 // Auth Service
@@ -53,8 +56,8 @@ class AuthService {
       
       if (data && data.accessToken) {
         this.setTokens(data);
-        const userInfo = await this.getCurrentUser();
-        return userInfo;
+        // Không gọi getCurrentUser ngay lập tức, để useAuthStore xử lý
+        return data as any; // Trả về data tạm thời
       }
       
       throw new Error('Đăng nhập thất bại');
@@ -71,7 +74,6 @@ class AuthService {
     try {
       return await apiService.create('/api/auth/register', userData);
     } catch (error) {
-      console.error('Register error:', error);
       throw error;
     }
   }
@@ -89,7 +91,6 @@ class AuthService {
       
       return await apiService.get('/api/auth/me');
     } catch (error) {
-      console.error('Get user error:', error);
       this.logout();
       throw error;
     }
@@ -115,7 +116,6 @@ class AuthService {
       
       return false;
     } catch (error) {
-      console.error('Refresh token error:', error);
       this.logout();
       return false;
     }
@@ -136,7 +136,6 @@ class AuthService {
       this.clearLocalData();
       return true;
     } catch (error) {
-      console.error('Logout error:', error);
       // Even if API call fails, clear local data
       this.clearLocalData();
       return false;
@@ -158,21 +157,21 @@ class AuthService {
   }
 
   /**
-   * Get access token from cookie
+   * Get access token from cookies
    */
   getToken(): string | null {
     return Cookies.get(TOKEN_COOKIE_NAME) || null;
   }
 
   /**
-   * Get refresh token from cookie
+   * Get refresh token from cookies
    */
   getRefreshToken(): string | null {
     return Cookies.get(REFRESH_TOKEN_COOKIE_NAME) || null;
   }
 
   /**
-   * Get user ID from cookie
+   * Get user ID from cookies
    */
   getUserId(): string | null {
     return Cookies.get(USER_ID_COOKIE_NAME) || null;
@@ -182,13 +181,31 @@ class AuthService {
    * Set tokens in cookies
    */
   private setTokens(authData: AuthResponse): void {
-    Cookies.set(TOKEN_COOKIE_NAME, authData.accessToken, { expires: ACCESS_TOKEN_EXPIRY, secure: true, sameSite: 'strict' });
-    Cookies.set(REFRESH_TOKEN_COOKIE_NAME, authData.refreshToken, { expires: REFRESH_TOKEN_EXPIRY, secure: true, sameSite: 'strict' });
-    Cookies.set(USER_ID_COOKIE_NAME, authData.userId, { expires: REFRESH_TOKEN_EXPIRY, secure: true, sameSite: 'strict' });
+    try {
+      Cookies.set(TOKEN_COOKIE_NAME, authData.accessToken, { 
+        expires: ACCESS_TOKEN_EXPIRY,
+        secure: false, // Set to true in production
+        sameSite: 'lax'
+      });
+      
+      Cookies.set(REFRESH_TOKEN_COOKIE_NAME, authData.refreshToken, { 
+        expires: REFRESH_TOKEN_EXPIRY,
+        secure: false, // Set to true in production
+        sameSite: 'lax'
+      });
+      
+      Cookies.set(USER_ID_COOKIE_NAME, authData.userId, { 
+        expires: REFRESH_TOKEN_EXPIRY,
+        secure: false, // Set to true in production
+        sameSite: 'lax'
+      });
+    } catch (error) {
+      console.error('authService - Lỗi lưu token:', error);
+    }
   }
 
   /**
-   * Clear all local authentication data
+   * Clear all authentication data from cookies
    */
   private clearLocalData(): void {
     Cookies.remove(TOKEN_COOKIE_NAME);

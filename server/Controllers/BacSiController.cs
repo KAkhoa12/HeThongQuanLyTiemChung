@@ -26,6 +26,7 @@ public class BacSiController : ControllerBase
         var query = _ctx.BacSis
                         .Include(b => b.MaNguoiDungNavigation)
                             .ThenInclude(n => n.MaAnhNavigation)
+                        .Include(b => b.MaDiaDiemNavigation)
                         .Where(b => b.IsDelete == false)
                         .OrderByDescending(b => b.NgayTao);
 
@@ -39,6 +40,7 @@ public class BacSiController : ControllerBase
             b.MaNguoiDungNavigation.Email,
             b.ChuyenMon,
             b.SoGiayPhep,
+            b.MaDiaDiem,
             b.MaNguoiDungNavigation.MaAnhNavigation?.UrlAnh,
             b.NgayTao!.Value)).ToList();
 
@@ -59,6 +61,7 @@ public class BacSiController : ControllerBase
         var doctor = await _ctx.BacSis
             .Include(b => b.MaNguoiDungNavigation)
                 .ThenInclude(n => n.MaAnhNavigation)
+            .Include(b => b.MaDiaDiemNavigation)
             .Include(b => b.LichLamViecs
                 .Where(l => l.IsDelete == false && l.NgayLam >= DateOnly.FromDateTime(DateTime.Today)))
                 .ThenInclude(l => l.MaDiaDiemNavigation)
@@ -75,6 +78,7 @@ public class BacSiController : ControllerBase
             doctor.MaNguoiDungNavigation.Email,
             doctor.ChuyenMon,
             doctor.SoGiayPhep,
+            doctor.MaDiaDiem,
             doctor.MaNguoiDungNavigation.MaAnhNavigation?.UrlAnh,
             doctor.NgayTao!.Value,
             doctor.LichLamViecs
@@ -117,6 +121,7 @@ public class BacSiController : ControllerBase
             MaNguoiDung = dto.UserId,
             ChuyenMon = dto.Specialty,
             SoGiayPhep = dto.LicenseNumber,
+            MaDiaDiem = dto.MaDiaDiem,
             IsActive = true,
             IsDelete = false,
             NgayTao = DateTime.UtcNow
@@ -169,6 +174,7 @@ public class BacSiController : ControllerBase
             MaNguoiDung = user.MaNguoiDung,
             ChuyenMon = dto.ChuyenMon,
             SoGiayPhep = dto.SoGiayPhep,
+            MaDiaDiem = dto.MaDiaDiem,
             IsActive = true,
             IsDelete = false,
             NgayTao = DateTime.UtcNow
@@ -200,6 +206,7 @@ public class BacSiController : ControllerBase
 
         doctor.ChuyenMon = dto.Specialty ?? doctor.ChuyenMon;
         doctor.SoGiayPhep = dto.LicenseNumber ?? doctor.SoGiayPhep;
+        doctor.MaDiaDiem = dto.MaDiaDiem ?? doctor.MaDiaDiem;
         doctor.NgayCapNhat = DateTime.UtcNow;
 
         await _ctx.SaveChangesAsync(ct);
@@ -286,6 +293,7 @@ public class BacSiController : ControllerBase
         var doctors = await _ctx.BacSis
             .Include(b => b.MaNguoiDungNavigation)
                 .ThenInclude(n => n.MaAnhNavigation)
+            .Include(b => b.MaDiaDiemNavigation)
             .Where(b => b.IsDelete == false)
             .OrderBy(b => b.MaNguoiDungNavigation.Ten)
             .Select(b => new DoctorDto(
@@ -296,6 +304,7 @@ public class BacSiController : ControllerBase
                 b.MaNguoiDungNavigation.Email,
                 b.ChuyenMon,
                 b.SoGiayPhep,
+                b.MaDiaDiem,
                 b.MaNguoiDungNavigation.MaAnhNavigation.UrlAnh,
                 b.NgayTao!.Value))
             .ToListAsync(ct);
@@ -314,6 +323,7 @@ public class BacSiController : ControllerBase
         var searchQuery = _ctx.BacSis
             .Include(b => b.MaNguoiDungNavigation)
                 .ThenInclude(n => n.MaAnhNavigation)
+            .Include(b => b.MaDiaDiemNavigation)
             .Where(b => b.IsDelete == false &&
                        (string.IsNullOrEmpty(query) ||
                         b.MaNguoiDungNavigation.Ten.Contains(query) ||
@@ -330,6 +340,7 @@ public class BacSiController : ControllerBase
             b.MaNguoiDungNavigation.Email,
             b.ChuyenMon,
             b.SoGiayPhep,
+            b.MaDiaDiem,
             b.MaNguoiDungNavigation.MaAnhNavigation?.UrlAnh,
             b.NgayTao!.Value)).ToList();
 
@@ -341,5 +352,36 @@ public class BacSiController : ControllerBase
                 paged.PageSize,
                 paged.TotalPages,
                 data));
+    }
+
+    /* ---------- 9. Cập nhật thông tin bác sĩ theo userId ---------- */
+    [HttpPut("profile/{userId}")]
+    public async Task<IActionResult> UpdateDoctorProfile(
+        string userId,
+        [FromBody] DoctorUpdateDto dto,
+        CancellationToken ct)
+    {
+        var doctor = await _ctx.BacSis
+            .Include(b => b.MaNguoiDungNavigation)
+            .Include(b => b.MaDiaDiemNavigation)
+            .FirstOrDefaultAsync(b => b.MaNguoiDung == userId && b.IsDelete == false, ct);
+        
+        if (doctor == null)
+            return ApiResponse.Error("Không tìm thấy bác sĩ", 404);
+
+        // Cập nhật thông tin bác sĩ
+        if (!string.IsNullOrEmpty(dto.Specialty))
+            doctor.ChuyenMon = dto.Specialty;
+        
+        if (!string.IsNullOrEmpty(dto.LicenseNumber))
+            doctor.SoGiayPhep = dto.LicenseNumber;
+
+        if (!string.IsNullOrEmpty(dto.MaDiaDiem))
+            doctor.MaDiaDiem = dto.MaDiaDiem;
+
+        doctor.NgayCapNhat = DateTime.UtcNow;
+
+        await _ctx.SaveChangesAsync(ct);
+        return ApiResponse.Success("Cập nhật thông tin bác sĩ thành công", null);
     }
 }

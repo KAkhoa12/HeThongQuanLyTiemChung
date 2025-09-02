@@ -9,9 +9,7 @@ public partial class LichHen
 
     public string MaDonHang { get; set; } = null!;
 
-    public string MaLichLamViec { get; set; } = null!;
-
-    public int MuiThu { get; set; }
+    public string MaDiaDiem { get; set; } = null!;
 
     public DateTime NgayHen { get; set; }
 
@@ -29,7 +27,7 @@ public partial class LichHen
 
     public virtual DonHang MaDonHangNavigation { get; set; } = null!;
 
-    public virtual LichLamViec MaLichLamViecNavigation { get; set; } = null!;
+    public virtual DiaDiem MaDiaDiemNavigation { get; set; } = null!;
 
     public virtual ICollection<PhieuTiem> PhieuTiems { get; set; } = new List<PhieuTiem>();
 

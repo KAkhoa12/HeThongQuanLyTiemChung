@@ -1,24 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FaCalendarAlt, FaClock, FaStethoscope, FaMapMarkerAlt } from 'react-icons/fa';
 import DefaultLayout from '../../layout/DefaultLayout';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { 
-  createAppointmentFromOrder, 
+  phieuDangKyLichTiemService,
   CreateAppointmentFromOrderDto
-} from '../../services/appointment.service';
-import { 
-  getAllDoctorsNoPage, 
-  getSchedulesByDoctorAndLocation
-} from '../../services/doctor.service';
-import { getAllLocationsNoPage, LocationDto } from '../../services/location.service';
+} from '../../services/phieuDangKyLichTiem.service';
 import { getOrderById, OrderDetail } from '../../services/order.service';
 import { useApiWithParams } from '../../hooks/useApi';
-import { Doctor } from '../../types/doctor.types';
 
 // Sử dụng types đã có sẵn
-type Location = LocationDto;
 type Order = OrderDetail;
 
 const AppointmentRegistrationFromInvoice: React.FC = () => {
@@ -26,11 +18,6 @@ const AppointmentRegistrationFromInvoice: React.FC = () => {
   const navigate = useNavigate();
 
   // States
-  const [selectedDoctor, setSelectedDoctor] = useState<string>('');
-  const [selectedLocation, setSelectedLocation] = useState<string>('');
-  const [selectedSchedule, setSelectedSchedule] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [selectedTime, setSelectedTime] = useState<string>('');
   const [ghiChu, setGhiChu] = useState<string>('');
 
   // API Hooks
@@ -38,55 +25,16 @@ const AppointmentRegistrationFromInvoice: React.FC = () => {
     async (id) => getOrderById(id), null
   );
 
-  const { data: doctors, loading: doctorsLoading, execute: fetchDoctors } = useApiWithParams<Doctor[], any>(
-    async () => getAllDoctorsNoPage(), null
-  );
-
-  const { data: locations, loading: locationsLoading, execute: fetchLocations } = useApiWithParams<Location[], any>(
-    async () => getAllLocationsNoPage(), null
-  );
-
-  const { data: doctorSchedules, loading: slotsLoading, execute: fetchDoctorSchedules } = useApiWithParams<any, any>(
-    async (params) => getSchedulesByDoctorAndLocation(params.doctorId, params.locationId, params.fromDate, params.toDate), null
-  );
-
   const { loading: creating, execute: executeCreateAppointment } = useApiWithParams<any, CreateAppointmentFromOrderDto>(
-    async (data) => createAppointmentFromOrder(data), null
+    async (data) => phieuDangKyLichTiemService.createFromOrder(data), null
   );
 
   // Load initial data
   useEffect(() => {
     if (orderId) {
       fetchOrder(orderId);
-      fetchDoctors({});
-      fetchLocations({});
     }
   }, [orderId]);
-
-  // Load available slots when doctor and location are selected
-  useEffect(() => {
-    if (selectedDoctor && selectedLocation) {
-      const today = new Date().toISOString().split('T')[0];
-      const nextMonth = new Date();
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      const toDate = nextMonth.toISOString().split('T')[0];
-      
-      fetchDoctorSchedules({
-        doctorId: selectedDoctor,
-        locationId: selectedLocation,
-        fromDate: today,
-        toDate: toDate
-      });
-    }
-  }, [selectedDoctor, selectedLocation]);
-
-  // Handle schedule selection
-  const handleScheduleSelect = (schedule: any) => {
-    setSelectedSchedule(schedule.id);
-    setSelectedDate(schedule.workDate);
-    // Set default time to start time of the schedule
-    setSelectedTime(schedule.startTime);
-  };
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,38 +45,19 @@ const AppointmentRegistrationFromInvoice: React.FC = () => {
       return;
     }
 
-    if (!selectedDoctor || !selectedSchedule || !selectedDate || !selectedTime) {
-      toast.error('Vui lòng điền đầy đủ thông tin');
-      return;
-    }
-
     try {
       const appointmentData: CreateAppointmentFromOrderDto = {
         orderId: order.maDonHang,
-        doctorId: selectedDoctor,
-        scheduleId: selectedSchedule,
-        appointmentDate: selectedDate,
-        appointmentTime: selectedTime,
         ghiChu: ghiChu || undefined
       };
 
       await executeCreateAppointment(appointmentData);
-      toast.success('Đăng ký lịch tiêm thành công!');
+      toast.success('Đăng ký lịch tiêm thành công! Sẽ tạo phiếu đăng ký cho tất cả dịch vụ trong đơn hàng.');
       navigate('/dashboard/invoices');
     } catch (error) {
       console.error('Lỗi đăng ký lịch tiêm:', error);
       toast.error('Có lỗi xảy ra khi đăng ký lịch tiêm');
     }
-  };
-
-  // Format date display
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
   };
 
   // Format currency
@@ -139,14 +68,14 @@ const AppointmentRegistrationFromInvoice: React.FC = () => {
     }).format(amount);
   };
 
-  if (orderLoading || doctorsLoading || locationsLoading) {
+  if (orderLoading) {
     return (
-      <DefaultLayout>
+      <>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </DefaultLayout>
-    );
+      </>
+      );
   }
 
   if (orderError || !order || order.trangThaiDon !== 'PAID') {
@@ -207,133 +136,18 @@ const AppointmentRegistrationFromInvoice: React.FC = () => {
           </div>
         </div>
 
-
-
-         {/* Appointment Registration Form */}
-         <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        {/* Appointment Registration Form */}
+        <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="border-b border-stroke py-4 px-6.5 dark:border-strokedark">
             <h3 className="font-medium text-black dark:text-white">
               Đăng ký lịch tiêm
             </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Hệ thống sẽ tự động tạo phiếu đăng ký cho tất cả dịch vụ trong đơn hàng này
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6.5">
-            {/* Location Selection */}
-            <div className="mb-4.5">
-              <label className="mb-2.5 block text-black dark:text-white">
-                <FaMapMarkerAlt className="inline mr-2" />
-                Địa điểm tiêm <span className="text-meta-1">*</span>
-              </label>
-                             <select
-                 value={selectedLocation}
-                 onChange={(e) => setSelectedLocation(e.target.value)}
-                 className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-                 required
-               >
-                <option value="">Chọn địa điểm</option>
-                {locations?.map((location) => (
-                  <option key={location.id} value={location.id}>
-                    {location.name} - {location.address}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-
-
-            {/* Doctor Selection */}
-            <div className="mb-4.5">
-              <label className="mb-2.5 block text-black dark:text-white">
-                <FaStethoscope className="inline mr-2" />
-                Bác sĩ <span className="text-meta-1">*</span>
-              </label>
-                             <select
-                 value={selectedDoctor}
-                 onChange={(e) => setSelectedDoctor(e.target.value)}
-                 className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-                 required
-               >
-                <option value="">Chọn bác sĩ</option>
-                {doctors?.map((doctor) => (
-                  <option key={doctor.id} value={doctor.id}>
-                    {doctor.name} {doctor.specialty && `- ${doctor.specialty}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Available Slots */}
-            {selectedDoctor && selectedLocation && (
-              <div className="mb-4.5">
-                <label className="mb-2.5 block text-black dark:text-white">
-                  <FaCalendarAlt className="inline mr-2" />
-                  Lịch trống <span className="text-meta-1">*</span>
-                </label>
-                {slotsLoading ? (
-                  <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                  </div>
-                ) : doctorSchedules && doctorSchedules.data && doctorSchedules.data.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {doctorSchedules.data
-                      .filter((schedule: any) => {
-                        // Chỉ hiển thị lịch có sẵn và còn chỗ trống
-                        return schedule.status === 'Available' && 
-                               (schedule.totalSlots - schedule.bookedSlots) > 0;
-                      })
-                      .map((schedule: any) => (
-                        <div
-                          key={schedule.id}
-                          onClick={() => handleScheduleSelect(schedule)}
-                          className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                            selectedSchedule === schedule.id
-                              ? 'border-primary bg-primary/10'
-                              : 'border-stroke hover:border-primary/50'
-                          }`}
-                        >
-                          <div className="text-sm font-medium text-black dark:text-white">
-                            {formatDate(schedule.workDate)}
-                          </div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            {schedule.startTime} - {schedule.endTime}
-                          </div>
-                          <div className="text-xs text-green-600">
-                            Còn {schedule.totalSlots - schedule.bookedSlots} chỗ
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {schedule.locationName}
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <div className="py-4">
-                    <p className="text-gray-600 dark:text-gray-400 mb-2">
-                      Không có lịch trống cho bác sĩ và địa điểm đã chọn
-                    </p>
-
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Time Selection */}
-            {selectedSchedule && (
-              <div className="mb-4.5">
-                <label className="mb-2.5 block text-black dark:text-white">
-                  <FaClock className="inline mr-2" />
-                  Giờ hẹn <span className="text-meta-1">*</span>
-                </label>
-                <input
-                  type="time"
-                  value={selectedTime}
-                  onChange={(e) => setSelectedTime(e.target.value)}
-                  className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-                  required
-                />
-              </div>
-            )}
-
             {/* Notes */}
             <div className="mb-6">
               <label className="mb-2.5 block text-black dark:text-white">
@@ -355,7 +169,7 @@ const AppointmentRegistrationFromInvoice: React.FC = () => {
                 disabled={creating}
                 className="flex w-full justify-center rounded bg-primary p-3 font-medium text-gray hover:bg-opacity-90 disabled:opacity-50"
               >
-                {creating ? 'Đang đăng ký...' : 'Đăng ký lịch tiêm'}
+                {creating ? 'Đang đăng ký...' : 'Đăng ký lịch tiêm cho tất cả dịch vụ'}
               </button>
               <button
                 type="button"

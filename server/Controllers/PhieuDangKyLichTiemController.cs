@@ -32,31 +32,26 @@ public class PhieuDangKyLichTiemController : ControllerBase
         {
             var query = from p in _context.PhieuDangKyLichTiems
                         join kh in _context.NguoiDungs on p.MaKhachHang equals kh.MaNguoiDung
-                        join dh in _context.DonHangs on p.MaDonHang equals dh.MaDonHang
-                        join bs in _context.BacSis on p.MaBacSi equals bs.MaBacSi
-                        join nd in _context.NguoiDungs on bs.MaNguoiDung equals nd.MaNguoiDung
+                        join dv in _context.DichVus on p.MaDichVu equals dv.MaDichVu
                         where p.IsDelete != true && p.IsActive == true
                         select new PhieuDangKyLichTiemVM
                         {
                             MaPhieuDangKy = p.MaPhieuDangKy,
                             MaKhachHang = p.MaKhachHang,
-                            MaDonHang = p.MaDonHang,
-                            MaBacSi = p.MaBacSi,
-                            NgayDangKy = p.NgayDangKy,
-                            NgayHenTiem = p.NgayHenTiem,
-                            GioHenTiem = p.GioHenTiem,
+                            MaDichVu = p.MaDichVu,
+                            NgayDangKy = p.NgayDangKy.ToString("yyyy-MM-dd HH:mm:ss"),
                             TrangThai = p.TrangThai,
                             LyDoTuChoi = p.LyDoTuChoi,
                             GhiChu = p.GhiChu,
                             IsDelete = p.IsDelete,
                             IsActive = p.IsActive,
-                            NgayTao = p.NgayTao,
-                            NgayCapNhat = p.NgayCapNhat,
+                            NgayTao = p.NgayTao.HasValue ? p.NgayTao.Value.ToString("yyyy-MM-dd HH:mm:ss") : null,
+                            NgayCapNhat = p.NgayCapNhat.HasValue ? p.NgayCapNhat.Value.ToString("yyyy-MM-dd HH:mm:ss") : null,
                             TenKhachHang = kh.Ten,
                             SoDienThoaiKhachHang = kh.SoDienThoai,
                             EmailKhachHang = kh.Email,
-                            MaDonHangDisplay = dh.MaDonHang,
-                            TenBacSi = nd.Ten
+                            TenDichVu = dv.Ten,
+                            MaDonHangDisplay = p.MaDichVu
                         };
 
             var paged = await query.ToPagedAsync(page!.Value, pageSize!.Value, ct);
@@ -77,62 +72,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
         }
     }
 
-    /* ---------- 2. Lấy lịch trống theo bác sĩ và địa điểm ---------- */
-    [HttpGet("available-slots")]
-    public async Task<IActionResult> GetAvailableSlots(
-        [FromQuery] string doctorId,
-        [FromQuery] string locationId,
-        [FromQuery] DateOnly? fromDate = null,
-        [FromQuery] DateOnly? toDate = null,
-        CancellationToken ct = default)
-    {
-        try
-        {
-            // Kiểm tra bác sĩ tồn tại
-            if (!await _context.BacSis.AnyAsync(b => b.MaBacSi == doctorId && b.IsDelete == false, ct))
-                return ApiResponse.Error("Không tìm thấy bác sĩ", 404);
 
-            // Kiểm tra địa điểm tồn tại
-            if (!await _context.DiaDiems.AnyAsync(d => d.MaDiaDiem == locationId && d.IsDelete == false, ct))
-                return ApiResponse.Error("Không tìm thấy địa điểm", 404);
-
-            // Mặc định lấy lịch từ ngày hiện tại đến 30 ngày sau
-            var today = DateOnly.FromDateTime(DateTime.Today);
-            fromDate ??= today;
-            toDate ??= today.AddDays(30);
-
-            // Lấy lịch làm việc có sẵn của bác sĩ
-            var availableSchedules = await _context.LichLamViecs
-                .Where(l => l.MaBacSi == doctorId &&
-                           l.MaDiaDiem == locationId &&
-                           l.IsDelete == false &&
-                           l.IsActive == true &&
-                           l.TrangThai == "Available" &&
-                           l.NgayLam >= fromDate &&
-                           l.NgayLam <= toDate &&
-                           l.SoLuongCho > (l.DaDat ?? 0))
-                .OrderBy(l => l.NgayLam)
-                .ThenBy(l => l.GioBatDau)
-                .Select(l => new
-                {
-                    l.MaLichLamViec,
-                    l.NgayLam,
-                    l.GioBatDau,
-                    l.GioKetThuc,
-                    l.SoLuongCho,
-                    AvailableSlots = l.SoLuongCho - (l.DaDat ?? 0),
-                    l.TrangThai
-                })
-                .ToListAsync(ct);
-
-            return ApiResponse.Success("Lấy lịch trống thành công", availableSchedules);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Lỗi khi lấy lịch trống");
-            return ApiResponse.Error("Lỗi server khi lấy lịch trống");
-        }
-    }
 
     /* ---------- 3. Lấy thông tin phiếu đăng ký theo ID ---------- */
     [HttpGet("{id}")]
@@ -142,31 +82,26 @@ public class PhieuDangKyLichTiemController : ControllerBase
         {
             var phieuDangKy = await (from p in _context.PhieuDangKyLichTiems
                                     join kh in _context.NguoiDungs on p.MaKhachHang equals kh.MaNguoiDung
-                                    join dh in _context.DonHangs on p.MaDonHang equals dh.MaDonHang
-                                    join bs in _context.BacSis on p.MaBacSi equals bs.MaBacSi
-                                    join nd in _context.NguoiDungs on bs.MaNguoiDung equals nd.MaNguoiDung
+                                    join dv in _context.DichVus on p.MaDichVu equals dv.MaDichVu
                                     where p.MaPhieuDangKy == id && p.IsDelete != true && p.IsActive == true
                                     select new PhieuDangKyLichTiemVM
                                     {
                                         MaPhieuDangKy = p.MaPhieuDangKy,
                                         MaKhachHang = p.MaKhachHang,
-                                        MaDonHang = p.MaDonHang,
-                                        MaBacSi = p.MaBacSi,
-                                        NgayDangKy = p.NgayDangKy,
-                                        NgayHenTiem = p.NgayHenTiem,
-                                        GioHenTiem = p.GioHenTiem,
+                                        MaDichVu = p.MaDichVu,
+                                        NgayDangKy = p.NgayDangKy.ToString("yyyy-MM-dd HH:mm:ss"),
                                         TrangThai = p.TrangThai,
                                         LyDoTuChoi = p.LyDoTuChoi,
                                         GhiChu = p.GhiChu,
                                         IsDelete = p.IsDelete,
                                         IsActive = p.IsActive,
-                                        NgayTao = p.NgayTao,
-                                        NgayCapNhat = p.NgayCapNhat,
+                                        NgayTao = p.NgayTao.HasValue ? p.NgayTao.Value.ToString("yyyy-MM-dd HH:mm:ss") : null,
+                                        NgayCapNhat = p.NgayCapNhat.HasValue ? p.NgayCapNhat.Value.ToString("yyyy-MM-dd HH:mm:ss") : null,
                                         TenKhachHang = kh.Ten,
                                         SoDienThoaiKhachHang = kh.SoDienThoai,
                                         EmailKhachHang = kh.Email,
-                                        MaDonHangDisplay = dh.MaDonHang,
-                                        TenBacSi = nd.Ten
+                                        TenDichVu = dv.Ten,
+                                        MaDonHangDisplay = p.MaDichVu
                                     }).FirstOrDefaultAsync(ct);
 
             if (phieuDangKy == null)
@@ -183,94 +118,53 @@ public class PhieuDangKyLichTiemController : ControllerBase
         }
     }
 
-    /* ---------- 4. Đăng ký lịch tiêm từ đơn hàng đã thanh toán ---------- */
-    [HttpPost("from-order")]
-    public async Task<IActionResult> CreateFromOrder(CreateAppointmentFromOrderDto createDto, CancellationToken ct = default)
+    /* ---------- 2. Tạo phiếu đăng ký từ đơn hàng ---------- */
+    [HttpPost("create-from-order")]
+    public async Task<IActionResult> CreateFromOrder([FromBody] CreateAppointmentFromOrderDto createDto, CancellationToken ct = default)
     {
         try
         {
-            if (!ModelState.IsValid)
+            // Lấy thông tin đơn hàng
+            var order = await _context.DonHangs
+                .Include(dh => dh.DonHangChiTiets)
+                .FirstOrDefaultAsync(dh => dh.MaDonHang == createDto.OrderId, ct);
+
+            if (order == null)
             {
-                return ApiResponse.Error("Dữ liệu không hợp lệ");
+                return ApiResponse.Error("Không tìm thấy đơn hàng");
             }
 
-            // Kiểm tra đơn hàng tồn tại và đã thanh toán
-            var order = await _context.DonHangs
-                .FirstOrDefaultAsync(d => d.MaDonHang == createDto.OrderId && 
-                                        d.IsDelete == false && 
-                                        d.TrangThaiDon == "PAID", ct);
-            
-            if (order == null)
-                return ApiResponse.Error("Đơn hàng không tồn tại hoặc chưa thanh toán", 400);
+            // Tạo phiếu đăng ký cho từng dịch vụ trong đơn hàng
+            var createdAppointments = new List<string>();
 
-            // Kiểm tra bác sĩ tồn tại
-            if (!await _context.BacSis.AnyAsync(b => b.MaBacSi == createDto.DoctorId && b.IsDelete == false, ct))
-                return ApiResponse.Error("Không tìm thấy bác sĩ", 404);
-
-            // Kiểm tra lịch làm việc có sẵn
-            var schedule = await _context.LichLamViecs
-                .FirstOrDefaultAsync(l => l.MaLichLamViec == createDto.ScheduleId &&
-                                        l.MaBacSi == createDto.DoctorId &&
-                                        l.IsDelete == false &&
-                                        l.IsActive == true &&
-                                        l.TrangThai == "Available" &&
-                                        l.SoLuongCho > (l.DaDat ?? 0), ct);
-
-            if (schedule == null)
-                return ApiResponse.Error("Lịch làm việc không có sẵn", 400);
-
-            // Kiểm tra thời gian hợp lệ
-            if (createDto.AppointmentDate < DateOnly.FromDateTime(DateTime.Today))
-                return ApiResponse.Error("Ngày hẹn không thể trong quá khứ", 400);
-
-            // Kiểm tra thời gian hẹn có trong lịch làm việc không
-            if (createDto.AppointmentDate != schedule.NgayLam)
-                return ApiResponse.Error("Ngày hẹn không khớp với lịch làm việc của bác sĩ", 400);
-
-            // Kiểm tra giờ hẹn có trong khung giờ làm việc không
-            var appointmentTime = TimeOnly.Parse(createDto.AppointmentTime);
-            if (appointmentTime < schedule.GioBatDau || appointmentTime >= schedule.GioKetThuc)
-                return ApiResponse.Error("Giờ hẹn không nằm trong khung giờ làm việc của bác sĩ", 400);
-
-            // Tạo phiếu đăng ký lịch tiêm
-            var appointment = new PhieuDangKyLichTiem
+            foreach (var chiTiet in order.DonHangChiTiets)
             {
-                MaPhieuDangKy = Guid.NewGuid().ToString(),
-                MaKhachHang = order.MaNguoiDung,
-                MaDonHang = createDto.OrderId,
-                MaBacSi = createDto.DoctorId,
-                NgayDangKy = DateTime.Now,
-                NgayHenTiem = createDto.AppointmentDate.ToDateTime(TimeOnly.MinValue),
-                GioHenTiem = createDto.AppointmentTime,
-                TrangThai = "Chờ xác nhận",
-                GhiChu = createDto.GhiChu,
-                IsDelete = false,
-                IsActive = true,
-                NgayTao = DateTime.Now,
-                NgayCapNhat = DateTime.Now
-            };
+                var phieuDangKy = new PhieuDangKyLichTiem
+                {
+                    MaPhieuDangKy = Guid.NewGuid().ToString(),
+                    MaKhachHang = order.MaNguoiDung,
+                    MaDichVu = chiTiet.MaDichVu,
+                    NgayDangKy = DateTime.Now,
+                    TrangThai = "Pending",
+                    GhiChu = createDto.GhiChu,
+                    IsActive = true,
+                    IsDelete = false,
+                    NgayTao = DateTime.Now,
+                    NgayCapNhat = DateTime.Now
+                };
 
-            _context.PhieuDangKyLichTiems.Add(appointment);
-
-            // Cập nhật số chỗ đã đặt trong lịch làm việc
-            schedule.DaDat = (schedule.DaDat ?? 0) + 1;
-            if (schedule.DaDat >= schedule.SoLuongCho)
-            {
-                schedule.TrangThai = "Full";
+                _context.PhieuDangKyLichTiems.Add(phieuDangKy);
+                createdAppointments.Add(phieuDangKy.MaPhieuDangKy);
             }
 
             await _context.SaveChangesAsync(ct);
 
-            // Lấy thông tin đầy đủ để trả về
-            var result = await GetById(appointment.MaPhieuDangKy, ct);
-
-            return CreatedAtAction(nameof(GetById), new { id = appointment.MaPhieuDangKy }, 
-                ApiResponse.Success("Đăng ký lịch tiêm thành công", result));
+            return ApiResponse.Success("Tạo phiếu đăng ký lịch tiêm từ đơn hàng thành công", createdAppointments);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Lỗi khi đăng ký lịch tiêm từ đơn hàng");
-            return ApiResponse.Error("Lỗi server khi đăng ký lịch tiêm");
+            _logger.LogError(ex, "Lỗi khi tạo phiếu đăng ký lịch tiêm từ đơn hàng");
+            return ApiResponse.Error("Lỗi server khi tạo phiếu đăng ký lịch tiêm từ đơn hàng");
         }
     }
 
@@ -289,12 +183,9 @@ public class PhieuDangKyLichTiemController : ControllerBase
             {
                 MaPhieuDangKy = Guid.NewGuid().ToString(),
                 MaKhachHang = createDto.MaKhachHang,
-                MaDonHang = createDto.MaDonHang,
-                MaBacSi = createDto.MaBacSi,
+                MaDichVu = createDto.MaDichVu,
                 NgayDangKy = DateTime.Now,
-                NgayHenTiem = createDto.NgayHenTiem,
-                GioHenTiem = createDto.GioHenTiem,
-                TrangThai = "Chờ duyệt",
+                TrangThai = "Pending",
                 GhiChu = createDto.GhiChu,
                 IsDelete = false,
                 IsActive = true,
@@ -336,10 +227,6 @@ public class PhieuDangKyLichTiemController : ControllerBase
             }
 
             // Cập nhật các trường
-            if (updateDto.NgayHenTiem.HasValue)
-                phieuDangKy.NgayHenTiem = updateDto.NgayHenTiem.Value;
-            if (!string.IsNullOrEmpty(updateDto.GioHenTiem))
-                phieuDangKy.GioHenTiem = updateDto.GioHenTiem;
             if (!string.IsNullOrEmpty(updateDto.GhiChu))
                 phieuDangKy.GhiChu = updateDto.GhiChu;
 
@@ -372,14 +259,14 @@ public class PhieuDangKyLichTiemController : ControllerBase
                 return ApiResponse.Error("Không tìm thấy phiếu đăng ký lịch tiêm");
             }
 
-            if (phieuDangKy.TrangThai != "Chờ xác nhận")
+            if (phieuDangKy.TrangThai != "Pending")
             {
                 return ApiResponse.Error("Phiếu đăng ký không ở trạng thái chờ xác nhận");
             }
 
             // Cập nhật trạng thái
             phieuDangKy.TrangThai = approveDto.Status;
-            if (approveDto.Status == "Từ chối" && !string.IsNullOrEmpty(approveDto.Reason))
+            if (approveDto.Status == "Rejected" && !string.IsNullOrEmpty(approveDto.Reason))
             {
                 phieuDangKy.LyDoTuChoi = approveDto.Reason;
             }
@@ -389,6 +276,41 @@ public class PhieuDangKyLichTiemController : ControllerBase
             }
 
             phieuDangKy.NgayCapNhat = DateTime.Now;
+
+            // Nếu trạng thái là "Approved", tạo PhieuTiem mới
+            if (approveDto.Status == "Approved")
+            {
+                var phieuTiem = new PhieuTiem
+                {
+                    MaPhieuTiem = Guid.NewGuid().ToString(),
+                    MaNguoiDung = phieuDangKy.MaKhachHang,
+                    MaDichVu = phieuDangKy.MaDichVu,
+                    TrangThai = "NOTIFICATION",
+                    NgayTiem = DateTime.UtcNow,
+                    IsActive = true,
+                    IsDelete = false,
+                    NgayTao = DateTime.UtcNow,
+                    NgayCapNhat = DateTime.UtcNow
+                };
+
+                _context.PhieuTiems.Add(phieuTiem);
+                
+                // Tạo chi tiết phiếu tiêm mặc định
+                var chiTietPhieuTiem = new ChiTietPhieuTiem
+                {
+                    MaChiTietPhieuTiem = Guid.NewGuid().ToString(),
+                    MaPhieuTiem = phieuTiem.MaPhieuTiem,
+                    MaVaccine = "default", // Cần cập nhật để lấy từ dịch vụ thực tế
+                    MuiTiemThucTe = 1,
+                    ThuTu = 1,
+                    IsActive = true,
+                    IsDelete = false,
+                    NgayTao = DateTime.UtcNow,
+                    NgayCapNhat = DateTime.UtcNow
+                };
+                
+                _context.ChiTietPhieuTiems.Add(chiTietPhieuTiem);
+            }
 
             _context.PhieuDangKyLichTiems.Update(phieuDangKy);
             await _context.SaveChangesAsync(ct);
@@ -401,7 +323,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi duyệt phiếu đăng ký lịch tiêm");
-            return ApiResponse.Error("Lỗi server khi duyệt phiếu đăng ký lịch tiêm");
+            return ApiResponse.Error("Lỗi server khi duyệt phiếu đăng ký lịch tiêm"+ex.Message);
         }
     }
 
@@ -441,31 +363,26 @@ public class PhieuDangKyLichTiemController : ControllerBase
         {
             var query = from p in _context.PhieuDangKyLichTiems
                         join kh in _context.NguoiDungs on p.MaKhachHang equals kh.MaNguoiDung
-                        join dh in _context.DonHangs on p.MaDonHang equals dh.MaDonHang
-                        join bs in _context.BacSis on p.MaBacSi equals bs.MaBacSi
-                        join nd in _context.NguoiDungs on bs.MaNguoiDung equals nd.MaNguoiDung
+                        join dv in _context.DichVus on p.MaDichVu equals dv.MaDichVu
                         where p.MaKhachHang == customerId && p.IsDelete != true && p.IsActive == true
                         select new PhieuDangKyLichTiemVM
                         {
                             MaPhieuDangKy = p.MaPhieuDangKy,
                             MaKhachHang = p.MaKhachHang,
-                            MaDonHang = p.MaDonHang,
-                            MaBacSi = p.MaBacSi,
-                            NgayDangKy = p.NgayDangKy,
-                            NgayHenTiem = p.NgayHenTiem,
-                            GioHenTiem = p.GioHenTiem,
+                            MaDichVu = p.MaDichVu,
+                            NgayDangKy = p.NgayDangKy.ToString("yyyy-MM-dd HH:mm:ss"),
                             TrangThai = p.TrangThai,
                             LyDoTuChoi = p.LyDoTuChoi,
                             GhiChu = p.GhiChu,
                             IsDelete = p.IsDelete,
                             IsActive = p.IsActive,
-                            NgayTao = p.NgayTao,
-                            NgayCapNhat = p.NgayCapNhat,
+                            NgayTao = p.NgayTao.HasValue ? p.NgayTao.Value.ToString("yyyy-MM-dd HH:mm:ss") : null,
+                            NgayCapNhat = p.NgayCapNhat.HasValue ? p.NgayCapNhat.Value.ToString("yyyy-MM-dd HH:mm:ss") : null,
                             TenKhachHang = kh.Ten,
                             SoDienThoaiKhachHang = kh.SoDienThoai,
                             EmailKhachHang = kh.Email,
-                            MaDonHangDisplay = dh.MaDonHang,
-                            TenBacSi = nd.Ten
+                            TenDichVu = dv.Ten,
+                            MaDonHangDisplay = p.MaDichVu
                         };
 
             var phieuDangKys = await query.ToListAsync(ct);
@@ -479,49 +396,99 @@ public class PhieuDangKyLichTiemController : ControllerBase
         }
     }
 
-    /* ---------- 10. Lấy phiếu đăng ký theo bác sĩ ---------- */
-    [HttpGet("by-doctor/{doctorId}")]
-    public async Task<IActionResult> GetByDoctor(string doctorId, CancellationToken ct = default)
+    /* ---------- 10. Lấy tất cả phiếu đăng ký tiêm chủng theo maNguoiDung (có phân trang) ---------- */
+    [HttpGet("by-user/{maNguoiDung}")]
+    public async Task<IActionResult> GetAllByUser(
+        string maNguoiDung,
+        [FromQuery] int? page = 1,
+        [FromQuery] int? pageSize = 20,
+        CancellationToken ct = default)
     {
         try
         {
+            _logger.LogInformation("Bắt đầu lấy danh sách phiếu đăng ký cho maNguoiDung: {maNguoiDung}", maNguoiDung);
+            
+            // Kiểm tra xem maNguoiDung có tồn tại không
+            var userExists = await _context.NguoiDungs.AnyAsync(u => u.MaNguoiDung == maNguoiDung, ct);
+            if (!userExists)
+            {
+                _logger.LogWarning("Không tìm thấy người dùng với maNguoiDung: {maNguoiDung}", maNguoiDung);
+                return ApiResponse.Error($"Không tìm thấy người dùng với mã: {maNguoiDung}");
+            }
+
             var query = from p in _context.PhieuDangKyLichTiems
                         join kh in _context.NguoiDungs on p.MaKhachHang equals kh.MaNguoiDung
-                        join dh in _context.DonHangs on p.MaDonHang equals dh.MaDonHang
-                        join bs in _context.BacSis on p.MaBacSi equals bs.MaBacSi
-                        join nd in _context.NguoiDungs on bs.MaNguoiDung equals nd.MaNguoiDung
-                        where p.MaBacSi == doctorId && p.IsDelete != true && p.IsActive == true
+                        join dv in _context.DichVus on p.MaDichVu equals dv.MaDichVu
+                        where p.MaKhachHang == maNguoiDung && p.IsDelete != true && p.IsActive == true
                         select new PhieuDangKyLichTiemVM
                         {
                             MaPhieuDangKy = p.MaPhieuDangKy,
                             MaKhachHang = p.MaKhachHang,
-                            MaDonHang = p.MaDonHang,
-                            MaBacSi = p.MaBacSi,
-                            NgayDangKy = p.NgayDangKy,
-                            NgayHenTiem = p.NgayHenTiem,
-                            GioHenTiem = p.GioHenTiem,
+                            MaDichVu = p.MaDichVu,
+                            NgayDangKy = p.NgayDangKy.ToString("yyyy-MM-dd HH:mm:ss"),
                             TrangThai = p.TrangThai,
                             LyDoTuChoi = p.LyDoTuChoi,
                             GhiChu = p.GhiChu,
                             IsDelete = p.IsDelete,
                             IsActive = p.IsActive,
-                            NgayTao = p.NgayTao,
-                            NgayCapNhat = p.NgayCapNhat,
+                            NgayTao = p.NgayTao.HasValue ? p.NgayTao.Value.ToString("yyyy-MM-dd HH:mm:ss") : null,
+                            NgayCapNhat = p.NgayCapNhat.HasValue ? p.NgayCapNhat.Value.ToString("yyyy-MM-dd HH:mm:ss") : null,
                             TenKhachHang = kh.Ten,
                             SoDienThoaiKhachHang = kh.SoDienThoai,
                             EmailKhachHang = kh.Email,
-                            MaDonHangDisplay = dh.MaDonHang,
-                            TenBacSi = nd.Ten
+                            TenDichVu = dv.Ten,
+                            MaDonHangDisplay = p.MaDichVu
                         };
 
-            var phieuDangKys = await query.ToListAsync(ct);
+            _logger.LogInformation("Thực hiện query với page: {page}, pageSize: {pageSize}", page, pageSize);
+            var paged = await query.ToPagedAsync(page!.Value, pageSize!.Value, ct);
+            
+            _logger.LogInformation("Query thành công, tổng số: {totalCount}", paged.TotalCount);
 
-            return ApiResponse.Success("Lấy danh sách phiếu đăng ký lịch tiêm theo bác sĩ thành công", phieuDangKys);
+            return ApiResponse.Success(
+                "Lấy danh sách phiếu đăng ký lịch tiêm theo người dùng thành công",
+                new PagedResultDto<PhieuDangKyLichTiemVM>(
+                    paged.TotalCount,
+                    paged.Page,
+                    paged.PageSize,
+                    paged.TotalPages,
+                    paged.Data));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Lỗi khi lấy danh sách phiếu đăng ký lịch tiêm theo bác sĩ");
-            return ApiResponse.Error("Lỗi server khi lấy danh sách phiếu đăng ký lịch tiêm theo bác sĩ");
+            _logger.LogError(ex, "Lỗi khi lấy danh sách phiếu đăng ký lịch tiêm theo người dùng");
+            return ApiResponse.Error("Lỗi server khi lấy danh sách phiếu đăng ký lịch tiêm theo người dùng");
+        }
+    }
+
+    /* ---------- 11. Test endpoint để kiểm tra controller ---------- */
+    [HttpGet("test")]
+    public IActionResult Test()
+    {
+        return ApiResponse.Success("Controller hoạt động bình thường", new { timestamp = DateTime.Now });
+    }
+
+    /* ---------- 12. Kiểm tra dữ liệu trong database ---------- */
+    [HttpGet("check-data")]
+    public async Task<IActionResult> CheckData(CancellationToken ct = default)
+    {
+        try
+        {
+            var totalPhieuDangKy = await _context.PhieuDangKyLichTiems.CountAsync(ct);
+            var totalNguoiDung = await _context.NguoiDungs.CountAsync(ct);
+            var totalDonHang = await _context.DonHangs.CountAsync(ct);
+
+            return ApiResponse.Success("Thông tin database", new
+            {
+                totalPhieuDangKy,
+                totalNguoiDung,
+                totalDonHang
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi kiểm tra dữ liệu database");
+            return ApiResponse.Error("Lỗi server khi kiểm tra dữ liệu database");
         }
     }
 
@@ -529,17 +496,13 @@ public class PhieuDangKyLichTiemController : ControllerBase
     public class CreateAppointmentFromOrderDto
     {
         public string OrderId { get; set; } = null!;
-        public string DoctorId { get; set; } = null!;
-        public string ScheduleId { get; set; } = null!;
-        public DateOnly AppointmentDate { get; set; }
-        public string AppointmentTime { get; set; } = null!;
         public string? GhiChu { get; set; }
     }
 
     // DTO cho việc duyệt phiếu
     public class ApproveAppointmentDto
     {
-        public string Status { get; set; } = null!; // "Chấp nhận" hoặc "Từ chối"
+        public string Status { get; set; } = null!; // "Approved" hoặc "Rejected"
         public string? Reason { get; set; } // Lý do từ chối nếu có
     }
 } 

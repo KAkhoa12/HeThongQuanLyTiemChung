@@ -10,9 +10,11 @@ export interface UserInfo {
   soDienThoai?: string;
   ngaySinh?: string;
   diaChi?: string;
-  vaiTro: string;
-  ngayTao: string;
+  role: string;
+  moTaVaiTro: string;
+  registeredAt: string;
   avatarUrl?: string;
+  permissions: string[];
 }
 
 export interface AuthState {
@@ -59,7 +61,11 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true, error: null });
           
-          const userInfo = await authService.login({ email, matKhau: password });
+          // Login và lưu token
+          await authService.login({ email, matKhau: password });
+          
+          // Sau khi lưu token, lấy thông tin user
+          const userInfo = await authService.getCurrentUser();
           
           set({
             user: userInfo,

@@ -1,11 +1,11 @@
-import toast from 'react-hot-toast';
+import { toast } from 'react-toastify';
 import React from 'react';
 
 export type ToastType = 'success' | 'warning' | 'error';
 
 const createCustomToast = (title: string, msg: string, type: ToastType) => {
   const toastId = `toast-${Date.now()}`;
-  
+
   const getBackgroundColor = () => {
     switch (type) {
       case 'success': return '#04b20c';
@@ -23,8 +23,8 @@ const createCustomToast = (title: string, msg: string, type: ToastType) => {
       default: return '✅';
     }
   };
-  
-  return toast.custom(
+
+  return toast(
     (t) => (
       <div
         style={{
@@ -50,7 +50,7 @@ const createCustomToast = (title: string, msg: string, type: ToastType) => {
           </div>
         </div>
         <button
-          onClick={() => toast.dismiss(t.id)}
+          onClick={() => toast.dismiss()}
           style={{
             background: 'rgba(255, 255, 255, 0.2)',
             border: 'none',
@@ -81,9 +81,15 @@ const createCustomToast = (title: string, msg: string, type: ToastType) => {
       </div>
     ),
     {
-      id: toastId,
-      duration: type === 'error' ? 5000 : 4000,
+      toastId: toastId,
+      autoClose: type === 'error' ? 5000 : 4000,
       position: 'top-right',
+      closeButton: false,
+      hideProgressBar: true,
+      pauseOnHover: true,
+      draggable: true,
+      style: { background: 'transparent', boxShadow: 'none', padding: 0 },
+      bodyStyle: { padding: 0, margin: 0 },
     }
   );
 };
@@ -106,4 +112,4 @@ export const useToast = () => {
     showWarning,
     showError
   };
-}; 
+};

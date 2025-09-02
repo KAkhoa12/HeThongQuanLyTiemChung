@@ -43,7 +43,7 @@ const DropdownUser = () => {
           <span className="block text-sm font-medium text-black dark:text-white">
             {user?.ten || 'User'}
           </span>
-          <span className="block text-xs">{user?.vaiTro || 'User'}</span>
+          <span className="block text-xs">{user?.moTaVaiTro || 'Người dùng'}</span>
         </span>
 
         <span className="h-12 w-12 rounded-full">
@@ -61,39 +61,10 @@ const DropdownUser = () => {
         <div
           className={`absolute right-0 mt-4 flex w-62.5 flex-col rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark`}
         >
-          <ul className="flex flex-col gap-5 border-b border-stroke px-6 py-7.5 dark:border-strokedark">
-            <li>
-              <Link
-                to="/profile"
-                className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
-              >
-                <i className="ri-user-line"></i>
-                My Profile
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="#"
-                className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
-              >
-                <i className="ri-article-line"></i>
-                My Contacts
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/settings"
-                className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
-              >
-                <i className="ri-settings-line"></i>
-                Account Settings
-              </Link>
-            </li>
-          </ul>
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-red-500 lg:text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <i className="ri-logout-box-line"></i>
 

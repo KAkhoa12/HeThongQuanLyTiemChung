@@ -28,7 +28,7 @@ const PrivateRoute = ({ children, requiredRoles = [] }: PrivateRouteProps) => {
           // Try to get current user
           const user = await authService.getCurrentUser();
           setIsAuthenticated(true);
-          setUserRoles([user.vaiTro]);
+          setUserRoles([user.role]);
           setIsLoading(false);
         } catch (error) {
           // Try to refresh token if getting user fails
@@ -38,7 +38,7 @@ const PrivateRoute = ({ children, requiredRoles = [] }: PrivateRouteProps) => {
               const user = await authService.getCurrentUser();
               setIsAuthenticated(true);
               
-              setUserRoles([user.vaiTro]);
+              setUserRoles([user.role]);
             } catch (e) {
               setIsAuthenticated(false);
             }

@@ -1,5 +1,34 @@
 // Types cho User - tương ứng với DTOs từ backend
 
+// Interface cho thông tin bác sĩ
+export interface BacSiInfoDto {
+  maBacSi: string;
+  chuyenMon?: string;
+  soGiayPhep?: string;
+}
+
+// Interface cho thông tin quản lý
+export interface QuanLyInfoDto {
+  maQuanLy: string;
+}
+
+// Interface cho thông tin người dùng thường (health info)
+export interface UserHealthInfoDto {
+  maThongTin: string;
+  chieuCao?: number;
+  canNang?: number;
+  bmi?: number;
+  nhomMau?: string;
+  benhNen?: string;
+  diUng?: string;
+  thuocDangDung?: string;
+  tinhTrangMangThai?: boolean;
+  ngayKhamGanNhat?: string; // DateOnly
+}
+
+// Union type cho info theo vai trò
+export type RoleInfo = BacSiInfoDto | QuanLyInfoDto | UserHealthInfoDto;
+
 export interface UserCompleteProfileDto {
   maNguoiDung: string;
   ten: string;
@@ -9,7 +38,8 @@ export interface UserCompleteProfileDto {
   diaChi?: string;
   maVaiTro: string;
   ngayTao?: string; // DateTime từ backend
-  healthInfo?: HealthInfoDto;
+  maAnh?: string;
+  info?: RoleInfo; // Thông tin theo vai trò
 }
 
 export interface UserProfileUpdateDto {
@@ -17,6 +47,13 @@ export interface UserProfileUpdateDto {
   soDienThoai?: string;
   ngaySinh?: string; // DateOnly
   diaChi?: string;
+  maAnh?: string;
+  bacSiInfo?: BacSiUpdateDto;
+}
+
+export interface BacSiUpdateDto {
+  chuyenMon?: string;
+  soGiayPhep?: string;
 }
 
 export interface HealthInfoDto {
