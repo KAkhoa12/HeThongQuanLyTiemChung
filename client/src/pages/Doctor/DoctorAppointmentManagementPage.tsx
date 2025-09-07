@@ -4,7 +4,7 @@ import { FaCalendarAlt, FaClock, FaUser, FaCheck, FaTimes, FaEye, FaSearch, FaFi
 import { getAllDoctorsNoPage } from '../../services/doctor.service';
 import { useApiWithParams } from '../../hooks/useApi';
 import { Doctor } from '../../types/doctor.types';
-import { useAppointmentsByDoctor, useApproveAppointment, useAppointment } from '../../hooks';
+import { useAppointmentsByDoctor, useApproveAppointment, useAppointmentById } from '../../hooks';
 import { AppointmentVM } from '../../services/appointment.service';
 import DefaultLayout from '../../layout/DefaultLayout';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
@@ -29,7 +29,7 @@ const DoctorAppointmentManagementPage: React.FC = () => {
   // Load appointments
   const { appointments: doctorAppointments, loading: loadingDoctorAppointments, execute: fetchDoctorAppointments } = useAppointmentsByDoctor();
   const { appointment: approvedAppointment, loading: approving, error: errorApproving, execute: approveExistingAppointment, reset: resetApprove } = useApproveAppointment();
-  const { appointment, loading: loadingAppointment, execute: fetchAppointment } = useAppointment();
+  const { appointment, loading: loadingAppointment, execute: fetchAppointment } = useAppointmentById(null);
 
   useEffect(() => {
     fetchDoctors({});

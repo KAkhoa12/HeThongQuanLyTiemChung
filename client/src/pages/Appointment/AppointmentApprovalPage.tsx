@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { FaCalendarAlt, FaClock, FaUser, FaMapMarkerAlt, FaCheck, FaTimes, FaEye, FaSearch, FaFileAlt, FaPhone, FaEnvelope, FaStethoscope } from 'react-icons/fa';
-import { useAppointmentsByDoctor, useApproveAppointment, useAppointment } from '../../hooks';
+import { useAppointmentsByDoctor, useApproveAppointment, useAppointmentById } from '../../hooks';
 import { useAuth } from '../../hooks';
 import { AppointmentVM } from '../../services/appointment.service';
 import { getAllDoctorsNoPage } from '../../services/doctor.service';
@@ -26,7 +26,7 @@ const AppointmentApprovalPage: React.FC = () => {
   // Hooks
   const { appointments: doctorAppointments, loading: loadingDoctorAppointments, execute: fetchDoctorAppointments } = useAppointmentsByDoctor();
   const { appointment: approvedAppointment, loading: approving, error: errorApproving, execute: approveExistingAppointment, reset: resetApprove } = useApproveAppointment();
-  const { appointment, loading: loadingAppointment, execute: fetchAppointment } = useAppointment();
+  const { appointment, loading: loadingAppointment, execute: fetchAppointment } = useAppointmentById(null);
   const { data: doctors, loading: doctorsLoading, execute: fetchDoctors } = useApiWithParams<Doctor[], any>(
     async () => getAllDoctorsNoPage(), null
   );

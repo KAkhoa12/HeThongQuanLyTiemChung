@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { CardDataStats } from '../../components/CardDataStats';
-import { DataTable } from '../../components/Tables/DataTable';
+import CardDataStats from '../../components/CardDataStats';
+import DataTable from '../../components/Tables/DataTable';
 import { usePhieuDangKyLichTiemByCustomer } from '../../hooks';
 import { useAuth } from '../../hooks';
 import { format } from 'date-fns';

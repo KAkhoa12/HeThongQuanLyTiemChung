@@ -37,6 +37,8 @@ export { useLocations, useAllLocations, useLocation } from './useLocations';
 
 // Appointment Hooks
 export { useAppointments } from './useAppointments';
+export { useAppointmentsByDoctor } from './useAppointmentsByDoctor';
+export { useAppointmentById } from './useAppointment';
 export { useCreateAppointment } from './useCreateAppointment';
 export { useCreateAppointmentFromOrder } from './useCreateAppointmentFromOrder';
 export { useUpdateAppointment } from './useUpdateAppointment';
