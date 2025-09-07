@@ -11,8 +11,6 @@ public partial class PhieuXuat
 
     public string? MaDiaDiemNhap { get; set; }
 
-    public string? MaQuanLy { get; set; }
-
     public DateTime? NgayXuat { get; set; }
 
     public string? LoaiXuat { get; set; }
@@ -26,6 +24,8 @@ public partial class PhieuXuat
     public DateTime? NgayTao { get; set; }
 
     public DateTime? NgayCapNhat { get; set; }
+
+    public string? MaQuanLy { get; set; }
 
     public virtual ICollection<ChiTietXuat> ChiTietXuats { get; set; } = new List<ChiTietXuat>();
 

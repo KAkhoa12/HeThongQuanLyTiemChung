@@ -9,8 +9,6 @@ public partial class LichHen
 
     public string MaDonHang { get; set; } = null!;
 
-    public string MaDiaDiem { get; set; } = null!;
-
     public DateTime NgayHen { get; set; }
 
     public string? TrangThai { get; set; }
@@ -25,11 +23,11 @@ public partial class LichHen
 
     public DateTime? NgayCapNhat { get; set; }
 
-    public virtual DonHang MaDonHangNavigation { get; set; } = null!;
+    public string MaDiaDiem { get; set; } = null!;
 
     public virtual DiaDiem MaDiaDiemNavigation { get; set; } = null!;
 
-    public virtual ICollection<PhieuTiem> PhieuTiems { get; set; } = new List<PhieuTiem>();
+    public virtual DonHang MaDonHangNavigation { get; set; } = null!;
 
     public virtual ICollection<YeuCauDoiLich> YeuCauDoiLiches { get; set; } = new List<YeuCauDoiLich>();
 }

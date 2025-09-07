@@ -4,6 +4,7 @@ using server.DTOs.Kho;
 using server.DTOs.Pagination;
 using server.Helpers;
 using server.Models;
+using server.Types;
 
 namespace server.Controllers;
 
@@ -28,16 +29,27 @@ public class LoVaccineController : ControllerBase
         var query = _ctx.LoVaccines
             .Include(l => l.MaVaccineNavigation)
             .Include(l => l.MaNhaCungCapNavigation)
-            .Where(l => l.IsDelete == false);
+            .Where(l => l.IsDelete == false)
+            // Step 1: Exclude LoVaccine records that have been disposed of (thanh lý)
+            .Where(l => !l.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude LoVaccine records that have pending or rejected phiếu nhập
+            .Where(l => !l.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include LoVaccine records that have at least one approved phiếu nhập
+            .Where(l => l.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved));
 
         // Tìm kiếm theo từ khóa
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(l => 
-                l.MaLo.Contains(search) ||
-                l.SoLo.Contains(search) ||
-                l.MaVaccineNavigation.Ten.Contains(search) ||
-                l.MaNhaCungCapNavigation.Ten.Contains(search));
+                (l.MaLo != null && l.MaLo.Contains(search)) ||
+                (l.SoLo != null && l.SoLo.Contains(search)) ||
+                (l.MaVaccineNavigation != null && l.MaVaccineNavigation.Ten.Contains(search)) ||
+                (l.MaNhaCungCapNavigation != null && l.MaNhaCungCapNavigation.Ten.Contains(search)));
         }
 
         // Lọc theo vaccine
@@ -83,7 +95,19 @@ public class LoVaccineController : ControllerBase
             .Include(l => l.MaNhaCungCapNavigation)
             .Include(l => l.TonKhoLos)
                 .ThenInclude(tk => tk.MaDiaDiemNavigation)
-            .FirstOrDefaultAsync(l => l.MaLo == id && l.IsDelete == false, ct);
+            .Where(l => l.MaLo == id && l.IsDelete == false)
+            // Step 1: Exclude LoVaccine records that have been disposed of (thanh lý)
+            .Where(l => !l.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude LoVaccine records that have pending or rejected phiếu nhập
+            .Where(l => !l.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include LoVaccine records that have at least one approved phiếu nhập
+            .Where(l => l.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved))
+            .FirstOrDefaultAsync(ct);
 
         if (loVaccine == null)
             return ApiResponse.Error("Không tìm thấy lô vaccine", 404);
@@ -97,9 +121,9 @@ public class LoVaccineController : ControllerBase
                 tk.SoLuong,
                 tk.NgayTao,
                 tk.NgayCapNhat,
-                tk.MaDiaDiemNavigation.Ten,
+                tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation.Ten : "",
                 loVaccine.SoLo,
-                loVaccine.MaVaccineNavigation.Ten
+                loVaccine.MaVaccineNavigation != null ? loVaccine.MaVaccineNavigation.Ten : ""
             ))
             .ToList();
 
@@ -153,7 +177,7 @@ public class LoVaccineController : ControllerBase
             NgaySanXuat = dto.NgaySanXuat,
             NgayHetHan = dto.NgayHetHan,
             SoLuongNhap = dto.SoLuongNhap,
-            SoLuongHienTai = dto.SoLuongNhap, // Ban đầu số lượng hiện tại = số lượng nhập
+            SoLuongHienTai = dto.SoLuongNhap,
             GiaNhap = dto.GiaNhap,
             IsActive = true,
             IsDelete = false,
@@ -252,6 +276,17 @@ public class LoVaccineController : ControllerBase
             .Include(l => l.MaVaccineNavigation)
             .Include(l => l.MaNhaCungCapNavigation)
             .Where(l => l.MaVaccine == vaccineId && l.IsDelete == false)
+            // Step 1: Exclude LoVaccine records that have been disposed of (thanh lý)
+            .Where(l => !l.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude LoVaccine records that have pending or rejected phiếu nhập
+            .Where(l => !l.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include LoVaccine records that have at least one approved phiếu nhập
+            .Where(l => l.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved))
             .OrderByDescending(l => l.NgayTao)
             .Select(l => new LoVaccineDto(
                 l.MaLo,
@@ -288,6 +323,17 @@ public class LoVaccineController : ControllerBase
                        l.NgayHetHan <= expiringDate && 
                        l.IsDelete == false &&
                        l.SoLuongHienTai > 0)
+            // Step 1: Exclude LoVaccine records that have been disposed of (thanh lý)
+            .Where(l => !l.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude LoVaccine records that have pending or rejected phiếu nhập
+            .Where(l => !l.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include LoVaccine records that have at least one approved phiếu nhập
+            .Where(l => l.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved))
             .OrderBy(l => l.NgayHetHan)
             .Select(l => new LoVaccineDto(
                 l.MaLo,

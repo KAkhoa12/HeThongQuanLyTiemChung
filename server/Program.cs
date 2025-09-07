@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Http.Timeouts;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -38,6 +39,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 builder.Services.AddControllers();
+builder.Services.AddRequestTimeouts();
 builder.Services.AddAuthorization(options =>
 {
     // Policy cho AnhDiaDiem
@@ -294,6 +296,7 @@ app.UseStaticFiles(new StaticFileOptions
 });
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRequestTimeouts();
 
 app.MapControllers();
 app.UseSession();

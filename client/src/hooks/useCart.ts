@@ -29,9 +29,9 @@ export const useCart = () => {
     };
   }, []);
 
-  // Load cart từ localStorage lần đầu
+  // Load cart từ localStorage lần đầu và lắng nghe thay đổi
   useEffect(() => {
-    if (globalCartItems.length === 0) {
+    const loadCart = () => {
       const savedCart = localStorage.getItem('vaccineCart');
       if (savedCart) {
         try {
@@ -40,12 +40,34 @@ export const useCart = () => {
             ...item,
             addedAt: new Date(item.addedAt)
           }));
-          notifyListeners();
         } catch (error) {
           console.error('Failed to parse cart:', error);
+          globalCartItems = [];
         }
+      } else {
+        globalCartItems = [];
       }
-    }
+      notifyListeners();
+    };
+
+    // Load cart lần đầu
+    loadCart();
+
+    // Lắng nghe sự thay đổi trong localStorage (từ tab khác)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'vaccineCart') {
+        loadCart();
+      }
+    };
+
+    // Lắng nghe custom event khi cart bị xóa từ cùng tab
+    const handleCartCleared = () => {
+      globalCartItems = [];
+      notifyListeners();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('cartCleared', handleCartCleared);
 
     // Load service types lần đầu
     if (globalServiceTypes.length === 0) {
@@ -54,6 +76,11 @@ export const useCart = () => {
         notifyListeners();
       });
     }
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('cartCleared', handleCartCleared);
+    };
   }, []);
 
   const getServiceTypeName = (typeId: string | undefined) => {
@@ -68,20 +95,16 @@ export const useCart = () => {
       serviceTypeName: service.serviceTypeName || getServiceTypeName(service.serviceTypeId)
     };
 
-    const existingItem = globalCartItems.find(item => item.service.id === service.id);
-    
-    if (existingItem) {
-      existingItem.quantity += 1;
-    } else {
-      globalCartItems.push({
-        service: serviceWithTypeName,
-        quantity: 1,
-        addedAt: new Date()
-      });
-    }
+    // Xóa tất cả dịch vụ cũ và chỉ giữ lại dịch vụ mới
+    globalCartItems = [{
+      service: serviceWithTypeName,
+      quantity: 1,
+      addedAt: new Date()
+    }];
 
     localStorage.setItem('vaccineCart', JSON.stringify(globalCartItems));
     notifyListeners();
+    return true;
   };
 
   const removeFromCart = (serviceId: string) => {
@@ -121,6 +144,10 @@ export const useCart = () => {
     return globalCartItems.reduce((total, item) => total + item.quantity, 0);
   };
 
+  const isInCart = (serviceId: string) => {
+    return globalCartItems.some(item => item.service.id === serviceId);
+  };
+
   return {
     cartItems: globalCartItems,
     addToCart,
@@ -129,5 +156,6 @@ export const useCart = () => {
     clearCart,
     getCartTotal,
     getCartItemCount,
+    isInCart,
   };
 }; 

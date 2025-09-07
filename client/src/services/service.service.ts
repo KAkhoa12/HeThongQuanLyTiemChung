@@ -118,6 +118,48 @@ class ServiceService {
   async getByType(typeId: string, page: number = 1, pageSize: number = 20): Promise<any> {
     return await apiService.get(`/api/services/by-type/${typeId}?page=${page}&pageSize=${pageSize}`);
   }
+
+  // ========== SERVICE CONDITIONS API ==========
+  
+  // Lấy tất cả điều kiện dịch vụ
+  async getServiceConditions(page: number = 1, pageSize: number = 20): Promise<any> {
+    return await apiService.get(`/api/service-conditions?page=${page}&pageSize=${pageSize}`);
+  }
+
+  // Lấy điều kiện theo ID
+  async getServiceConditionById(id: string): Promise<any> {
+    return await apiService.get(`/api/service-conditions/${id}`);
+  }
+
+  // Lấy điều kiện theo dịch vụ
+  async getServiceConditionsByService(serviceId: string): Promise<any> {
+    return await apiService.get(`/api/service-conditions/by-service/${serviceId}`);
+  }
+
+  // Tạo điều kiện mới
+  async createServiceCondition(data: any): Promise<any> {
+    return await apiService.post('/api/service-conditions', data);
+  }
+
+  // Tạo nhiều điều kiện cùng lúc
+  async createServiceConditionsBatch(data: any): Promise<any> {
+    return await apiService.post('/api/service-conditions/batch', data);
+  }
+
+  // Cập nhật điều kiện
+  async updateServiceCondition(id: string, data: any): Promise<any> {
+    return await apiService.put(`/api/service-conditions/${id}`, data);
+  }
+
+  // Xóa điều kiện
+  async deleteServiceCondition(id: string): Promise<any> {
+    return await apiService.delete(`/api/service-conditions/${id}`);
+  }
+
+  // Kiểm tra điều kiện cho người dùng
+  async checkEligibility(data: any): Promise<any> {
+    return await apiService.post('/api/service-conditions/check-eligibility', data);
+  }
 }
 
 const serviceService = new ServiceService();
@@ -161,5 +203,30 @@ export const deleteServiceType = (id: string) =>
 
 export const getServicesByType = (typeId: string, page: number = 1, pageSize: number = 20) => 
   serviceService.getByType(typeId, page, pageSize);
+
+// ========== SERVICE CONDITIONS EXPORTS ==========
+export const getServiceConditions = (page: number = 1, pageSize: number = 20) => 
+  serviceService.getServiceConditions(page, pageSize);
+
+export const getServiceConditionById = (id: string) => 
+  serviceService.getServiceConditionById(id);
+
+export const getServiceConditionsByService = (serviceId: string) => 
+  serviceService.getServiceConditionsByService(serviceId);
+
+export const createServiceCondition = (data: any) => 
+  serviceService.createServiceCondition(data);
+
+export const createServiceConditionsBatch = (data: any) => 
+  serviceService.createServiceConditionsBatch(data);
+
+export const updateServiceCondition = (id: string, data: any) => 
+  serviceService.updateServiceCondition(id, data);
+
+export const deleteServiceCondition = (id: string) => 
+  serviceService.deleteServiceCondition(id);
+
+export const checkEligibility = (data: any) => 
+  serviceService.checkEligibility(data);
 
 export default serviceService;

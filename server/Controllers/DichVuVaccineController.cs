@@ -51,13 +51,6 @@ public class DichVuVaccineController : ControllerBase
         if (!await _ctx.Vaccines.AnyAsync(v => v.MaVaccine == dto.MaVaccine && v.IsDelete == false, ct))
             return ApiResponse.Error("Vaccine không tồn tại");
 
-        // Kiểm tra đã tồn tại liên kết chưa
-        if (await _ctx.DichVuVaccines.AnyAsync(
-            dv => dv.MaDichVu == dto.MaDichVu && 
-                  dv.MaVaccine == dto.MaVaccine && 
-                  dv.IsDelete == false, ct))
-            return ApiResponse.Error("Vaccine đã được thêm vào dịch vụ này");
-
         var serviceVaccine = new DichVuVaccine
         {
             MaDichVuVaccine = Guid.NewGuid().ToString("N"),

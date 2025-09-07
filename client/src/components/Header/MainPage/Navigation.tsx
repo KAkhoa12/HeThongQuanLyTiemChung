@@ -1,34 +1,46 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import logo from '../../../images/logo/logo-icon.svg';
 import { useAuthStore } from '../../../store/useAuthStore';
 import { API_CONFIG } from '../../../config/api.config';
+import { getAllServiceTypesNoPage } from '../../../services/service.service';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
-
-  // Use actual auth store instead of mock data
+  const [serviceTypes, setServiceTypes] = useState<any[]>([]);
   const { user, isAuthenticated, logout, fetchCurrentUser, isLoading } = useAuthStore();
-
-  // Debug authentication state
+  const navigate = useNavigate();
   useEffect(() => {
-    console.log('Navigation - Auth State:', { isAuthenticated, user, isLoading });
-  }, [isAuthenticated, user, isLoading]);
-
-  // Check authentication status on mount
-  useEffect(() => {
-    console.log('Navigation - Fetching current user...');
     fetchCurrentUser();
+    fetchServiceTypes();
   }, [fetchCurrentUser]);
+
+  // Lắng nghe event logout để chuyển hướng về trang chủ
+  useEffect(() => {
+    const handleLogoutSuccess = () => {
+      navigate('/');
+    };
+
+    window.addEventListener('logoutSuccess', handleLogoutSuccess);
+
+    return () => {
+      window.removeEventListener('logoutSuccess', handleLogoutSuccess);
+    };
+  }, [navigate]);
+
+  const fetchServiceTypes = async () => {
+    try {
+      const types = await getAllServiceTypesNoPage();
+      setServiceTypes(types || []);
+    } catch (error) {
+      console.error('Failed to fetch service types:', error);
+      setServiceTypes([]);
+    }
+  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
-  };
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
   };
 
   const toggleUserDropdown = () => {
@@ -97,39 +109,10 @@ const Navigation = () => {
           <div className="relative">
             <button 
               className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
-              onClick={toggleDropdown}
+              onClick={() => navigate('/services')}
             >
               Dịch vụ
-              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
             </button>
-            
-            {isDropdownOpen && (
-              <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                <div className="py-1">
-                  <Link to="/services" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-                    <span className="mr-2">💉</span>
-                    Xem tất cả dịch vụ
-                  </Link>
-                  
-                  <a href="#services" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-                    <span className="mr-2">🏥</span>
-                    Dịch vụ tiêm chủng
-                  </a>
-                  
-                  <a href="#departments" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-                    <span className="mr-2">📍</span>
-                    Địa điểm tiêm chủng
-                  </a>
-                  
-                  <a href="#doctors" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-                    <span className="mr-2">👨‍⚕️</span>
-                    Đội ngũ bác sĩ
-                  </a>
-                </div>
-              </div>
-            )}
           </div>
           
           <a href="#contact" className="text-gray-700 font-medium hover:text-blue-600">Contact</a>
@@ -200,9 +183,16 @@ const Navigation = () => {
                 <span className="mr-2">💉</span>
                 Xem tất cả dịch vụ
               </Link>
-              <a href="#services" className="block py-2 text-sm text-gray-600 hover:text-blue-600">Dịch vụ tiêm chủng</a>
-              <a href="#departments" className="block py-2 text-sm text-gray-600 hover:text-blue-600">Địa điểm tiêm chủng</a>
-                          <a href="#doctors" className="block py-2 text-sm text-gray-600 hover:text-blue-600">Đội ngũ bác sĩ</a>
+              {serviceTypes && serviceTypes.length > 0 && serviceTypes.map((type) => (
+                <Link 
+                  key={type.id} 
+                  to={`/services?type=${type.id}`} 
+                  className="block py-2 text-sm text-gray-600 hover:text-blue-600 flex items-center"
+                >
+                  <span className="mr-2">🏥</span>
+                  {type.name}
+                </Link>
+              ))}
           </div>
           
           {/* Mobile Đăng ký lịch hẹn */}

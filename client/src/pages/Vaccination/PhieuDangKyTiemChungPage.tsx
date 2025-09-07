@@ -23,7 +23,7 @@ const PhieuDangKyTiemChungPage: React.FC = () => {
   // Sử dụng hook khác nhau tùy theo role
   const { data: userAppointmentsData, loading: userLoading, error: userError, execute: refetchUser } = usePhieuDangKyLichTiemByUser();
   const { data: allAppointmentsData, loading: allLoading, error: allError, execute: refetchAll } = usePhieuDangKyLichTiems();
-  const { execute: approveAppointment, loading: isApproving } = useApprovePhieuDangKyLichTiem();
+  const { execute: approveAppointment, loading: isApproving, status: approveStatus, error: approveError } = useApprovePhieuDangKyLichTiem();
   const { execute: deleteAppointment, loading: isDeleting } = useDeletePhieuDangKyLichTiem();
   const { showSuccess, showError } = useToast();
 
@@ -73,18 +73,29 @@ const PhieuDangKyTiemChungPage: React.FC = () => {
         id: selectedAppointment.maPhieuDangKy,
         data: editData
       });
-
-      // Nếu là DOCTOR hoặc MANAGER và trạng thái là "Approved", tạo PhieuTiem mới
-      if ((user?.role === 'DOCTOR' || user?.role === 'MANAGER') && editData.status === 'Approved') {
-        showSuccess('Thành công', 'Cập nhật phiếu đăng ký và tạo phiếu tiêm thành công');
-      } else {
-        showSuccess('Thành công', 'Cập nhật phiếu đăng ký thành công');
+      
+      console.log('Approve status:', approveStatus);
+      console.log('Approve error:', approveError);
+      
+      // Kiểm tra trạng thái từ hook
+      if (approveStatus === 'success') {
+        // Nếu là DOCTOR hoặc MANAGER và trạng thái là "Approved", tạo PhieuTiem mới
+        if ((user?.role === 'DOCTOR' || user?.role === 'MANAGER') && editData.status === 'Approved') {
+          showSuccess('Thành công', 'Cập nhật phiếu đăng ký và tạo phiếu tiêm thành công');
+        } else {
+          showSuccess('Thành công', 'Cập nhật phiếu đăng ký thành công');
+        }
+        
+        setShowEditModal(false);
+        setSelectedAppointment(null);
+        refetch({ page: currentPage, pageSize });
+      } else if (approveStatus === 'error') {
+        // Xử lý lỗi từ API
+        const errorMessage = approveError || 'Có lỗi xảy ra khi cập nhật phiếu đăng ký';
+        showError('Lỗi', errorMessage);
       }
-
-      setShowEditModal(false);
-      setSelectedAppointment(null);
-      refetch({ page: currentPage, pageSize });
     } catch (error) {
+      console.error('Error in handleUpdate:', error);
       showError('Lỗi', 'Có lỗi xảy ra khi cập nhật phiếu đăng ký');
     }
   };
@@ -228,12 +239,27 @@ const PhieuDangKyTiemChungPage: React.FC = () => {
           header: 'Thao tác',
           render: (value: any, item: PhieuDangKyLichTiem) => (
             <div className="flex items-center space-x-2">
-              <button
-                onClick={() => openEditModal(item)}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors"
-              >
-                Chỉnh sửa
-              </button>
+              {
+                item.trangThai === 'Pending' ? (
+                  <button
+                    onClick={() => openEditModal(item)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm transition-colors"
+                  >
+                    Chỉnh sửa
+                  </button>
+                ) : (
+                  item.trangThai === 'Approved' ? (
+                    <span className="text-sm text-green-600">
+                      Đã duyệt
+                    </span>
+                  ) : (
+                    <span className="text-sm text-red-600">
+                      Từ chối
+                    </span>
+                  )
+                )
+              }
+              
             </div>
           ),
         });
@@ -358,10 +384,10 @@ const PhieuDangKyTiemChungPage: React.FC = () => {
               </button>
               <button
                 onClick={handleUpdate}
-                disabled={isApproving || (editData.status === 'Rejected' && !editData.reason)}
+                disabled={isApproving || approveStatus === 'loading' || (editData.status === 'Rejected' && !editData.reason)}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
               >
-                {isApproving ? 'Đang xử lý...' : 'Cập nhật'}
+                {isApproving || approveStatus === 'loading' ? 'Đang xử lý...' : 'Cập nhật'}
               </button>
             </div>
           </div>

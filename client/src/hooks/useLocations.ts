@@ -1,11 +1,10 @@
 import { useApiWithParams } from './useApi';
-import { getAllLocations, getAllLocationsNoPage, getLocationById } from '../services/location.service';
+import { getAllLocations, getAllLocationsNoPage, getLocationById, PagedLocationResult } from '../services/location.service';
 import { LocationDto, LocationDetailDto } from '../services/location.service';
-import { PagedResponse } from '../types/staff.types';
 
 // Hook để lấy danh sách locations có phân trang
 export const useLocations = () => {
-  return useApiWithParams<PagedResponse<LocationDto>, {
+  return useApiWithParams<PagedLocationResult, {
     page?: number;
     pageSize?: number;
   }>(

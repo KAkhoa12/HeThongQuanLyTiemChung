@@ -1,10 +1,17 @@
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 import React from 'react';
 
 export type ToastType = 'success' | 'warning' | 'error';
 
 const createCustomToast = (title: string, msg: string, type: ToastType) => {
-  const toastId = `toast-${Date.now()}`;
+  const getIcon = () => {
+    switch (type) {
+      case 'success': return '✅';
+      case 'warning': return '⚠️';
+      case 'error': return '❌';
+      default: return '✅';
+    }
+  };
 
   const getBackgroundColor = () => {
     switch (type) {
@@ -15,16 +22,7 @@ const createCustomToast = (title: string, msg: string, type: ToastType) => {
     }
   };
 
-  const getIcon = () => {
-    switch (type) {
-      case 'success': return '✅';
-      case 'warning': return '⚠️';
-      case 'error': return '❌';
-      default: return '✅';
-    }
-  };
-
-  return toast(
+  return toast.custom(
     (t) => (
       <div
         style={{
@@ -50,7 +48,7 @@ const createCustomToast = (title: string, msg: string, type: ToastType) => {
           </div>
         </div>
         <button
-          onClick={() => toast.dismiss()}
+          onClick={() => toast.dismiss(t.id)}
           style={{
             background: 'rgba(255, 255, 255, 0.2)',
             border: 'none',
@@ -81,15 +79,7 @@ const createCustomToast = (title: string, msg: string, type: ToastType) => {
       </div>
     ),
     {
-      toastId: toastId,
-      autoClose: type === 'error' ? 5000 : 4000,
-      position: 'top-right',
-      closeButton: false,
-      hideProgressBar: true,
-      pauseOnHover: true,
-      draggable: true,
-      style: { background: 'transparent', boxShadow: 'none', padding: 0 },
-      bodyStyle: { padding: 0, margin: 0 },
+      duration: type === 'error' ? 5000 : 4000,
     }
   );
 };

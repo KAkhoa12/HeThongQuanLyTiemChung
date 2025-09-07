@@ -4,6 +4,7 @@ using server.DTOs.Kho;
 using server.DTOs.Pagination;
 using server.Helpers;
 using server.Models;
+using server.Types;
 
 namespace server.Controllers;
 
@@ -140,11 +141,17 @@ public class PhieuXuatController : ControllerBase
                 return ApiResponse.Error("Địa điểm nhập không tồn tại", 404);
         }
 
-        // Kiểm tra quản lý tồn tại
+        // Tìm MaQuanLy thực sự từ MaNguoiDung
+        string? maQuanLyThuc = null;
         if (!string.IsNullOrEmpty(dto.MaQuanLy))
         {
-            if (!await _ctx.QuanLies.AnyAsync(q => q.MaQuanLy == dto.MaQuanLy && q.IsDelete == false, ct))
+            var quanLy = await _ctx.QuanLies
+                .FirstOrDefaultAsync(q => q.MaNguoiDung == dto.MaQuanLy && q.IsDelete == false, ct);
+            
+            if (quanLy == null)
                 return ApiResponse.Error("Quản lý không tồn tại", 404);
+            
+            maQuanLyThuc = quanLy.MaQuanLy;
         }
 
         // Kiểm tra các lô vaccine có đủ số lượng để xuất
@@ -162,10 +169,10 @@ public class PhieuXuatController : ControllerBase
             MaPhieuXuat = Guid.NewGuid().ToString("N"),
             MaDiaDiemXuat = dto.MaDiaDiemXuat,
             MaDiaDiemNhap = dto.MaDiaDiemNhap,
-            MaQuanLy = dto.MaQuanLy,
+            MaQuanLy = maQuanLyThuc,
             NgayXuat = dto.NgayXuat ?? DateTime.UtcNow,
             LoaiXuat = dto.LoaiXuat,
-            TrangThai = "Chờ xác nhận",
+            TrangThai = TrangThaiPhieuKho.Pending,
             IsActive = true,
             IsDelete = false,
             NgayTao = DateTime.UtcNow
@@ -239,12 +246,16 @@ public class PhieuXuatController : ControllerBase
             phieuXuat.MaDiaDiemNhap = dto.MaDiaDiemNhap;
         }
 
-        // Kiểm tra quản lý tồn tại
+        // Tìm MaQuanLy thực sự từ MaNguoiDung
         if (!string.IsNullOrEmpty(dto.MaQuanLy))
         {
-            if (!await _ctx.QuanLies.AnyAsync(q => q.MaQuanLy == dto.MaQuanLy && q.IsDelete == false, ct))
+            var quanLy = await _ctx.QuanLies
+                .FirstOrDefaultAsync(q => q.MaNguoiDung == dto.MaQuanLy && q.IsDelete == false, ct);
+            
+            if (quanLy == null)
                 return ApiResponse.Error("Quản lý không tồn tại", 404);
-            phieuXuat.MaQuanLy = dto.MaQuanLy;
+            
+            phieuXuat.MaQuanLy = quanLy.MaQuanLy;
         }
 
         if (dto.NgayXuat.HasValue)
@@ -300,13 +311,67 @@ public class PhieuXuatController : ControllerBase
         if (phieuXuat == null)
             return ApiResponse.Error("Không tìm thấy phiếu xuất", 404);
 
-        if (phieuXuat.TrangThai == "Đã xác nhận")
+        if (phieuXuat.TrangThai == TrangThaiPhieuKho.Approved)
             return ApiResponse.Error("Phiếu xuất đã được xác nhận", 400);
 
-        phieuXuat.TrangThai = "Đã xác nhận";
+        phieuXuat.TrangThai = TrangThaiPhieuKho.Approved;
         phieuXuat.NgayCapNhat = DateTime.UtcNow;
 
         await _ctx.SaveChangesAsync(ct);
         return ApiResponse.Success("Xác nhận phiếu xuất thành công", null);
+    }
+
+    /* ---------- 7. Từ chối phiếu xuất ---------- */
+    [HttpPost("{id}/reject")]
+    public async Task<IActionResult> Reject(string id, [FromBody] RejectDto dto, CancellationToken ct = default)
+    {
+        var phieuXuat = await _ctx.PhieuXuats
+            .FirstOrDefaultAsync(p => p.MaPhieuXuat == id && p.IsDelete == false, ct);
+
+        if (phieuXuat == null)
+            return ApiResponse.Error("Không tìm thấy phiếu xuất", 404);
+
+        if (phieuXuat.TrangThai == TrangThaiPhieuKho.Rejected)
+            return ApiResponse.Error("Phiếu xuất đã được từ chối", 400);
+
+        phieuXuat.TrangThai = TrangThaiPhieuKho.Rejected;
+        phieuXuat.NgayCapNhat = DateTime.UtcNow;
+
+        await _ctx.SaveChangesAsync(ct);
+        return ApiResponse.Success("Từ chối phiếu xuất thành công", null);
+    }
+
+    /* ---------- 8. Lấy danh sách phiếu chờ duyệt ---------- */
+    [HttpGet("pending")]
+    public async Task<IActionResult> GetPending(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken ct = default)
+    {
+        var query = _ctx.PhieuXuats
+            .Include(p => p.MaDiaDiemXuatNavigation)
+            .Include(p => p.MaDiaDiemNhapNavigation)
+            .Include(p => p.MaQuanLyNavigation)
+            .Where(p => p.IsDelete == false && p.TrangThai == TrangThaiPhieuKho.Pending);
+
+        var result = await query
+            .OrderByDescending(p => p.NgayTao)
+            .Select(p => new PhieuXuatDto(
+                p.MaPhieuXuat,
+                p.MaDiaDiemXuat,
+                p.MaDiaDiemNhap,
+                p.MaQuanLy,
+                p.NgayXuat,
+                p.LoaiXuat,
+                p.TrangThai,
+                p.NgayTao,
+                p.NgayCapNhat,
+                p.MaDiaDiemXuatNavigation.Ten,
+                p.MaDiaDiemNhapNavigation.Ten,
+                p.MaQuanLyNavigation.MaNguoiDungNavigation.Ten
+            ))
+            .ToPagedAsync(page, pageSize, ct);
+
+        return ApiResponse.Success("Lấy danh sách phiếu xuất chờ duyệt thành công", result);
     }
 } 

@@ -41,6 +41,7 @@ const LocationManagePage = lazy(() => import('../pages/Location/LocationManagePa
 
 // Vaccine Management
 const VaccineManagePage = lazy(() => import('../pages/VaccineManage/VaccineManagePage'));
+const VaccineCreatePage = lazy(() => import('../pages/VaccineManage/VaccineCreatePage'));
 const VaccineDetailPage = lazy(() => import('../pages/VaccineManage/VaccineDetailPage'));
 const VaccineEditPage = lazy(() => import('../pages/VaccineManage/VaccineEditPage'));
 
@@ -52,6 +53,7 @@ const ImageManagementPage = lazy(() => import('../pages/ImageManagement'));
 // Vaccination Management
 const PhieuDangKyTiemChungPage = lazy(() => import('../pages/Vaccination/PhieuDangKyTiemChungPage'));
 const LichSuTiemPage = lazy(() => import('../pages/Vaccination/LichSuTiemPage'));
+const UpcomingVaccinationsPage = lazy(() => import('../pages/Vaccination/UpcomingVaccinationsPage'));
 
 // Doctor Schedule Management
 const DoctorSchedulePage = lazy(() => import('../pages/DoctorSchedule'));
@@ -81,6 +83,10 @@ const AppointmentApprovalPage = lazy(() => import('../pages/Appointment/Appointm
 const AppointmentRegistrationFromInvoice = lazy(() => import('../pages/Appointment/AppointmentRegistrationFromInvoice'));
 const DoctorAppointmentManagementPage = lazy(() => import('../pages/Doctor/DoctorAppointmentManagementPage'));
 
+// Vaccination Management (New)
+const DoctorVaccinationManagementPage = lazy(() => import('../pages/VaccinationManagement/DoctorVaccinationManagementPage'));
+const CustomerVaccinationSchedulePage = lazy(() => import('../pages/ClientPages/VaccinationSchedule/CustomerVaccinationSchedulePage'));
+
 // KhuyenMai Management
 const KhuyenMaiPage = lazy(() => import('../pages/KhuyenMai/KhuyenMaiPage'));
 const LoaiKhuyenMaiPage = lazy(() => import('../pages/KhuyenMai/LoaiKhuyenMaiPage'));
@@ -88,6 +94,18 @@ const LoaiKhuyenMaiPage = lazy(() => import('../pages/KhuyenMai/LoaiKhuyenMaiPag
 // Quyen Management
 const VaiTroQuyenPage = lazy(() => import('../pages/QuyenManage/VaiTroQuyenPage'));
 const NguoiDungQuyenPage = lazy(() => import('../pages/QuyenManage/NguoiDungQuyenPage'));
+
+// Inventory Management
+const TonKhoPage = lazy(() => import('../pages/DashboardPages/Inventory/TonKhoPage'));
+const PhieuNhapPage = lazy(() => import('../pages/DashboardPages/Inventory/PhieuNhapPage'));
+const PhieuXuatPage = lazy(() => import('../pages/DashboardPages/Inventory/PhieuXuatPage'));
+const ThanhLyPage = lazy(() => import('../pages/DashboardPages/Inventory/ThanhLyPage'));
+const DuyetPhieuPage = lazy(() => import('../pages/DashboardPages/Inventory/ApprovalPage'));
+
+// NhaCungCap Management
+const NhaCungCapPage = lazy(() => import('../pages/DashboardPages/NhaCungCap/NhaCungCapPage'));
+
+
 
 const routes = [
   {
@@ -110,10 +128,10 @@ const routes = [
       {
         path: 'cart',
         element: (
-          <>
+          <PrivateRoute >
             <PageTitle title="Giỏ hàng | HuitKIT" />
             <CartPage />
-          </>
+          </PrivateRoute>
         )
       },
       {
@@ -149,6 +167,15 @@ const routes = [
           <>
             <PageTitle title="Chi tiết đơn hàng | HuitKIT" />
             <OrderDetailPage />
+          </>
+        )
+      },
+      {
+        path: '/vaccination-schedule',
+        element: (
+          <>
+            <PageTitle title="Lịch tiêm chủng của tôi | HuitKIT" />
+            <CustomerVaccinationSchedulePage />
           </>
         )
       },
@@ -203,6 +230,7 @@ const routes = [
           </PrivateRoute>
         )
       },
+
       {
         path: 'doctor-schedule',
         element: (
@@ -394,6 +422,15 @@ const routes = [
         )
       },
       {
+        path: 'create',
+        element: (
+          <PermissionRoute requiredPermissions={['Vaccine']}>
+            <PageTitle title="Tạo Vaccine | HuitKIT" />
+            <VaccineCreatePage />
+          </PermissionRoute>
+        )
+      },
+      {
         path: 'detail/:id',
         element: (
           <PermissionRoute requiredPermissions={['Vaccine']}>
@@ -576,6 +613,76 @@ const routes = [
       }
     ]
   },
+
+  // Inventory Management Routes
+  {
+    path: '/dashboard/inventory',
+    element: <DefaultLayout />,
+    children: [
+      {
+        path: 'ton-kho',
+        element: (
+          <PermissionRoute requiredPermissions={['TonKhoLo']}>
+            <PageTitle title="Quản lý Tồn kho Lô Vaccine | HuitKIT" />
+            <TonKhoPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'phieu-nhap',
+        element: (
+          <PermissionRoute requiredPermissions={['PhieuNhap']}>
+            <PageTitle title="Quản lý Phiếu Nhập | HuitKIT" />
+            <PhieuNhapPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'phieu-xuat',
+        element: (
+          <PermissionRoute requiredPermissions={['PhieuXuat']}>
+            <PageTitle title="Quản lý Phiếu Xuất | HuitKIT" />
+            <PhieuXuatPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'thanh-ly',
+        element: (
+          <PermissionRoute requiredPermissions={['PhieuThanhLy']}>
+            <PageTitle title="Thanh lý Vaccine sắp hết hạn | HuitKIT" />
+            <ThanhLyPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'approval',
+        element: (
+          <PermissionRoute requiredPermissions={['PhieuNhap', 'PhieuXuat', 'PhieuThanhLy']}>
+            <PageTitle title="Duyệt phiếu | HuitKIT" />
+            <DuyetPhieuPage />
+          </PermissionRoute>
+        )
+      }
+    ]
+  },
+
+  // NhaCungCap Management Routes
+  {
+    path: '/dashboard/nha-cung-cap',
+    element: <DefaultLayout />,
+    children: [
+      {
+        index: true,
+        element: (
+          <PermissionRoute requiredPermissions={['NhaCungCap']}>
+            <PageTitle title="Quản lý Nhà cung cấp | HuitKIT" />
+            <NhaCungCapPage />
+          </PermissionRoute>
+        )
+      }
+    ]
+  },
   
   // Vaccination Management Routes
   {
@@ -589,6 +696,33 @@ const routes = [
             <PageTitle title="Phiếu đăng ký tiêm chủng | HuitKIT" />
             <PhieuDangKyTiemChungPage />
           </PermissionRoute>
+        )
+      },
+      {
+        path: 'approval',
+        element: (
+          <PermissionRoute requiredPermissions={['PhieuDangKyLichTiem']}>
+            <PageTitle title="Duyệt phiếu đăng ký tiêm chủng | HuitKIT" />
+            <AppointmentApprovalPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'doctor-management',
+        element: (
+          <PermissionRoute requiredPermissions={['PhieuTiem']}>
+            <PageTitle title="Quản lý tiêm chủng cho bác sĩ | HuitKIT" />
+            <DoctorVaccinationManagementPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'upcoming',
+        element: (
+          <>
+            <PageTitle title="Đợt tiêm sắp tới | HuitKIT" />
+            <UpcomingVaccinationsPage />
+          </>
         )
       },
       {

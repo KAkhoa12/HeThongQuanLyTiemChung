@@ -18,4 +18,8 @@ public partial class QuanLy
     public DateTime? NgayCapNhat { get; set; }
 
     public virtual NguoiDung MaNguoiDungNavigation { get; set; } = null!;
+
+    public virtual ICollection<PhieuNhap> PhieuNhaps { get; set; } = new List<PhieuNhap>();
+
+    public virtual ICollection<PhieuXuat> PhieuXuats { get; set; } = new List<PhieuXuat>();
 }

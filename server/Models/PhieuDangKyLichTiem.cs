@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace server.Models;
@@ -9,11 +9,9 @@ public partial class PhieuDangKyLichTiem
 
     public string MaKhachHang { get; set; } = null!;
 
-    public string MaDichVu { get; set; } = null!;
-
     public DateTime NgayDangKy { get; set; }
 
-    public string TrangThai { get; set; } = null!; // "Chờ duyệt", "Đã duyệt", "Từ chối", "Hoàn thành"
+    public string TrangThai { get; set; } = null!;
 
     public string? LyDoTuChoi { get; set; }
 
@@ -27,7 +25,17 @@ public partial class PhieuDangKyLichTiem
 
     public DateTime? NgayCapNhat { get; set; }
 
-    // Navigation properties
+    public string? MaDichVu { get; set; }
+
+    public string? MaDiaDiem { get; set; }
+
+    public string? MaDonHang { get; set; }
+
+    public virtual DiaDiem? MaDiaDiemNavigation { get; set; }
+
+    public virtual DichVu? MaDichVuNavigation { get; set; }
+
+    public virtual DonHang? MaDonHangNavigation { get; set; }
+
     public virtual NguoiDung MaKhachHangNavigation { get; set; } = null!;
-    public virtual DichVu MaDichVuNavigation { get; set; } = null!;
-} 
+}

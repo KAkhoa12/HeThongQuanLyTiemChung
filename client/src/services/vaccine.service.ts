@@ -132,6 +132,72 @@ class VaccineService {
   async getVaccineUsage(id: string): Promise<VaccineUsageDto> {
     return await apiService.get<VaccineUsageDto>(`/api/Vaccine/${id}/usage`);
   }
+
+  // ========== LICH TIEM CHUAN API ==========
+
+  /**
+   * Lấy tất cả lịch tiêm chuẩn
+   */
+  async getVaccineSchedules(page?: number, pageSize?: number): Promise<PagedResultDto<any>> {
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (pageSize) params.append('pageSize', pageSize.toString());
+    
+    return await apiService.get<PagedResultDto<any>>(`/api/vaccine-schedules?${params.toString()}`);
+  }
+
+  /**
+   * Lấy lịch tiêm chuẩn theo ID
+   */
+  async getVaccineScheduleById(id: string): Promise<any> {
+    return await apiService.get<any>(`/api/vaccine-schedules/${id}`);
+  }
+
+  /**
+   * Lấy lịch tiêm chuẩn theo vaccine
+   */
+  async getVaccineSchedulesByVaccine(vaccineId: string, minAgeInMonths?: number): Promise<any> {
+    const params: any = {};
+    if (minAgeInMonths !== undefined && minAgeInMonths !== null) {
+      params.minAgeInMonths = minAgeInMonths;
+    }
+    return await apiService.get<any>(`/api/vaccine-schedules/by-vaccine/${vaccineId}`, params);
+  }
+
+  /**
+   * Tạo lịch tiêm chuẩn mới
+   */
+  async createVaccineSchedule(data: any): Promise<{ id: string }> {
+    return await apiService.create<{ id: string }>('/api/vaccine-schedules', data);
+  }
+
+  /**
+   * Tạo nhiều lịch tiêm chuẩn cùng lúc
+   */
+  async createVaccineSchedulesBatch(data: any): Promise<{ count: number }> {
+    return await apiService.create<{ count: number }>('/api/vaccine-schedules/batch', data);
+  }
+
+  /**
+   * Cập nhật lịch tiêm chuẩn
+   */
+  async updateVaccineSchedule(id: string, data: any): Promise<void> {
+    return await apiService.update(`/api/vaccine-schedules/${id}`, data);
+  }
+
+  /**
+   * Xóa lịch tiêm chuẩn
+   */
+  async deleteVaccineSchedule(id: string): Promise<void> {
+    return await apiService.delete(`/api/vaccine-schedules/${id}`);
+  }
+
+  /**
+   * Lấy lịch tiêm chuẩn theo độ tuổi và vaccine
+   */
+  async getVaccineSchedulesByAgeAndVaccine(vaccineId: string, ageInMonths: number): Promise<any[]> {
+    return await apiService.get<any[]>(`/api/vaccine-schedules/by-age-and-vaccine?vaccineId=${vaccineId}&ageInMonths=${ageInMonths}`);
+  }
 }
 
 export default new VaccineService();  

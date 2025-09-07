@@ -43,6 +43,9 @@ export * from './serviceVaccine.service';
 export { default as phieuNhapService } from './phieuNhap.service';
 export { default as phieuXuatService } from './phieuXuat.service';
 export { default as phieuThanhLyService } from './phieuThanhLy.service';
+export { default as chiTietNhapService } from './chiTietNhap.service';
+export { default as chiTietXuatService } from './chiTietXuat.service';
+export { default as chiTietThanhLyService } from './chiTietThanhLy.service';
 export { default as loVaccineService } from './loVaccine.service';
 export { default as tonKhoLoService } from './tonKhoLo.service';
 
@@ -129,6 +132,25 @@ export type {
   TonKhoLoQueryParams
 } from './tonKhoLo.service';
 
+export type {
+  ChiTietNhapDto,
+  ChiTietNhapCreateDto,
+  ChiTietNhapQueryParams
+} from './chiTietNhap.service';
+
+export type {
+  ChiTietXuatDto,
+  ChiTietXuatCreateDto,
+  ChiTietXuatQueryParams
+} from './chiTietXuat.service';
+
+export type {
+  ChiTietThanhLyDto,
+  ChiTietThanhLyCreateDto,
+  ChiTietThanhLyQueryParams,
+  VaccineExpiringSoonDto
+} from './chiTietThanhLy.service';
+
 // KhuyenMai service exports
 export {
   getAllKhuyenMais,
@@ -174,4 +196,29 @@ export {
   type PhieuTiemCreateDto,
   type PhieuTiemUpdateDto,
   type PhieuTiemResponse
-} from './phieuTiem.service'; 
+} from './phieuTiem.service';
+
+// Service Conditions exports
+export {
+  getServiceConditions,
+  getServiceConditionById,
+  getServiceConditionsByService,
+  createServiceCondition,
+  createServiceConditionsBatch,
+  updateServiceCondition,
+  deleteServiceCondition,
+  checkEligibility
+} from './service.service';
+
+// NhaCungCap exports
+export {
+  nhaCungCapService,
+  type NhaCungCapDto,
+  type NhaCungCapDetailDto,
+  type NhaCungCapCreateDto,
+  type NhaCungCapUpdateDto,
+  type AnhNhaCungCapDto,
+  type AnhNhaCungCapCreateDto,
+  type AnhNhaCungCapUpdateDto,
+  type NhaCungCapQueryParams
+} from './nhaCungCap.service'; 

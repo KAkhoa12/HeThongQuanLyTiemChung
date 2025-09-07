@@ -81,6 +81,7 @@ public class DichVuController : ControllerBase
                 .ThenInclude(a => a.MaAnhNavigation)
             .Include(d => d.DichVuVaccines.Where(v => v.IsDelete == false))
                 .ThenInclude(v => v.MaVaccineNavigation)
+            .Include(d => d.DieuKienDichVus)
             .FirstOrDefaultAsync(d => d.MaDichVu == id && d.IsDelete == false, ct);
 
         if (service == null)
@@ -110,6 +111,16 @@ public class DichVuController : ControllerBase
                     v.SoMuiChuan,
                     v.ThuTu,
                     v.GhiChu))
+                .ToList(),
+            service.DieuKienDichVus
+                .Select(k => new ServiceConditionDto(
+                    k.MaDieuKien,
+                    k.TuoiThangToiThieu,
+                    k.TuoiThangToiDa,
+                    k.GioiTinh,
+                    k.GhiChu,
+                    k.MaDichVu,
+                    service.Ten))
                 .ToList());
 
         return ApiResponse.Success("Chi tiết dịch vụ", dto);

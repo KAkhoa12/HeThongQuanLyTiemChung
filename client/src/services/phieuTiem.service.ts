@@ -93,6 +93,15 @@ const phieuTiemService = {
     return apiService.get<PhieuTiemResponse>(`/api/phieu-tiem/by-user/${maNguoiDung}?${params.toString()}`);
   },
 
+  // Lấy danh sách đợt tiêm sắp tới
+  getUpcomingVaccinations: (page?: number, pageSize?: number): Promise<PhieuTiemResponse> => {
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (pageSize) params.append('pageSize', pageSize.toString());
+    
+    return apiService.get<PhieuTiemResponse>(`/api/phieu-tiem/upcoming?${params.toString()}`);
+  },
+
   // Tạo phiếu tiêm mới
   create: (data: PhieuTiemCreateDto): Promise<string> => {
     return apiService.create<string>('/api/phieu-tiem', data);

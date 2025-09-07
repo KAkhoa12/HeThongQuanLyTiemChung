@@ -62,4 +62,8 @@ namespace server.DTOs.Kho
         string MaLo,
         int SoLuong
     );
-} 
+
+    public record RejectDto(
+        string LyDo
+    );
+}

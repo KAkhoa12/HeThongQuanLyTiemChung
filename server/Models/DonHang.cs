@@ -29,10 +29,17 @@ public partial class DonHang
 
     public DateTime? NgayCapNhat { get; set; }
 
-    // Navigation properties
-    public virtual NguoiDung MaNguoiDungNavigation { get; set; } = null!;
-    public virtual DiaDiem MaDiaDiemYeuThichNavigation { get; set; } = null!;
     public virtual ICollection<DonHangChiTiet> DonHangChiTiets { get; set; } = new List<DonHangChiTiet>();
+
     public virtual ICollection<DonHangKhuyenMai> DonHangKhuyenMais { get; set; } = new List<DonHangKhuyenMai>();
+
+    public virtual ICollection<KeHoachTiem> KeHoachTiems { get; set; } = new List<KeHoachTiem>();
+
     public virtual ICollection<LichHen> LichHens { get; set; } = new List<LichHen>();
+
+    public virtual DiaDiem? MaDiaDiemYeuThichNavigation { get; set; }
+
+    public virtual NguoiDung MaNguoiDungNavigation { get; set; } = null!;
+
+    public virtual ICollection<PhieuDangKyLichTiem> PhieuDangKyLichTiems { get; set; } = new List<PhieuDangKyLichTiem>();
 }

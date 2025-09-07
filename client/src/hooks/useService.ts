@@ -45,4 +45,70 @@ export function useDeleteService() {
     serviceService.delete,
     null
   );
+}
+
+// ========== SERVICE CONDITIONS HOOKS ==========
+
+// Lấy tất cả điều kiện dịch vụ
+export function useServiceConditions() {
+  return useApiWithParams<any, { page: number; pageSize: number }>(
+    ({ page, pageSize }) => serviceService.getServiceConditions(page, pageSize),
+    null
+  );
+}
+
+// Lấy điều kiện theo ID
+export function useServiceCondition() {
+  return useApiWithParams<any, string>(
+    serviceService.getServiceConditionById,
+    null
+  );
+}
+
+// Lấy điều kiện theo dịch vụ
+export function useServiceConditionsByService() {
+  return useApiWithParams<any, string>(
+    serviceService.getServiceConditionsByService,
+    null
+  );
+}
+
+// Tạo điều kiện mới
+export function useCreateServiceCondition() {
+  return useApiWithParams<any, any>(
+    serviceService.createServiceCondition,
+    null
+  );
+}
+
+// Tạo nhiều điều kiện cùng lúc
+export function useCreateServiceConditionsBatch() {
+  return useApiWithParams<any, any>(
+    serviceService.createServiceConditionsBatch,
+    null
+  );
+}
+
+// Cập nhật điều kiện
+export function useUpdateServiceCondition() {
+  return useApiWithParams<any, { id: string; data: any }>(
+    ({ id, data }) => serviceService.updateServiceCondition(id, data),
+    null
+  );
+}
+
+// Xóa điều kiện
+export function useDeleteServiceCondition() {
+  return useApiWithParams<any, string>(
+    serviceService.deleteServiceCondition,
+    null
+  );
+}
+
+// Kiểm tra điều kiện
+export function useCheckEligibility() {
+  return useApiWithParams<any, any>(
+    serviceService.checkEligibility,
+    null
+  );
 } 

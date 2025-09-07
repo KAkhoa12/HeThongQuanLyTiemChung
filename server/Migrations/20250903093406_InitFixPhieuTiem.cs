@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace server.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitFixPhieuTiem : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -194,10 +194,12 @@ namespace server.Migrations
                     maKhuyenMai = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
                     maLoaiKhuyenMai = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
                     tenKhuyenMai = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    code = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     loaiGiam = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     giaTriGiam = table.Column<decimal>(type: "decimal(12,2)", nullable: true),
                     giamToiDa = table.Column<decimal>(type: "decimal(12,2)", nullable: true),
                     dieuKienToiThieu = table.Column<decimal>(type: "decimal(12,2)", nullable: true),
+                    giaTriToiThieu = table.Column<decimal>(type: "decimal(12,2)", nullable: true),
                     ngayBatDau = table.Column<DateOnly>(type: "date", nullable: true),
                     ngayKetThuc = table.Column<DateOnly>(type: "date", nullable: true),
                     soLuotDung = table.Column<int>(type: "int", nullable: true),
@@ -302,6 +304,7 @@ namespace server.Migrations
                     maDichVu = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
                     maVaccine = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
                     soMuiChuan = table.Column<int>(type: "int", nullable: false),
+                    thuTu = table.Column<int>(type: "int", nullable: true),
                     ghiChu = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     isDelete = table.Column<bool>(type: "bit", nullable: true),
                     isActive = table.Column<bool>(type: "bit", nullable: true),
@@ -422,6 +425,7 @@ namespace server.Migrations
                     soDienThoai = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     ngaySinh = table.Column<DateOnly>(type: "date", nullable: true),
                     diaChi = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    gioiTinh = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
                     isDelete = table.Column<bool>(type: "bit", nullable: true),
                     isActive = table.Column<bool>(type: "bit", nullable: true),
                     ngayTao = table.Column<DateTime>(type: "datetime", nullable: true),
@@ -476,14 +480,26 @@ namespace server.Migrations
                     maNguoiDung = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
                     chuyenMon = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     soGiayPhep = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    maDiaDiem = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
                     isDelete = table.Column<bool>(type: "bit", nullable: true),
                     isActive = table.Column<bool>(type: "bit", nullable: true),
                     ngayTao = table.Column<DateTime>(type: "datetime", nullable: true),
-                    ngayCapNhat = table.Column<DateTime>(type: "datetime", nullable: true)
+                    ngayCapNhat = table.Column<DateTime>(type: "datetime", nullable: true),
+                    DiaDiemMaDiaDiem = table.Column<string>(type: "varchar(100)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK__BacSi__F48AA2377FD9FA0E", x => x.maBacSi);
+                    table.ForeignKey(
+                        name: "FK_BacSi_DiaDiem_DiaDiemMaDiaDiem",
+                        column: x => x.DiaDiemMaDiaDiem,
+                        principalTable: "DiaDiem",
+                        principalColumn: "maDiaDiem");
+                    table.ForeignKey(
+                        name: "FK__BacSi__maDiaDiem__NewConstraint",
+                        column: x => x.maDiaDiem,
+                        principalTable: "DiaDiem",
+                        principalColumn: "maDiaDiem");
                     table.ForeignKey(
                         name: "FK__BacSi__maNguoiDu__5CD6CB2B",
                         column: x => x.maNguoiDung,
@@ -570,6 +586,37 @@ namespace server.Migrations
                     table.ForeignKey(
                         name: "FK__PhienDang__maNgu__5629CD9C",
                         column: x => x.maNguoiDung,
+                        principalTable: "NguoiDung",
+                        principalColumn: "maNguoiDung");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PhieuDangKyLichTiem",
+                columns: table => new
+                {
+                    maPhieuDangKy = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    maKhachHang = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    maDichVu = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    ngayDangKy = table.Column<DateTime>(type: "datetime", nullable: false),
+                    trangThai = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    lyDoTuChoi = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ghiChu = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    isDelete = table.Column<bool>(type: "bit", nullable: true),
+                    isActive = table.Column<bool>(type: "bit", nullable: true),
+                    ngayTao = table.Column<DateTime>(type: "datetime", nullable: true),
+                    ngayCapNhat = table.Column<DateTime>(type: "datetime", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__PhieuDan__NewKey", x => x.maPhieuDangKy);
+                    table.ForeignKey(
+                        name: "FK__PhieuDan__maDichVu__NewConstraint2",
+                        column: x => x.maDichVu,
+                        principalTable: "DichVu",
+                        principalColumn: "maDichVu");
+                    table.ForeignKey(
+                        name: "FK__PhieuDan__maKha__NewConstraint1",
+                        column: x => x.maKhachHang,
                         principalTable: "NguoiDung",
                         principalColumn: "maNguoiDung");
                 });
@@ -720,40 +767,38 @@ namespace server.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PhieuDangKyLichTiem",
+                name: "PhieuTiem",
                 columns: table => new
                 {
-                    maPhieuDangKy = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    maKhachHang = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    maDichVu = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    maBacSi = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    ngayDangKy = table.Column<DateTime>(type: "datetime", nullable: false),
-                    ngayHenTiem = table.Column<DateTime>(type: "datetime", nullable: false),
-                    gioHenTiem = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
-                    trangThai = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    lyDoTuChoi = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    ghiChu = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    maPhieuTiem = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    ngayTiem = table.Column<DateTime>(type: "datetime", nullable: true),
+                    maBacSi = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
+                    phanUng = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    moTaPhanUng = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     isDelete = table.Column<bool>(type: "bit", nullable: true),
                     isActive = table.Column<bool>(type: "bit", nullable: true),
                     ngayTao = table.Column<DateTime>(type: "datetime", nullable: true),
-                    ngayCapNhat = table.Column<DateTime>(type: "datetime", nullable: true)
+                    ngayCapNhat = table.Column<DateTime>(type: "datetime", nullable: true),
+                    maDichVu = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
+                    trangThai = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    maNguoiDung = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__PhieuDan__NewKey", x => x.maPhieuDangKy);
+                    table.PrimaryKey("PK__PhieuTie__4BEEAEF35F4FAF1E", x => x.maPhieuTiem);
                     table.ForeignKey(
-                        name: "FK__PhieuDan__maBac__NewConstraint3",
+                        name: "FK__PhieuTiem__maBac__5AB9788F",
                         column: x => x.maBacSi,
                         principalTable: "BacSi",
                         principalColumn: "maBacSi");
                     table.ForeignKey(
-                        name: "FK__PhieuDan__maDic__NewConstraint2",
+                        name: "FK__PhieuTiem__maDic__NewConstraint",
                         column: x => x.maDichVu,
                         principalTable: "DichVu",
                         principalColumn: "maDichVu");
                     table.ForeignKey(
-                        name: "FK__PhieuDan__maKha__NewConstraint1",
-                        column: x => x.maKhachHang,
+                        name: "FK__PhieuTiem__maNguoiDung__NewConstraint",
+                        column: x => x.maNguoiDung,
                         principalTable: "NguoiDung",
                         principalColumn: "maNguoiDung");
                 });
@@ -764,28 +809,27 @@ namespace server.Migrations
                 {
                     maDonHangChiTiet = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
                     maDonHang = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    maVaccine = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
                     soMuiChuan = table.Column<int>(type: "int", nullable: false),
                     donGiaMui = table.Column<decimal>(type: "decimal(12,2)", nullable: true),
                     thanhTien = table.Column<decimal>(type: "decimal(12,2)", nullable: true),
                     isDelete = table.Column<bool>(type: "bit", nullable: true),
                     isActive = table.Column<bool>(type: "bit", nullable: true),
-                    ngayTao = table.Column<DateTime>(type: "datetime", nullable: true),
-                    ngayCapNhat = table.Column<DateTime>(type: "datetime", nullable: true)
+                    ngayCapNhat = table.Column<DateTime>(type: "datetime", nullable: true),
+                    MaDichVu = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK__DonHangC__7212B475698B2C68", x => x.maDonHangChiTiet);
                     table.ForeignKey(
+                        name: "FK_DonHangChiTiet_DichVu_MaDichVu",
+                        column: x => x.MaDichVu,
+                        principalTable: "DichVu",
+                        principalColumn: "maDichVu");
+                    table.ForeignKey(
                         name: "FK__DonHangCh__maDon__3C34F16F",
                         column: x => x.maDonHang,
                         principalTable: "DonHang",
                         principalColumn: "maDonHang");
-                    table.ForeignKey(
-                        name: "FK__DonHangCh__maVac__3D2915A8",
-                        column: x => x.maVaccine,
-                        principalTable: "Vaccine",
-                        principalColumn: "maVaccine");
                 });
 
             migrationBuilder.CreateTable(
@@ -816,6 +860,37 @@ namespace server.Migrations
                         column: x => x.maKhuyenMai,
                         principalTable: "KhuyenMai",
                         principalColumn: "maKhuyenMai");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LichHen",
+                columns: table => new
+                {
+                    maLichHen = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    maDonHang = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    maDiaDiem = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    ngayHen = table.Column<DateTime>(type: "datetime", nullable: false),
+                    trangThai = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    ghiChu = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    isDelete = table.Column<bool>(type: "bit", nullable: true),
+                    isActive = table.Column<bool>(type: "bit", nullable: true),
+                    ngayTao = table.Column<DateTime>(type: "datetime", nullable: true),
+                    ngayCapNhat = table.Column<DateTime>(type: "datetime", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__LichHen__FBFE3223EFA716D4", x => x.maLichHen);
+                    table.ForeignKey(
+                        name: "FK__LichHen__maDiaDiem__NewConstraint",
+                        column: x => x.maDiaDiem,
+                        principalTable: "DiaDiem",
+                        principalColumn: "maDiaDiem",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK__LichHen__maDonHa__503BEA1C",
+                        column: x => x.maDonHang,
+                        principalTable: "DonHang",
+                        principalColumn: "maDonHang");
                 });
 
             migrationBuilder.CreateTable(
@@ -942,17 +1017,14 @@ namespace server.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "LichHen",
+                name: "ChiTietPhieuTiem",
                 columns: table => new
                 {
-                    maLichHen = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    maDonHang = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    maLichLamViec = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    maChiTietPhieuTiem = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    maPhieuTiem = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
                     maVaccine = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    muiThu = table.Column<int>(type: "int", nullable: false),
-                    ngayHen = table.Column<DateTime>(type: "datetime", nullable: false),
-                    trangThai = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
-                    ghiChu = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    muiTiemThucTe = table.Column<int>(type: "int", nullable: false),
+                    thuTu = table.Column<int>(type: "int", nullable: false),
                     isDelete = table.Column<bool>(type: "bit", nullable: true),
                     isActive = table.Column<bool>(type: "bit", nullable: true),
                     ngayTao = table.Column<DateTime>(type: "datetime", nullable: true),
@@ -960,22 +1032,41 @@ namespace server.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__LichHen__FBFE3223EFA716D4", x => x.maLichHen);
+                    table.PrimaryKey("PK__ChiTietP__NewKey", x => x.maChiTietPhieuTiem);
                     table.ForeignKey(
-                        name: "FK__LichHen__maDonHa__503BEA1C",
-                        column: x => x.maDonHang,
-                        principalTable: "DonHang",
-                        principalColumn: "maDonHang");
+                        name: "FK__ChiTietPh__maPhi__NewConstraint1",
+                        column: x => x.maPhieuTiem,
+                        principalTable: "PhieuTiem",
+                        principalColumn: "maPhieuTiem");
                     table.ForeignKey(
-                        name: "FK__LichHen__maLichL__51300E55",
-                        column: x => x.maLichLamViec,
-                        principalTable: "LichLamViec",
-                        principalColumn: "maLichLamViec");
-                    table.ForeignKey(
-                        name: "FK__LichHen__maVacci__5224328E",
+                        name: "FK__ChiTietPh__maVac__NewConstraint2",
                         column: x => x.maVaccine,
                         principalTable: "Vaccine",
                         principalColumn: "maVaccine");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "YeuCauDoiLich",
+                columns: table => new
+                {
+                    maYeuCau = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    maLichHen = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    ngayHenMoi = table.Column<DateTime>(type: "datetime", nullable: false),
+                    lyDo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    trangThai = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    isDelete = table.Column<bool>(type: "bit", nullable: true),
+                    isActive = table.Column<bool>(type: "bit", nullable: true),
+                    ngayTao = table.Column<DateTime>(type: "datetime", nullable: true),
+                    ngayCapNhat = table.Column<DateTime>(type: "datetime", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__YeuCauDo__765F6DD63B02AAE0", x => x.maYeuCau);
+                    table.ForeignKey(
+                        name: "FK__YeuCauDoi__maLic__55009F39",
+                        column: x => x.maLichHen,
+                        principalTable: "LichHen",
+                        principalColumn: "maLichHen");
                 });
 
             migrationBuilder.CreateTable(
@@ -1035,73 +1126,6 @@ namespace server.Migrations
                         principalColumn: "maLo");
                 });
 
-            migrationBuilder.CreateTable(
-                name: "PhieuTiem",
-                columns: table => new
-                {
-                    maPhieuTiem = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    maLichHen = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    maVaccine = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    maLo = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    muiThuThucTe = table.Column<int>(type: "int", nullable: true),
-                    ngayTiem = table.Column<DateTime>(type: "datetime", nullable: true),
-                    maBacSi = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
-                    phanUng = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
-                    moTaPhanUng = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    isDelete = table.Column<bool>(type: "bit", nullable: true),
-                    isActive = table.Column<bool>(type: "bit", nullable: true),
-                    ngayTao = table.Column<DateTime>(type: "datetime", nullable: true),
-                    ngayCapNhat = table.Column<DateTime>(type: "datetime", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK__PhieuTie__4BEEAEF35F4FAF1E", x => x.maPhieuTiem);
-                    table.ForeignKey(
-                        name: "FK__PhieuTiem__maBac__5AB9788F",
-                        column: x => x.maBacSi,
-                        principalTable: "BacSi",
-                        principalColumn: "maBacSi");
-                    table.ForeignKey(
-                        name: "FK__PhieuTiem__maLic__57DD0BE4",
-                        column: x => x.maLichHen,
-                        principalTable: "LichHen",
-                        principalColumn: "maLichHen");
-                    table.ForeignKey(
-                        name: "FK__PhieuTiem__maLo__59C55456",
-                        column: x => x.maLo,
-                        principalTable: "LoVaccine",
-                        principalColumn: "maLo");
-                    table.ForeignKey(
-                        name: "FK__PhieuTiem__maVac__58D1301D",
-                        column: x => x.maVaccine,
-                        principalTable: "Vaccine",
-                        principalColumn: "maVaccine");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "YeuCauDoiLich",
-                columns: table => new
-                {
-                    maYeuCau = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    maLichHen = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    ngayHenMoi = table.Column<DateTime>(type: "datetime", nullable: false),
-                    lyDo = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    trangThai = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
-                    isDelete = table.Column<bool>(type: "bit", nullable: true),
-                    isActive = table.Column<bool>(type: "bit", nullable: true),
-                    ngayTao = table.Column<DateTime>(type: "datetime", nullable: true),
-                    ngayCapNhat = table.Column<DateTime>(type: "datetime", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK__YeuCauDo__765F6DD63B02AAE0", x => x.maYeuCau);
-                    table.ForeignKey(
-                        name: "FK__YeuCauDoi__maLic__55009F39",
-                        column: x => x.maLichHen,
-                        principalTable: "LichHen",
-                        principalColumn: "maLichHen");
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_AnhDiaDiem_maAnh",
                 table: "AnhDiaDiem",
@@ -1143,6 +1167,16 @@ namespace server.Migrations
                 column: "maVaccine");
 
             migrationBuilder.CreateIndex(
+                name: "IX_BacSi_DiaDiemMaDiaDiem",
+                table: "BacSi",
+                column: "DiaDiemMaDiaDiem");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BacSi_maDiaDiem",
+                table: "BacSi",
+                column: "maDiaDiem");
+
+            migrationBuilder.CreateIndex(
                 name: "UQ__BacSi__446439EBDE1365ED",
                 table: "BacSi",
                 column: "maNguoiDung",
@@ -1157,6 +1191,16 @@ namespace server.Migrations
                 name: "IX_ChiTietNhap_maPhieuNhap",
                 table: "ChiTietNhap",
                 column: "maPhieuNhap");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChiTietPhieuTiem_maPhieuTiem",
+                table: "ChiTietPhieuTiem",
+                column: "maPhieuTiem");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ChiTietPhieuTiem_maVaccine",
+                table: "ChiTietPhieuTiem",
+                column: "maVaccine");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ChiTietThanhLy_maLo",
@@ -1204,14 +1248,14 @@ namespace server.Migrations
                 column: "maNguoiDung");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DonHangChiTiet_MaDichVu",
+                table: "DonHangChiTiet",
+                column: "MaDichVu");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DonHangChiTiet_maDonHang",
                 table: "DonHangChiTiet",
                 column: "maDonHang");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DonHangChiTiet_maVaccine",
-                table: "DonHangChiTiet",
-                column: "maVaccine");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DonHangKhuyenMai_maDonHang",
@@ -1229,19 +1273,14 @@ namespace server.Migrations
                 column: "maLoaiKhuyenMai");
 
             migrationBuilder.CreateIndex(
+                name: "IX_LichHen_maDiaDiem",
+                table: "LichHen",
+                column: "maDiaDiem");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_LichHen_maDonHang",
                 table: "LichHen",
                 column: "maDonHang");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_LichHen_maLichLamViec",
-                table: "LichHen",
-                column: "maLichLamViec");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_LichHen_maVaccine",
-                table: "LichHen",
-                column: "maVaccine");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LichLamViec_maBacSi",
@@ -1299,11 +1338,6 @@ namespace server.Migrations
                 column: "maNguoiDung");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhieuDangKyLichTiem_maBacSi",
-                table: "PhieuDangKyLichTiem",
-                column: "maBacSi");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_PhieuDangKyLichTiem_maDichVu",
                 table: "PhieuDangKyLichTiem",
                 column: "maDichVu");
@@ -1334,19 +1368,14 @@ namespace server.Migrations
                 column: "maBacSi");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhieuTiem_maLichHen",
+                name: "IX_PhieuTiem_maDichVu",
                 table: "PhieuTiem",
-                column: "maLichHen");
+                column: "maDichVu");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhieuTiem_maLo",
+                name: "IX_PhieuTiem_maNguoiDung",
                 table: "PhieuTiem",
-                column: "maLo");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PhieuTiem_maVaccine",
-                table: "PhieuTiem",
-                column: "maVaccine");
+                column: "maNguoiDung");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PhieuXuat_maDiaDiemNhap",
@@ -1414,6 +1443,9 @@ namespace server.Migrations
                 name: "ChiTietNhap");
 
             migrationBuilder.DropTable(
+                name: "ChiTietPhieuTiem");
+
+            migrationBuilder.DropTable(
                 name: "ChiTietThanhLy");
 
             migrationBuilder.DropTable(
@@ -1429,6 +1461,9 @@ namespace server.Migrations
                 name: "DonHangKhuyenMai");
 
             migrationBuilder.DropTable(
+                name: "LichLamViec");
+
+            migrationBuilder.DropTable(
                 name: "LichTiemChuan");
 
             migrationBuilder.DropTable(
@@ -1439,9 +1474,6 @@ namespace server.Migrations
 
             migrationBuilder.DropTable(
                 name: "PhieuDangKyLichTiem");
-
-            migrationBuilder.DropTable(
-                name: "PhieuTiem");
 
             migrationBuilder.DropTable(
                 name: "ThongTinNguoiDung");
@@ -1459,6 +1491,9 @@ namespace server.Migrations
                 name: "PhieuNhap");
 
             migrationBuilder.DropTable(
+                name: "PhieuTiem");
+
+            migrationBuilder.DropTable(
                 name: "PhieuThanhLy");
 
             migrationBuilder.DropTable(
@@ -1466,9 +1501,6 @@ namespace server.Migrations
 
             migrationBuilder.DropTable(
                 name: "KhuyenMai");
-
-            migrationBuilder.DropTable(
-                name: "DichVu");
 
             migrationBuilder.DropTable(
                 name: "LoVaccine");
@@ -1480,28 +1512,28 @@ namespace server.Migrations
                 name: "LichHen");
 
             migrationBuilder.DropTable(
+                name: "BacSi");
+
+            migrationBuilder.DropTable(
+                name: "DichVu");
+
+            migrationBuilder.DropTable(
                 name: "QuanLy");
 
             migrationBuilder.DropTable(
                 name: "LoaiKhuyenMai");
 
             migrationBuilder.DropTable(
-                name: "LoaiDichVu");
-
-            migrationBuilder.DropTable(
                 name: "NhaCungCap");
-
-            migrationBuilder.DropTable(
-                name: "DonHang");
-
-            migrationBuilder.DropTable(
-                name: "LichLamViec");
 
             migrationBuilder.DropTable(
                 name: "Vaccine");
 
             migrationBuilder.DropTable(
-                name: "BacSi");
+                name: "DonHang");
+
+            migrationBuilder.DropTable(
+                name: "LoaiDichVu");
 
             migrationBuilder.DropTable(
                 name: "DiaDiem");

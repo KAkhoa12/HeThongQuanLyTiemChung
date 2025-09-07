@@ -27,5 +27,15 @@ public partial class DichVu
 
     public virtual ICollection<DichVuVaccine> DichVuVaccines { get; set; } = new List<DichVuVaccine>();
 
+    public virtual ICollection<DieuKienDichVu> DieuKienDichVus { get; set; } = new List<DieuKienDichVu>();
+
+    public virtual ICollection<DonHangChiTiet> DonHangChiTiets { get; set; } = new List<DonHangChiTiet>();
+
+    public virtual ICollection<KeHoachTiem> KeHoachTiems { get; set; } = new List<KeHoachTiem>();
+
     public virtual LoaiDichVu? MaLoaiDichVuNavigation { get; set; }
+
+    public virtual ICollection<PhieuDangKyLichTiem> PhieuDangKyLichTiems { get; set; } = new List<PhieuDangKyLichTiem>();
+
+    public virtual ICollection<PhieuTiem> PhieuTiems { get; set; } = new List<PhieuTiem>();
 }

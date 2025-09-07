@@ -21,9 +21,9 @@ public partial class DonHangChiTiet
 
     public DateTime? NgayCapNhat { get; set; }
 
-    public virtual DonHang MaDonHangNavigation { get; set; } = null!;
-    
     public string? MaDichVu { get; set; }
-    
+
     public virtual DichVu? MaDichVuNavigation { get; set; }
+
+    public virtual DonHang MaDonHangNavigation { get; set; } = null!;
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace server.Models;
@@ -26,4 +26,4 @@ public partial class ChiTietPhieuTiem
     public virtual PhieuTiem MaPhieuTiemNavigation { get; set; } = null!;
 
     public virtual Vaccine MaVaccineNavigation { get; set; } = null!;
-} 
+}

@@ -25,7 +25,8 @@ public class CreatePhieuDangKyLichTiemDto
 
     public string MaDichVu { get; set; } = null!;
 
-
+    public DateTime? NgayDangKy { get; set; }
+    public string? MaDiaDiem { get; set; }
 
     public string? GhiChu { get; set; }
 }

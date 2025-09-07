@@ -1,23 +1,15 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../../hooks/useCart';
 import { useToast } from '../../../hooks/useToast';
 
 const CartPage: React.FC = () => {
   const navigate = useNavigate();
-  const { cartItems, updateQuantity, removeFromCart, clearCart, getCartTotal, getCartItemCount } = useCart();
+  const { cartItems, removeFromCart, clearCart, getCartTotal } = useCart();
   const { showSuccess, showError } = useToast();
   
 
 
-  const handleUpdateQuantity = (serviceId: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeFromCart(serviceId);
-      return;
-    }
-    updateQuantity(serviceId, newQuantity);
-    showSuccess('Thành công', 'Cập nhật số lượng thành công!');
-  };
 
   const handleRemoveFromCart = (serviceId: string) => {
     removeFromCart(serviceId);
@@ -45,7 +37,7 @@ const CartPage: React.FC = () => {
           <h1 className="text-5xl font-bold mb-4">🛒 Giỏ Hàng</h1>
           <p className="text-xl text-blue-100">
             {cartItems.length > 0 
-              ? `Bạn có ${getCartItemCount()} dịch vụ trong giỏ hàng`
+              ? ``
               : 'Giỏ hàng của bạn đang trống'
             }
           </p>
@@ -78,14 +70,8 @@ const CartPage: React.FC = () => {
               <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-800">
-                    Dịch vụ trong giỏ hàng ({cartItems.length})
+                    Dịch vụ trong giỏ hàng 
                   </h2>
-                  <button
-                    onClick={handleClearCart}
-                    className="text-red-600 hover:text-red-700 font-medium text-sm"
-                  >
-                    🗑️ Xóa tất cả
-                  </button>
                 </div>
 
                 <div className="space-y-4">
@@ -112,30 +98,10 @@ const CartPage: React.FC = () => {
                         </div>
 
                         <div className="flex items-center space-x-4">
-                          {/* Quantity Controls */}
-                          <div className="flex items-center border border-gray-300 rounded-lg">
-                            <button
-                              onClick={() => handleUpdateQuantity(item.service.id, item.quantity - 1)}
-                              className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                            >
-                              -
-                            </button>
-                            <span className="px-4 py-2 text-gray-800 font-medium min-w-[3rem] text-center">
-                              {item.quantity}
-                            </span>
-                            <button
-                              onClick={() => handleUpdateQuantity(item.service.id, item.quantity + 1)}
-                              className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-700"
-                            >
-                              +
-                            </button>
-                          </div>
-
-                          {/* Price */}
                           <div className="text-right">
                             <div className="text-lg font-bold text-green-600">
                               {item.service.price 
-                                ? `${(item.service.price * item.quantity).toLocaleString('vi-VN')} VNĐ`
+                                ? `${item.service.price.toLocaleString('vi-VN')} VNĐ`
                                 : 'Liên hệ'
                               }
                             </div>
@@ -152,7 +118,7 @@ const CartPage: React.FC = () => {
                             className="text-red-600 hover:text-red-700 p-2"
                             title="Xóa khỏi giỏ hàng"
                           >
-                            🗑️
+                            <i className="ri-delete-bin-line text-2xl"></i>
                           </button>
                         </div>
                       </div>
@@ -168,10 +134,6 @@ const CartPage: React.FC = () => {
                 <h3 className="text-xl font-bold text-gray-800 mb-6">Tóm tắt đơn hàng</h3>
                 
                 <div className="space-y-4 mb-6">
-                  <div className="flex justify-between text-gray-600">
-                    <span>Tổng dịch vụ:</span>
-                    <span>{getCartItemCount()}</span>
-                  </div>
                   <div className="flex justify-between text-gray-600">
                     <span>Phí dịch vụ:</span>
                     <span>{getCartTotal().toLocaleString('vi-VN')} VNĐ</span>
@@ -195,17 +157,8 @@ const CartPage: React.FC = () => {
                   onClick={() => navigate('/services')}
                   className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-medium transition-colors duration-200"
                 >
-                  🏥 Tiếp tục mua sắm
+                  🏥 Mua dịch vụ khác
                 </button>
-
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-semibold text-blue-800 mb-2">ℹ️ Lưu ý</h4>
-                  <ul className="text-sm text-blue-700 space-y-1">
-                    <li>• Giỏ hàng được lưu trên máy của bạn</li>
-                    <li>• Có thể thay đổi số lượng hoặc xóa dịch vụ</li>
-                    <li>• Giá dịch vụ có thể thay đổi theo thời gian</li>
-                  </ul>
-                </div>
               </div>
             </div>
           </div>

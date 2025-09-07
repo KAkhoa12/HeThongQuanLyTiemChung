@@ -41,7 +41,5 @@ public partial class LoVaccine
 
     public virtual Vaccine MaVaccineNavigation { get; set; } = null!;
 
-    public virtual ICollection<PhieuTiem> PhieuTiems { get; set; } = new List<PhieuTiem>();
-
     public virtual ICollection<TonKhoLo> TonKhoLos { get; set; } = new List<TonKhoLo>();
 }

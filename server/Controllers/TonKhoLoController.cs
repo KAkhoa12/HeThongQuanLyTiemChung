@@ -4,6 +4,7 @@ using server.DTOs.Kho;
 using server.DTOs.Pagination;
 using server.Helpers;
 using server.Models;
+using server.Types;
 
 namespace server.Controllers;
 
@@ -29,16 +30,27 @@ public class TonKhoLoController : ControllerBase
             .Include(tk => tk.MaDiaDiemNavigation)
             .Include(tk => tk.MaLoNavigation)
                 .ThenInclude(l => l.MaVaccineNavigation)
-            .Where(tk => tk.IsDelete == false);
+            .Where(tk => tk.IsDelete == false)
+            // Step 1: Exclude TonKhoLo records where LoVaccine has been disposed of (thanh lý)
+            .Where(tk => !tk.MaLoNavigation.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude TonKhoLo records where LoVaccine has pending or rejected phiếu nhập
+            .Where(tk => !tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include TonKhoLo records where LoVaccine has at least one approved phiếu nhập
+            .Where(tk => tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved));
 
         // Tìm kiếm theo từ khóa
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(tk => 
-                tk.MaTonKho.Contains(search) ||
-                tk.MaLoNavigation.SoLo.Contains(search) ||
-                tk.MaLoNavigation.MaVaccineNavigation.Ten.Contains(search) ||
-                tk.MaDiaDiemNavigation.Ten.Contains(search));
+                (tk.MaTonKho != null && tk.MaTonKho.Contains(search)) ||
+                (tk.MaLoNavigation != null && tk.MaLoNavigation.SoLo != null && tk.MaLoNavigation.SoLo.Contains(search)) ||
+                (tk.MaLoNavigation != null && tk.MaLoNavigation.MaVaccineNavigation != null && tk.MaLoNavigation.MaVaccineNavigation.Ten != null && tk.MaLoNavigation.MaVaccineNavigation.Ten.Contains(search)) ||
+                (tk.MaDiaDiemNavigation != null && tk.MaDiaDiemNavigation.Ten != null && tk.MaDiaDiemNavigation.Ten.Contains(search)));
         }
 
         // Lọc theo địa điểm
@@ -62,9 +74,9 @@ public class TonKhoLoController : ControllerBase
                 tk.SoLuong,
                 tk.NgayTao,
                 tk.NgayCapNhat,
-                tk.MaDiaDiemNavigation.Ten,
-                tk.MaLoNavigation.SoLo,
-                tk.MaLoNavigation.MaVaccineNavigation.Ten
+                tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation.Ten : "" : "",
+                tk.MaLoNavigation != null ? tk.MaLoNavigation.SoLo : "",
+                tk.MaLoNavigation != null && tk.MaLoNavigation.MaVaccineNavigation != null ? tk.MaLoNavigation != null && tk.MaLoNavigation.MaVaccineNavigation != null ? tk.MaLoNavigation.MaVaccineNavigation.Ten : "" : ""
             ))
             .ToPagedAsync(page, pageSize, ct);
 
@@ -79,7 +91,19 @@ public class TonKhoLoController : ControllerBase
             .Include(tk => tk.MaDiaDiemNavigation)
             .Include(tk => tk.MaLoNavigation)
                 .ThenInclude(l => l.MaVaccineNavigation)
-            .FirstOrDefaultAsync(tk => tk.MaTonKho == id && tk.IsDelete == false, ct);
+            .Where(tk => tk.MaTonKho == id && tk.IsDelete == false)
+            // Step 1: Exclude TonKhoLo records where LoVaccine has been disposed of (thanh lý)
+            .Where(tk => !tk.MaLoNavigation.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude TonKhoLo records where LoVaccine has pending or rejected phiếu nhập
+            .Where(tk => !tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include TonKhoLo records where LoVaccine has at least one approved phiếu nhập
+            .Where(tk => tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved))
+            .FirstOrDefaultAsync(ct);
 
         if (tonKhoLo == null)
             return ApiResponse.Error("Không tìm thấy tồn kho lô", 404);
@@ -194,7 +218,18 @@ public class TonKhoLoController : ControllerBase
             .Include(tk => tk.MaLoNavigation)
                 .ThenInclude(l => l.MaVaccineNavigation)
             .Where(tk => tk.MaDiaDiem == diaDiemId && tk.IsDelete == false && tk.SoLuong > 0)
-            .OrderBy(tk => tk.MaLoNavigation.MaVaccineNavigation.Ten)
+            // Step 1: Exclude TonKhoLo records where LoVaccine has been disposed of (thanh lý)
+            .Where(tk => !tk.MaLoNavigation.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude TonKhoLo records where LoVaccine has pending or rejected phiếu nhập
+            .Where(tk => !tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include TonKhoLo records where LoVaccine has at least one approved phiếu nhập
+            .Where(tk => tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved))
+            .OrderBy(tk => tk.MaLoNavigation != null && tk.MaLoNavigation.MaVaccineNavigation != null ? tk.MaLoNavigation.MaVaccineNavigation.Ten : "")
             .Select(tk => new TonKhoLoDto(
                 tk.MaTonKho,
                 tk.MaDiaDiem,
@@ -202,9 +237,9 @@ public class TonKhoLoController : ControllerBase
                 tk.SoLuong,
                 tk.NgayTao,
                 tk.NgayCapNhat,
-                tk.MaDiaDiemNavigation.Ten,
-                tk.MaLoNavigation.SoLo,
-                tk.MaLoNavigation.MaVaccineNavigation.Ten
+                tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation.Ten : "" : "",
+                tk.MaLoNavigation != null ? tk.MaLoNavigation.SoLo : "",
+                tk.MaLoNavigation != null && tk.MaLoNavigation.MaVaccineNavigation != null ? tk.MaLoNavigation != null && tk.MaLoNavigation.MaVaccineNavigation != null ? tk.MaLoNavigation.MaVaccineNavigation.Ten : "" : ""
             ))
             .ToListAsync(ct);
 
@@ -222,7 +257,18 @@ public class TonKhoLoController : ControllerBase
             .Include(tk => tk.MaLoNavigation)
                 .ThenInclude(l => l.MaVaccineNavigation)
             .Where(tk => tk.MaLo == loId && tk.IsDelete == false)
-            .OrderBy(tk => tk.MaDiaDiemNavigation.Ten)
+            // Step 1: Exclude TonKhoLo records where LoVaccine has been disposed of (thanh lý)
+            .Where(tk => !tk.MaLoNavigation.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude TonKhoLo records where LoVaccine has pending or rejected phiếu nhập
+            .Where(tk => !tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include TonKhoLo records where LoVaccine has at least one approved phiếu nhập
+            .Where(tk => tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved))
+            .OrderBy(tk => tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation.Ten : "")
             .Select(tk => new TonKhoLoDto(
                 tk.MaTonKho,
                 tk.MaDiaDiem,
@@ -230,9 +276,9 @@ public class TonKhoLoController : ControllerBase
                 tk.SoLuong,
                 tk.NgayTao,
                 tk.NgayCapNhat,
-                tk.MaDiaDiemNavigation.Ten,
-                tk.MaLoNavigation.SoLo,
-                tk.MaLoNavigation.MaVaccineNavigation.Ten
+                tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation.Ten : "" : "",
+                tk.MaLoNavigation != null ? tk.MaLoNavigation.SoLo : "",
+                tk.MaLoNavigation != null && tk.MaLoNavigation.MaVaccineNavigation != null ? tk.MaLoNavigation != null && tk.MaLoNavigation.MaVaccineNavigation != null ? tk.MaLoNavigation.MaVaccineNavigation.Ten : "" : ""
             ))
             .ToListAsync(ct);
 
@@ -248,10 +294,21 @@ public class TonKhoLoController : ControllerBase
             .Include(tk => tk.MaLoNavigation)
                 .ThenInclude(l => l.MaVaccineNavigation)
             .Where(tk => tk.IsDelete == false && tk.SoLuong > 0)
-            .GroupBy(tk => new { tk.MaDiaDiem, tk.MaDiaDiemNavigation.Ten })
+            // Step 1: Exclude TonKhoLo records where LoVaccine has been disposed of (thanh lý)
+            .Where(tk => !tk.MaLoNavigation.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude TonKhoLo records where LoVaccine has pending or rejected phiếu nhập
+            .Where(tk => !tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include TonKhoLo records where LoVaccine has at least one approved phiếu nhập
+            .Where(tk => tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved))
+            .GroupBy(tk => new { MaDiaDiem = tk.MaDiaDiem, Ten = tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation.Ten : "" })
             .Select(g => new TonKhoSummaryDto(
-                g.Key.MaDiaDiem,
-                g.Key.Ten,
+                g.Key.MaDiaDiem ?? "",
+                g.Key.Ten ?? "",
                 g.Count(),
                 g.Sum(tk => tk.SoLuong ?? 0),
                 g.Sum(tk => (tk.SoLuong ?? 0) * (tk.MaLoNavigation.GiaNhap ?? 0))
@@ -289,4 +346,299 @@ public class TonKhoLoController : ControllerBase
         await _ctx.SaveChangesAsync(ct);
         return ApiResponse.Success("Cập nhật số lượng tồn kho thành công", null);
     }
-} 
+
+    /* ---------- 10. Lấy danh sách lô vaccine sắp hết hạn ---------- */
+    [HttpGet("expiring-soon")]
+    public async Task<IActionResult> GetExpiringSoon(
+        [FromQuery] int daysAhead = 30,
+        [FromQuery] string? maDiaDiem = null,
+        CancellationToken ct = default)
+    {
+        var cutoffDate = DateTime.UtcNow.AddDays(daysAhead);
+        
+        var query = _ctx.TonKhoLos
+            .Include(tk => tk.MaDiaDiemNavigation)
+            .Include(tk => tk.MaLoNavigation)
+                .ThenInclude(l => l.MaVaccineNavigation)
+            .Where(tk => tk.IsDelete == false && 
+                        tk.SoLuong > 0 &&
+                        tk.MaLoNavigation.NgayHetHan.HasValue &&
+                        tk.MaLoNavigation.NgayHetHan.Value <= DateOnly.FromDateTime(cutoffDate))
+            // Step 1: Exclude TonKhoLo records where LoVaccine has been disposed of (thanh lý)
+            .Where(tk => !tk.MaLoNavigation.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude TonKhoLo records where LoVaccine has pending or rejected phiếu nhập
+            .Where(tk => !tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include TonKhoLo records where LoVaccine has at least one approved phiếu nhập
+            .Where(tk => tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved));
+
+        if (!string.IsNullOrEmpty(maDiaDiem))
+        {
+            query = query.Where(tk => tk.MaDiaDiem == maDiaDiem);
+        }
+
+        var result = await query
+            .OrderBy(tk => tk.MaLoNavigation.NgayHetHan)
+            .Select(tk => new
+            {
+                tk.MaTonKho,
+                tk.MaDiaDiem,
+                tk.MaLo,
+                tk.SoLuong,
+                TenDiaDiem = tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation.Ten : "",
+                SoLo = tk.MaLoNavigation.SoLo,
+                TenVaccine = tk.MaLoNavigation != null && tk.MaLoNavigation.MaVaccineNavigation != null ? tk.MaLoNavigation.MaVaccineNavigation.Ten : "",
+                NgayHetHan = tk.MaLoNavigation.NgayHetHan,
+                NgaySanXuat = tk.MaLoNavigation.NgaySanXuat,
+                SoNgayConLai = tk.MaLoNavigation.NgayHetHan.HasValue ? 
+                    EF.Functions.DateDiffDay(DateTime.UtcNow, tk.MaLoNavigation.NgayHetHan.Value.ToDateTime(TimeOnly.MinValue)) : (int?)null
+            })
+            .ToListAsync(ct);
+
+        return ApiResponse.Success("Lấy danh sách lô vaccine sắp hết hạn thành công", result);
+    }
+
+    /* ---------- 11. Lấy danh sách vaccine có tồn kho thấp ---------- */
+    [HttpGet("low-stock")]
+    public async Task<IActionResult> GetLowStock(
+        [FromQuery] int threshold = 50,
+        [FromQuery] string? maDiaDiem = null,
+        CancellationToken ct = default)
+    {
+        var query = _ctx.TonKhoLos
+            .Include(tk => tk.MaDiaDiemNavigation)
+            .Include(tk => tk.MaLoNavigation)
+                .ThenInclude(l => l.MaVaccineNavigation)
+            .Where(tk => tk.IsDelete == false && 
+                        tk.SoLuong <= threshold &&
+                        tk.SoLuong > 0)
+            // Step 1: Exclude TonKhoLo records where LoVaccine has been disposed of (thanh lý)
+            .Where(tk => !tk.MaLoNavigation.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude TonKhoLo records where LoVaccine has pending or rejected phiếu nhập
+            .Where(tk => !tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include TonKhoLo records where LoVaccine has at least one approved phiếu nhập
+            .Where(tk => tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved));
+
+        if (!string.IsNullOrEmpty(maDiaDiem))
+        {
+            query = query.Where(tk => tk.MaDiaDiem == maDiaDiem);
+        }
+
+        var result = await query
+            .OrderBy(tk => tk.SoLuong)
+            .Select(tk => new
+            {
+                tk.MaTonKho,
+                tk.MaDiaDiem,
+                tk.MaLo,
+                tk.SoLuong,
+                TenDiaDiem = tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation.Ten : "",
+                SoLo = tk.MaLoNavigation.SoLo,
+                TenVaccine = tk.MaLoNavigation != null && tk.MaLoNavigation.MaVaccineNavigation != null ? tk.MaLoNavigation.MaVaccineNavigation.Ten : "",
+                NgayHetHan = tk.MaLoNavigation.NgayHetHan,
+                GiaNhap = tk.MaLoNavigation.GiaNhap,
+                TrangThai = tk.SoLuong == 0 ? "Hết hàng" : 
+                           tk.SoLuong <= threshold * 0.2 ? "Cực thấp" :
+                           tk.SoLuong <= threshold * 0.5 ? "Thấp" : "Bình thường"
+            })
+            .ToListAsync(ct);
+
+        return ApiResponse.Success("Lấy danh sách vaccine có tồn kho thấp thành công", result);
+    }
+
+    /* ---------- 12. Lấy danh sách lô vaccine có thể xuất ---------- */
+    [HttpGet("available-for-export")]
+    public async Task<IActionResult> GetAvailableForExport(
+        [FromQuery] string maDiaDiem,
+        [FromQuery] string? maVaccine = null,
+        CancellationToken ct = default)
+    {
+        var currentDate = DateTime.UtcNow;
+        
+        var query = _ctx.TonKhoLos
+            .Include(tk => tk.MaDiaDiemNavigation)
+            .Include(tk => tk.MaLoNavigation)
+                .ThenInclude(l => l.MaVaccineNavigation)
+            .Where(tk => tk.IsDelete == false && 
+                        tk.MaDiaDiem == maDiaDiem &&
+                        tk.SoLuong > 0 &&
+                        (!tk.MaLoNavigation.NgayHetHan.HasValue || tk.MaLoNavigation.NgayHetHan > DateOnly.FromDateTime(currentDate)))
+            // Step 1: Exclude TonKhoLo records where LoVaccine has been disposed of (thanh lý)
+            .Where(tk => !tk.MaLoNavigation.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude TonKhoLo records where LoVaccine has pending or rejected phiếu nhập
+            .Where(tk => !tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include TonKhoLo records where LoVaccine has at least one approved phiếu nhập
+            .Where(tk => tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved));
+
+        if (!string.IsNullOrEmpty(maVaccine))
+        {
+            query = query.Where(tk => tk.MaLoNavigation.MaVaccine == maVaccine);
+        }
+
+        var result = await query
+            .OrderBy(tk => tk.MaLoNavigation != null && tk.MaLoNavigation.MaVaccineNavigation != null ? tk.MaLoNavigation.MaVaccineNavigation.Ten : "")
+            .ThenBy(tk => tk.MaLoNavigation.NgayHetHan)
+            .Select(tk => new
+            {
+                tk.MaTonKho,
+                tk.MaDiaDiem,
+                tk.MaLo,
+                tk.SoLuong,
+                TenDiaDiem = tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation.Ten : "",
+                SoLo = tk.MaLoNavigation.SoLo,
+                TenVaccine = tk.MaLoNavigation != null && tk.MaLoNavigation.MaVaccineNavigation != null ? tk.MaLoNavigation.MaVaccineNavigation.Ten : "",
+                NgayHetHan = tk.MaLoNavigation.NgayHetHan,
+                NgaySanXuat = tk.MaLoNavigation.NgaySanXuat,
+                GiaNhap = tk.MaLoNavigation.GiaNhap,
+                SoNgayConLai = tk.MaLoNavigation.NgayHetHan.HasValue ? 
+                    EF.Functions.DateDiffDay(currentDate, tk.MaLoNavigation.NgayHetHan.Value.ToDateTime(TimeOnly.MinValue)) : (int?)null
+            })
+            .ToListAsync(ct);
+
+        return ApiResponse.Success("Lấy danh sách lô vaccine có thể xuất thành công", result);
+    }
+
+    /* ---------- 13. Thống kê tổng nhập/xuất/thanh lý/tồn theo thời gian ---------- */
+    [HttpGet("statistics")]
+    public async Task<IActionResult> GetStatistics(
+        [FromQuery] DateTime? tuNgay = null,
+        [FromQuery] DateTime? denNgay = null,
+        [FromQuery] string? maDiaDiem = null,
+        CancellationToken ct = default)
+    {
+        var startDate = tuNgay ?? DateTime.UtcNow.AddMonths(-1);
+        var endDate = denNgay ?? DateTime.UtcNow;
+
+        // Thống kê tồn kho hiện tại
+        var tonKhoQuery = _ctx.TonKhoLos
+            .Include(tk => tk.MaDiaDiemNavigation)
+            .Include(tk => tk.MaLoNavigation)
+                .ThenInclude(l => l.MaVaccineNavigation)
+            .Where(tk => tk.IsDelete == false)
+            // Step 1: Exclude TonKhoLo records where LoVaccine has been disposed of (thanh lý)
+            .Where(tk => !tk.MaLoNavigation.ChiTietThanhLies.Any(ct => ct.IsDelete == false))
+            // Step 2: Exclude TonKhoLo records where LoVaccine has pending or rejected phiếu nhập
+            .Where(tk => !tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                (chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Pending || 
+                 chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Rejected)))
+            // Step 3: Only include TonKhoLo records where LoVaccine has at least one approved phiếu nhập
+            .Where(tk => tk.MaLoNavigation.ChiTietNhaps.Any(chiTiet => chiTiet.IsDelete == false && 
+                chiTiet.MaPhieuNhapNavigation != null && 
+                chiTiet.MaPhieuNhapNavigation.TrangThai == TrangThaiPhieuKho.Approved));
+
+        if (!string.IsNullOrEmpty(maDiaDiem))
+        {
+            tonKhoQuery = tonKhoQuery.Where(tk => tk.MaDiaDiem == maDiaDiem);
+        }
+
+        var tonKhoHienTai = await tonKhoQuery
+            .GroupBy(tk => new { MaDiaDiem = tk.MaDiaDiem, Ten = tk.MaDiaDiemNavigation != null ? tk.MaDiaDiemNavigation.Ten : "" })
+            .Select(g => new
+            {
+                MaDiaDiem = g.Key.MaDiaDiem,
+                TenDiaDiem = g.Key.Ten,
+                TongSoLo = g.Count(),
+                TongSoLuong = g.Sum(tk => tk.SoLuong ?? 0),
+                TongGiaTri = g.Sum(tk => (tk.SoLuong ?? 0) * (tk.MaLoNavigation.GiaNhap ?? 0))
+            })
+            .ToListAsync(ct);
+
+        // Thống kê nhập kho
+        var nhapKhoQuery = _ctx.ChiTietNhaps
+            .Include(ct => ct.MaPhieuNhapNavigation)
+            .Include(ct => ct.MaLoNavigation)
+                .ThenInclude(l => l.MaVaccineNavigation)
+            .Where(ct => ct.IsDelete == false && 
+                        ct.MaPhieuNhapNavigation.NgayNhap >= startDate &&
+                        ct.MaPhieuNhapNavigation.NgayNhap <= endDate);
+
+        var nhapKho = await nhapKhoQuery
+            .GroupBy(ct => ct.MaLoNavigation.MaVaccineNavigation.Ten)
+            .Select(g => new
+            {
+                TenVaccine = g.Key,
+                TongSoLuongNhap = g.Sum(ct => ct.SoLuong ?? 0),
+                TongGiaTriNhap = g.Sum(ct => (ct.SoLuong ?? 0) * (ct.Gia ?? 0))
+            })
+            .ToListAsync(ct);
+
+        // Thống kê xuất kho
+        var xuatKhoQuery = _ctx.ChiTietXuats
+            .Include(ct => ct.MaPhieuXuatNavigation)
+            .Include(ct => ct.MaLoNavigation)
+                .ThenInclude(l => l.MaVaccineNavigation)
+            .Where(ct => ct.IsDelete == false && 
+                        ct.MaPhieuXuatNavigation.NgayXuat >= startDate &&
+                        ct.MaPhieuXuatNavigation.NgayXuat <= endDate);
+
+        if (!string.IsNullOrEmpty(maDiaDiem))
+        {
+            xuatKhoQuery = xuatKhoQuery.Where(ct => ct.MaPhieuXuatNavigation.MaDiaDiemXuat == maDiaDiem);
+        }
+
+        var xuatKho = await xuatKhoQuery
+            .GroupBy(ct => ct.MaLoNavigation.MaVaccineNavigation.Ten)
+            .Select(g => new
+            {
+                TenVaccine = g.Key,
+                TongSoLuongXuat = g.Sum(ct => ct.SoLuong ?? 0)
+            })
+            .ToListAsync(ct);
+
+        // Thống kê thanh lý
+        var thanhLyQuery = _ctx.ChiTietThanhLies
+            .Include(ct => ct.MaPhieuThanhLyNavigation)
+            .Include(ct => ct.MaLoNavigation)
+                .ThenInclude(l => l.MaVaccineNavigation)
+            .Where(ct => ct.IsDelete == false && 
+                        ct.MaPhieuThanhLyNavigation.NgayThanhLy >= startDate &&
+                        ct.MaPhieuThanhLyNavigation.NgayThanhLy <= endDate);
+
+        if (!string.IsNullOrEmpty(maDiaDiem))
+        {
+            thanhLyQuery = thanhLyQuery.Where(ct => ct.MaPhieuThanhLyNavigation.MaDiaDiem == maDiaDiem);
+        }
+
+        var thanhLy = await thanhLyQuery
+            .GroupBy(ct => ct.MaLoNavigation.MaVaccineNavigation.Ten)
+            .Select(g => new
+            {
+                TenVaccine = g.Key,
+                TongSoLuongThanhLy = g.Sum(ct => ct.SoLuong ?? 0)
+            })
+            .ToListAsync(ct);
+
+        var result = new
+        {
+            ThoiGian = new { TuNgay = startDate, DenNgay = endDate },
+            TonKhoHienTai = tonKhoHienTai,
+            NhapKho = nhapKho,
+            XuatKho = xuatKho,
+            ThanhLy = thanhLy,
+            TongKet = new
+            {
+                TongSoLuongNhap = nhapKho.Sum(n => n.TongSoLuongNhap),
+                TongSoLuongXuat = xuatKho.Sum(x => x.TongSoLuongXuat),
+                TongSoLuongThanhLy = thanhLy.Sum(t => t.TongSoLuongThanhLy),
+                TongGiaTriNhap = nhapKho.Sum(n => n.TongGiaTriNhap)
+            }
+        };
+
+        return ApiResponse.Success("Lấy thống kê tồn kho thành công", result);
+    }
+}   

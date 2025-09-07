@@ -14,7 +14,7 @@ const ServiceTypeCreatePage: React.FC = () => {
       setLoading(true);
       await createServiceType(data);
       toast.success('Tạo loại dịch vụ thành công!');
-      navigate('/services/types');
+      navigate('/dashboard/services/types');
     } catch (error) {
       console.error('Failed to create service type:', error);
       toast.error('Tạo loại dịch vụ thất bại. Vui lòng thử lại.');
@@ -24,7 +24,7 @@ const ServiceTypeCreatePage: React.FC = () => {
   };
 
   const handleCancel = () => {
-    navigate('/services/types');
+    navigate('/dashboard/services/types');
   };
 
   return (

@@ -95,6 +95,12 @@ export const useAuthStore = create<AuthState>()(
           // Call backend logout API
           await authService.logoutFromServer();
           
+          // Clear cart from localStorage
+          localStorage.removeItem('vaccineCart');
+          
+          // Dispatch custom event to notify cart components
+          window.dispatchEvent(new CustomEvent('cartCleared'));
+          
           // Clear local state
           set({
             user: null,
@@ -102,9 +108,20 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null
           });
+          
+          // Dispatch custom event to notify navigation
+          window.dispatchEvent(new CustomEvent('logoutSuccess'));
         } catch (error) {
           console.error('Logout error:', error);
-          // Even if API fails, clear local state
+          // Even if API fails, clear local state and cart
+          localStorage.removeItem('vaccineCart');
+          
+          // Dispatch custom event to notify cart components
+          window.dispatchEvent(new CustomEvent('cartCleared'));
+          
+          // Dispatch custom event to notify navigation
+          window.dispatchEvent(new CustomEvent('logoutSuccess'));
+          
           set({
             user: null,
             isAuthenticated: false,

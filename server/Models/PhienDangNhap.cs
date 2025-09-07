@@ -7,7 +7,7 @@ public partial class PhienDangNhap
 {
     public string MaPhien { get; set; } = null!;
 
-    public string AccessToken { get; set; } = null!;
+    public string? AccessToken { get; set; }
 
     public string RefreshToken { get; set; } = null!;
 

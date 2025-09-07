@@ -1,5 +1,5 @@
 import { useApiWithParams } from './useApi';
-import { phieuDangKyLichTiemService, PhieuDangKyLichTiem, PhieuDangKyLichTiemResponse } from '../services/phieuDangKyLichTiem.service';
+import { phieuDangKyLichTiemService, PhieuDangKyLichTiemResponse } from '../services/phieuDangKyLichTiem.service';
 
 export const useAppointments = () => {
   return useApiWithParams<PhieuDangKyLichTiemResponse, { page: number; pageSize: number }>(

@@ -331,6 +331,91 @@ public class OrderController : ControllerBase
         return ApiResponse.Success("Lấy danh sách đơn hàng thành công", orders);
     }
 
+    /* ---------- 6. Kiểm tra điều kiện mua đơn hàng ---------- */
+    [HttpPost("check-eligibility")]
+    [ConfigAuthorize]
+    public async Task<IActionResult> CheckOrderEligibility(
+        [FromBody] CheckOrderEligibilityDto dto,
+        CancellationToken ct)
+    {
+        try
+        {
+            // Lấy thông tin người dùng đã đăng nhập
+            var userId = User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return ApiResponse.Error("Người dùng chưa đăng nhập", 401);
+            }
+
+            // Lấy thông tin người dùng
+            var user = await _ctx.NguoiDungs
+                .FirstOrDefaultAsync(u => u.MaNguoiDung == userId && u.IsDelete != true, ct);
+
+            if (user == null)
+            {
+                return ApiResponse.Error("Không tìm thấy thông tin người dùng", 404);
+            }
+
+            var eligibilityResult = new
+            {
+                IsEligible = true,
+                Warnings = new List<string>(),
+                Errors = new List<string>(),
+                UserInfo = new
+                {
+                    user.MaNguoiDung,
+                    user.Ten,
+                    user.NgaySinh,
+                    user.GioiTinh
+                },
+                ServiceChecks = new List<object>()
+            };
+
+            var warnings = new List<string>();
+            var errors = new List<string>();
+            var serviceChecks = new List<object>();
+
+            // Kiểm tra từng dịch vụ trong đơn hàng
+            foreach (var item in dto.Items)
+            {
+                var serviceCheck = await CheckServiceEligibility(user, item.ServiceId, ct);
+                serviceChecks.Add(serviceCheck);
+
+                // Cast to dynamic để truy cập properties
+                var checkResult = (dynamic)serviceCheck;
+                
+                if (!checkResult.IsEligible)
+                {
+                    errors.AddRange((List<string>)checkResult.Errors);
+                    eligibilityResult = new
+                    {
+                        IsEligible = false,
+                        Warnings = warnings,
+                        Errors = errors,
+                        UserInfo = new
+                        {
+                            user.MaNguoiDung,
+                            user.Ten,
+                            user.NgaySinh,
+                            user.GioiTinh
+                        },
+                        ServiceChecks = serviceChecks
+                    };
+                }
+                else
+                {
+                    warnings.AddRange((List<string>)checkResult.Warnings);
+                }
+            }
+
+            return ApiResponse.Success("Kiểm tra điều kiện mua đơn hàng thành công", eligibilityResult);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.Error($"Lỗi khi kiểm tra điều kiện mua đơn hàng: {ex.Message}", 500);
+        }
+    }
+
     /* ---------- Helper Methods ---------- */
     private string GenerateOrderCode()
     {
@@ -338,5 +423,121 @@ public class OrderController : ControllerBase
         var random = new Random();
         var randomPart = random.Next(1000, 9999).ToString();
         return $"DH{timestamp}{randomPart}";
+    }
+
+    private async Task<object> CheckServiceEligibility(NguoiDung user, string serviceId, CancellationToken ct)
+    {
+        var warnings = new List<string>();
+        var errors = new List<string>();
+
+        // Lấy thông tin dịch vụ
+        var service = await _ctx.DichVus
+            .Include(d => d.DieuKienDichVus)
+            .FirstOrDefaultAsync(d => d.MaDichVu == serviceId && d.IsDelete != true, ct);
+
+        if (service == null)
+        {
+            errors.Add($"Dịch vụ {serviceId} không tồn tại hoặc đã bị xóa");
+            return new { IsEligible = false, Errors = errors, Warnings = warnings };
+        }
+
+        // Kiểm tra điều kiện tuổi
+        if (user.NgaySinh.HasValue && service.DieuKienDichVus.Any())
+        {
+            var ageInMonths = CalculateAgeInMonths(user.NgaySinh.Value);
+            
+            foreach (var condition in service.DieuKienDichVus)
+            {
+                if (condition.TuoiThangToiThieu.HasValue && ageInMonths < condition.TuoiThangToiThieu.Value)
+                {
+                    errors.Add($"Tuổi không đủ để sử dụng dịch vụ {service.Ten}. Yêu cầu tối thiểu: {condition.TuoiThangToiThieu.Value} tháng");
+                }
+                
+                if (condition.TuoiThangToiDa.HasValue && ageInMonths > condition.TuoiThangToiDa.Value)
+                {
+                    errors.Add($"Tuổi vượt quá để sử dụng dịch vụ {service.Ten}. Yêu cầu tối đa: {condition.TuoiThangToiDa.Value} tháng");
+                }
+
+                if (!string.IsNullOrEmpty(condition.GioiTinh) && 
+                    !string.IsNullOrEmpty(user.GioiTinh) && 
+                    condition.GioiTinh != user.GioiTinh)
+                {
+                    errors.Add($"Giới tính không phù hợp với dịch vụ {service.Ten}. Yêu cầu: {condition.GioiTinh}");
+                }
+            }
+        }
+
+        // Kiểm tra xem người dùng đã đăng ký dịch vụ này chưa
+        var existingRegistration = await _ctx.PhieuDangKyLichTiems
+            .Where(p => p.MaKhachHang == user.MaNguoiDung && 
+                       p.MaDichVu == serviceId && 
+                       p.IsDelete != true &&
+                       (p.TrangThai == "PENDING" || p.TrangThai == "APPROVED"))
+            .FirstOrDefaultAsync(ct);
+
+        if (existingRegistration != null)
+        {
+            warnings.Add($"Bạn đã đăng ký dịch vụ {service.Ten} trước đó (Trạng thái: {existingRegistration.TrangThai})");
+        }
+
+        // Kiểm tra xem người dùng đã tiêm dịch vụ này chưa
+        var existingVaccination = await _ctx.PhieuTiems
+            .Where(p => p.MaNguoiDung == user.MaNguoiDung && 
+                       p.MaDichVu == serviceId && 
+                       p.IsDelete != true)
+            .FirstOrDefaultAsync(ct);
+
+        if (existingVaccination != null)
+        {
+            warnings.Add($"Bạn đã tiêm dịch vụ {service.Ten} trước đó (Ngày tiêm: {existingVaccination.NgayTiem?.ToString("dd/MM/yyyy")})");
+        }
+
+        // Kiểm tra xem có đơn hàng đang chờ xử lý hoặc đã thanh toán cho dịch vụ này không
+        var existingOrder = await _ctx.DonHangs
+            .Include(d => d.DonHangChiTiets)
+            .Where(d => d.MaNguoiDung == user.MaNguoiDung && 
+                       d.IsDelete != true &&
+                       (d.TrangThaiDon == "PENDING" || 
+                        d.TrangThaiDon == "PAYMENT_PENDING" || 
+                        d.TrangThaiDon == "PAID" || 
+                        d.TrangThaiDon == "CONFIRMED" ||
+                        d.TrangThaiDon == "PROCESSING") &&
+                       d.DonHangChiTiets.Any(dct => dct.MaDichVu == serviceId && dct.IsDelete != true))
+            .FirstOrDefaultAsync(ct);
+
+        if (existingOrder != null)
+        {
+            if (existingOrder.TrangThaiDon == "PENDING" || existingOrder.TrangThaiDon == "PAYMENT_PENDING")
+            {
+                warnings.Add($"Bạn đã có đơn hàng đang chờ xử lý cho dịch vụ {service.Ten} (Trạng thái: {existingOrder.TrangThaiDon})");
+            }
+            else if (existingOrder.TrangThaiDon == "PAID" || existingOrder.TrangThaiDon == "CONFIRMED" || existingOrder.TrangThaiDon == "PROCESSING")
+            {
+                errors.Add($"Bạn đã có đơn hàng đã thanh toán cho dịch vụ {service.Ten} (Trạng thái: {existingOrder.TrangThaiDon}). Vui lòng chờ xử lý hoặc liên hệ hỗ trợ.");
+            }
+        }
+
+        return new
+        {
+            ServiceId = serviceId,
+            ServiceName = service.Ten,
+            IsEligible = !errors.Any(),
+            Errors = errors,
+            Warnings = warnings
+        };
+    }
+
+    private int CalculateAgeInMonths(DateOnly birthDate)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var age = today.Year - birthDate.Year;
+        
+        if (today.Month < birthDate.Month || 
+            (today.Month == birthDate.Month && today.Day < birthDate.Day))
+        {
+            age--;
+        }
+        
+        return age * 12 + (today.Month - birthDate.Month);
     }
 } 

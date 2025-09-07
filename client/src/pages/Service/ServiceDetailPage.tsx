@@ -2,15 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getServiceById } from '../../services';
 import { Service } from '../../types/service.types';
-import { toast } from 'react-toastify';
 import { ServiceLoading } from '../../components/Service';
-import { DataTable, Column, ActionButton } from '../../components/Tables';
 import { useServiceVaccines, useAddVaccineToService, useUpdateServiceVaccine, useDeleteServiceVaccine } from '../../hooks/useServiceVaccine';
-import { useVaccines } from '../../hooks/useVaccine';
-import { ServiceVaccineCreateRequest, ServiceVaccineUpdateRequest } from '../../types/service.types';
+import { useVaccines, useVaccineSchedulesByVaccine } from '../../hooks/useVaccine';
 import { ServiceVaccineDto, ServiceVaccineCreateDto, ServiceVaccineUpdateDto } from '../../services/serviceVaccine.service';
 import { VaccineDto } from '../../services/vaccine.service';
 import { useToast } from '../../hooks/useToast';
+import { useServiceConditionsByService, useCreateServiceCondition, useUpdateServiceCondition, useDeleteServiceCondition } from '../../hooks/useService';
+import { formatAge } from '../../utils/ageHelp';
 
 const ServiceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,21 +22,43 @@ const ServiceDetailPage: React.FC = () => {
   const [editingVaccine, setEditingVaccine] = useState<ServiceVaccineDto | null>(null);
   const [selectedVaccineId, setSelectedVaccineId] = useState<string>('');
   const [standardDoses, setStandardDoses] = useState<number>(1);
+  const [orderNumber, setOrderNumber] = useState<number>(1);
   const [notes, setNotes] = useState<string>('');
+
+  // Service conditions management
+  const [showAddConditionModal, setShowAddConditionModal] = useState(false);
+  const [editingCondition, setEditingCondition] = useState<any>(null);
+  const [minAgeInMonths, setMinAgeInMonths] = useState<number | ''>('');
+  const [maxAgeInMonths, setMaxAgeInMonths] = useState<number | ''>('');
+  const [gender, setGender] = useState<string>('');
+  const [conditionNotes, setConditionNotes] = useState<string>('');
+  
+  // Vaccine schedule modal
+  const [showVaccineScheduleModal, setShowVaccineScheduleModal] = useState(false);
   
   // Hooks for service vaccine management
-  const { data: serviceVaccines, loading: vaccinesLoading, execute: refetchVaccines, error: vaccinesError, status: vaccinesStatus } = useServiceVaccines(id!);
+  const { data: serviceVaccines, loading: vaccinesLoading, execute: refetchVaccines } = useServiceVaccines(id!);
   const { data: availableVaccines, loading: vaccinesListLoading, execute: loadVaccines } = useVaccines();
   const { execute: addVaccine, loading: addingVaccine, status: addVaccineStatus, error: addVaccineError } = useAddVaccineToService();
   const { execute: updateVaccine, loading: updatingVaccine } = useUpdateServiceVaccine();
   const { execute: deleteVaccine, loading: deletingVaccine } = useDeleteServiceVaccine();
+  
+  // Hook for vaccine schedules
+  const { data: vaccineSchedules, loading: schedulesLoading, execute: loadVaccineSchedules } = useVaccineSchedulesByVaccine();
+
+  // Hooks for service conditions management
+  const { data: serviceConditions, loading: conditionsLoading, execute: refetchConditions } = useServiceConditionsByService();
+  const { execute: addCondition, loading: addingCondition, status: addConditionStatus, error: addConditionError } = useCreateServiceCondition();
+  const { execute: updateCondition, loading: updatingCondition } = useUpdateServiceCondition();
+  const { execute: deleteCondition, loading: deletingCondition } = useDeleteServiceCondition();
 
   useEffect(() => {
     if (id) {
       fetchServiceDetails();
       refetchVaccines(id);
+      refetchConditions(id);
     }
-  }, [id, refetchVaccines]);
+  }, [id, refetchVaccines, refetchConditions]);
 
   useEffect(() => {
     // Load available vaccines for selection
@@ -53,21 +74,26 @@ const ServiceDetailPage: React.FC = () => {
         maDichVu: id,
         maVaccine: selectedVaccineId,
         soMuiChuan: standardDoses,
+        thuTu: orderNumber,
         ghiChu: notes.trim() || undefined
       };
       
       await addVaccine(vaccineData);
-      if(addVaccineStatus === 'success'){
-        console.log(addVaccineStatus);
-        showSuccess("Thành công",'Thêm vaccine vào dịch vụ thành công');
-        setShowAddVaccineModal(false);
-        resetVaccineForm(); 
-        refetchVaccines(id);
-      }else if(addVaccineStatus === 'error'){
-        showError("Lỗi",addVaccineError || 'Thêm vaccine vào dịch vụ thất bại');
-      }
+      
+      // Check status after execution
+      setTimeout(() => {
+        if (addVaccineStatus === 'success') {
+          showSuccess("Thành công", 'Thêm vaccine vào dịch vụ thành công');
+          setShowAddVaccineModal(false);
+          resetVaccineForm();
+          refetchVaccines(id);
+        } else if (addVaccineStatus === 'error') {
+          showError("Lỗi", addVaccineError || 'Thêm vaccine vào dịch vụ thất bại');
+        }
+      }, 100);
     } catch (error) {
-      showError("Lỗi",'Thêm vaccine vào dịch vụ thất bại');
+      console.error('Error adding vaccine:', error);
+      showError("Lỗi", 'Thêm vaccine vào dịch vụ thất bại');
     }
   };
 
@@ -78,6 +104,7 @@ const ServiceDetailPage: React.FC = () => {
     try {
       const updateData: ServiceVaccineUpdateDto = {
         soMuiChuan: standardDoses,
+        thuTu: orderNumber,
         ghiChu: notes.trim() || undefined
       };
       
@@ -108,14 +135,145 @@ const ServiceDetailPage: React.FC = () => {
   const resetVaccineForm = () => {
     setSelectedVaccineId('');
     setStandardDoses(1);
+    setOrderNumber(1);
     setNotes('');
+  };
+
+  // ========== SERVICE CONDITIONS MANAGEMENT ==========
+
+  // Handle adding condition to service
+  const handleAddCondition = async () => {
+    if (!id) return;
+    
+    try {
+      const conditionData = {
+        ServiceId: id,
+        MinAgeInMonths: minAgeInMonths === '' ? null : Number(minAgeInMonths),
+        MaxAgeInMonths: maxAgeInMonths === '' ? null : Number(maxAgeInMonths),
+        Gender: gender.trim() || null,
+        Note: conditionNotes.trim() || null
+      };
+      
+      await addCondition(conditionData);
+      
+      // Check status after execution
+      setTimeout(() => {
+        if (addConditionStatus === 'success') {
+          showSuccess("Thành công", 'Thêm điều kiện dịch vụ thành công');
+          setShowAddConditionModal(false);
+          resetConditionForm();
+          refetchConditions(id);
+        } else if (addConditionStatus === 'error') {
+          showError("Lỗi", addConditionError || 'Thêm điều kiện dịch vụ thất bại');
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Error adding condition:', error);
+      showError("Lỗi", 'Thêm điều kiện dịch vụ thất bại');
+    }
+  };
+
+  // Handle updating condition in service
+  const handleUpdateCondition = async () => {
+    if (!editingCondition || !id) return;
+    
+    try {
+      const updateData = {
+        MinAgeInMonths: minAgeInMonths === '' ? null : Number(minAgeInMonths),
+        MaxAgeInMonths: maxAgeInMonths === '' ? null : Number(maxAgeInMonths),
+        Gender: gender.trim() || null,
+        Note: conditionNotes.trim() || null
+      };
+      
+      console.log('Updating condition with data:', updateData);
+      console.log('Condition ID:', editingCondition.conditionId || editingCondition.ConditionId);
+      
+      await updateCondition({ 
+        id: editingCondition.conditionId || editingCondition.ConditionId, 
+        data: updateData 
+      });
+      
+      // Check status after execution
+      setTimeout(() => {
+        if (updatingCondition === false) { // Check if update completed
+          showSuccess("Thành công", 'Cập nhật điều kiện thành công');
+          setShowAddConditionModal(false);
+          setEditingCondition(null);
+          resetConditionForm();
+          refetchConditions(id);
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Error updating condition:', error);
+      showError("Lỗi", 'Cập nhật điều kiện thất bại');
+    }
+  };
+
+  // Handle deleting condition from service
+  const handleDeleteCondition = async (conditionId: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa điều kiện này?')) return;
+    
+    try {
+      await deleteCondition(conditionId);
+      showSuccess("Thành công", 'Xóa điều kiện thành công');
+      refetchConditions(id!);
+    } catch (error) {
+      showError("Lỗi", 'Xóa điều kiện thất bại');
+    }
+  };
+
+  // Reset condition form
+  const resetConditionForm = () => {
+    setMinAgeInMonths('');
+    setMaxAgeInMonths('');
+    setGender('');
+    setConditionNotes('');
+  };
+
+  // Open edit condition modal
+  const openEditConditionModal = (condition: any) => {
+    console.log('Opening edit modal for condition:', condition);
+    setEditingCondition(condition);
+    setMinAgeInMonths(condition.minAgeInMonths || condition.MinAgeInMonths || '');
+    setMaxAgeInMonths(condition.maxAgeInMonths || condition.MaxAgeInMonths || '');
+    setGender(condition.gender || condition.Gender || '');
+    setConditionNotes(condition.note || condition.Note || '');
+    setShowAddConditionModal(true); // Show the modal
   };
 
   // Open edit modal
   const openEditModal = (vaccine: ServiceVaccineDto) => {
     setEditingVaccine(vaccine);
     setStandardDoses(vaccine.soMuiChuan);
+    setOrderNumber(vaccine.thuTu || 1);
     setNotes(vaccine.ghiChu || '');
+  };
+
+  // Load vaccine schedules for a specific vaccine
+  const loadVaccineSchedule = async (vaccineId: string) => {
+    try {
+      // Get the minimum age from service conditions
+      let minAgeInMonths: number | undefined = undefined;
+      
+      if (serviceConditions && serviceConditions.length > 0) {
+        // Find the minimum age from all service conditions
+        const validAges = serviceConditions
+          .map((condition: any) => condition.minAgeInMonths || condition.MinAgeInMonths)
+          .filter((age: any) => age !== null && age !== undefined && age >= 0);
+        
+        if (validAges.length > 0) {
+          minAgeInMonths = Math.min(...validAges);
+        }
+      }
+      
+      console.log('Loading vaccine schedule for vaccine:', vaccineId, 'with minAgeInMonths:', minAgeInMonths);
+      
+      await loadVaccineSchedules({ vaccineId, minAgeInMonths });
+      setShowVaccineScheduleModal(true);
+    } catch (error) {
+      console.error('Error loading vaccine schedule:', error);
+      showError("Lỗi", 'Không thể tải lịch tiêm chuẩn');
+    }
   };
 
   const fetchServiceDetails = async () => {
@@ -130,7 +288,7 @@ const ServiceDetailPage: React.FC = () => {
       setLoading(false);
     }
   };
-
+  console.log(vaccineSchedules);
   const formatCurrency = (amount?: number): string => {
     if (amount == null) return 'N/A';
     return new Intl.NumberFormat('vi-VN', {
@@ -152,7 +310,7 @@ const ServiceDetailPage: React.FC = () => {
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Không tìm thấy dịch vụ</h2>
         <Link
-          to="/services"
+          to="/dashboard/services"
           className="text-blue-600 hover:text-blue-800 underline"
         >
           Quay lại danh sách dịch vụ
@@ -174,7 +332,7 @@ const ServiceDetailPage: React.FC = () => {
           </div>
           <div className="flex space-x-3">
             <Link
-              to={`/services/${id}/edit`}
+              to={`/dashboard/services/${id}/edit`}
               className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -183,7 +341,7 @@ const ServiceDetailPage: React.FC = () => {
               Chỉnh sửa
             </Link>
             <Link
-              to="/services"
+              to="/dashboard/services"
               className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -285,6 +443,9 @@ const ServiceDetailPage: React.FC = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Thứ tự
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Tên Vaccine
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -292,6 +453,9 @@ const ServiceDetailPage: React.FC = () => {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Ghi chú
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Lịch tiêm chuẩn
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Thao tác
@@ -302,6 +466,9 @@ const ServiceDetailPage: React.FC = () => {
                   {serviceVaccines.map((vaccine) => (
                     <tr key={vaccine.maDichVuVaccine}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {vaccine.thuTu || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {vaccine.tenVaccine}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -309,6 +476,14 @@ const ServiceDetailPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {vaccine.ghiChu || 'Không có'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button
+                          onClick={() => loadVaccineSchedule(vaccine.maVaccine)}
+                          className="text-blue-600 hover:text-blue-900 underline"
+                        >
+                          Xem lịch tiêm
+                        </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
@@ -344,10 +519,113 @@ const ServiceDetailPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Service Conditions Section */}
+      <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+        <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+          <div>
+            <h3 className="text-lg leading-6 font-medium text-gray-900">
+              Điều kiện dịch vụ
+            </h3>
+            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+              Các điều kiện về độ tuổi, giới tính để sử dụng dịch vụ này
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setEditingCondition(null);
+              resetConditionForm();
+              setShowAddConditionModal(true);
+            }}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+          >
+            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Thêm Điều kiện
+          </button>
+        </div>
+        
+        <div className="border-t border-gray-200">
+          {conditionsLoading ? (
+            <div className="px-4 py-5 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-500">Đang tải danh sách điều kiện...</p>
+            </div>
+          ) : serviceConditions && serviceConditions.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Độ tuổi tối thiểu
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Độ tuổi tối đa
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Giới tính
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ghi chú
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Thao tác
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {serviceConditions.map((condition: any) => (
+                    <tr key={condition.conditionId || condition.ConditionId}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {(condition.minAgeInMonths || condition.minAgeInMonths) >= 0 ? `${condition.minAgeInMonths || condition.minAgeInMonths} tháng` : 'Không giới hạn'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {(condition.maxAgeInMonths || condition.maxAgeInMonths) >= 0 ? `${condition.maxAgeInMonths || condition.maxAgeInMonths} tháng` : 'Không giới hạn'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {condition.gender || condition.Gender || 'Tất cả'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {condition.note || condition.Note || 'Không có'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => openEditConditionModal(condition)}
+                          className="text-indigo-600 hover:text-indigo-900 mr-3"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCondition(condition.conditionId || condition.ConditionId)}
+                          className="text-red-600 hover:text-red-900"
+                          disabled={deletingCondition}
+                        >
+                          {deletingCondition ? 'Đang xóa...' : 'Xóa'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="px-4 py-8 text-center">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">Chưa có điều kiện nào</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Bắt đầu bằng cách thêm điều kiện cho dịch vụ này.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Actions */}
       <div className="mt-8 flex justify-center space-x-4">
         <Link
-          to={`/services/${id}/edit`}
+          to={`/dashboard/services/${id}/edit`}
           className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -356,7 +634,7 @@ const ServiceDetailPage: React.FC = () => {
           Chỉnh sửa dịch vụ
         </Link>
         <Link
-          to="/services"
+          to="/dashboard/services"
           className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
         >
           <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -397,6 +675,19 @@ const ServiceDetailPage: React.FC = () => {
                     Không có vaccine nào khả dụng. Vui lòng kiểm tra lại sau.
                   </p>
                 )}
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Thứ tự
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={orderNumber}
+                  onChange={(e) => setOrderNumber(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
 
               <div className="mb-4">
@@ -469,6 +760,19 @@ const ServiceDetailPage: React.FC = () => {
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Thứ tự
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={orderNumber}
+                  onChange={(e) => setOrderNumber(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Liều tiêu chuẩn
                 </label>
                 <input
@@ -509,6 +813,200 @@ const ServiceDetailPage: React.FC = () => {
                   className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                 >
                   {updatingVaccine ? 'Đang cập nhật...' : 'Cập nhật'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Service Condition Modal */}
+      {showAddConditionModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                {editingCondition ? 'Chỉnh sửa Điều kiện Dịch vụ' : 'Thêm Điều kiện Dịch vụ'}
+              </h3>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Độ tuổi tối thiểu (tháng)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={minAgeInMonths}
+                  onChange={(e) => setMinAgeInMonths(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Để trống nếu không giới hạn"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Độ tuổi tối đa (tháng)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={maxAgeInMonths}
+                  onChange={(e) => setMaxAgeInMonths(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Để trống nếu không giới hạn"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Giới tính
+                </label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="">Tất cả giới tính</option>
+                  <option value="Nam">Nam</option>
+                  <option value="Nữ">Nữ</option>
+                </select>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ghi chú
+                </label>
+                <textarea
+                  value={conditionNotes}
+                  onChange={(e) => setConditionNotes(e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Ghi chú về điều kiện này..."
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowAddConditionModal(false);
+                    setEditingCondition(null);
+                    resetConditionForm();
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={editingCondition ? handleUpdateCondition : handleAddCondition}
+                  disabled={addingCondition || updatingCondition}
+                  className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+                >
+                  {editingCondition 
+                    ? (updatingCondition ? 'Đang cập nhật...' : 'Cập nhật')
+                    : (addingCondition ? 'Đang thêm...' : 'Thêm')
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* Vaccine Schedule Modal */}
+      {showVaccineScheduleModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-4/5 max-w-4xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Lịch tiêm chuẩn</h3>
+                  {serviceConditions && serviceConditions.length > 0 && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Hiển thị lịch tiêm phù hợp với điều kiện dịch vụ (độ tuổi tối thiểu: {Math.min(...serviceConditions
+                        .map((condition: any) => condition.minAgeInMonths || condition.MinAgeInMonths)
+                        .filter((age: any) => age !== null && age !== undefined && age >= 0))} tháng)
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowVaccineScheduleModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              {schedulesLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-sm text-gray-500">Đang tải lịch tiêm chuẩn...</p>
+                </div>
+              ) : vaccineSchedules && vaccineSchedules.lichTiemChuans.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>  
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Độ tuổi tối thiểu (tháng)
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Độ tuổi tối đa (tháng)
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Số mũi
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Khoảng cách (ngày) sau khi tiêm mũi
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Ghi chú
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {vaccineSchedules.lichTiemChuans.map((schedule: any, index: number) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {formatAge(schedule.tuoiThangToiThieu,"monthAge")}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {formatAge(schedule.tuoiThangToiDa,"monthAge")}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {schedule.muiThu}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {schedule.soNgaySauMuiTruoc} ngày
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {schedule.ghiChu || 'Không có'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">Không có lịch tiêm chuẩn</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Vaccine này chưa có lịch tiêm chuẩn được định nghĩa.
+                  </p>
+                </div>
+              )}
+              
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setShowVaccineScheduleModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Đóng
                 </button>
               </div>
             </div>

@@ -17,6 +17,32 @@ export interface OrderItemRequest {
   unitPrice: number;
 }
 
+// ✅ Interface cho Check Order Eligibility
+export interface CheckOrderEligibilityRequest {
+  items: OrderItemRequest[];
+}
+
+export interface CheckOrderEligibilityResponse {
+  isEligible: boolean;
+  warnings: string[];
+  errors: string[];
+  userInfo: {
+    maNguoiDung: string;
+    ten: string;
+    ngaySinh?: string;
+    gioiTinh?: string;
+  };
+  serviceChecks: ServiceEligibilityCheck[];
+}
+
+export interface ServiceEligibilityCheck {
+  serviceId: string;
+  serviceName: string;
+  isEligible: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
 export interface OrderResponse {
   orderId: string;
   orderCode: string;
@@ -213,4 +239,11 @@ export const convertCartToOrder = (cartItems: any[], customerInfo: any): OrderCr
  */
 export const updateOrderDiscount = async (orderId: string, discountAmount: number): Promise<any> => {
   return await apiService.update(`/api/orders/${orderId}/discount`, { discountAmount });
+};
+
+/**
+ * ✅ Kiểm tra điều kiện mua đơn hàng
+ */
+export const checkOrderEligibility = async (request: CheckOrderEligibilityRequest): Promise<CheckOrderEligibilityResponse> => {
+  return await apiService.create('/api/orders/check-eligibility', request);
 }; 

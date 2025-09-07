@@ -4,6 +4,7 @@ export interface PhieuDangKyLichTiem {
   maPhieuDangKy: string;
   maKhachHang: string;
   maDichVu: string;
+  maDiaDiem?: string;
   ngayDangKy: string;
   trangThai: string;
   lyDoTuChoi?: string;
@@ -22,11 +23,14 @@ export interface PhieuDangKyLichTiem {
 export interface CreatePhieuDangKyLichTiemDto {
   maKhachHang: string;
   maDichVu: string;
+  maDiaDiem?: string;
   ghiChu?: string;
 }
 
 export interface CreateAppointmentFromOrderDto {
   orderId: string;
+  maDiaDiem?: string;
+  ngayDangKy?: string;
   ghiChu?: string;
 }
 

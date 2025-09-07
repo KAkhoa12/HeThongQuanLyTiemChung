@@ -6,6 +6,7 @@ export interface ServiceVaccineDto {
   maVaccine: string;
   tenVaccine: string;
   soMuiChuan: number;
+  thuTu?: number;
   ghiChu?: string;
 }
 
@@ -13,11 +14,13 @@ export interface ServiceVaccineCreateDto {
   maDichVu: string;
   maVaccine: string;
   soMuiChuan: number;
+  thuTu?: number;
   ghiChu?: string;
 }
 
 export interface ServiceVaccineUpdateDto {
   soMuiChuan?: number;
+  thuTu?: number;
   ghiChu?: string;
 }
 

@@ -3,34 +3,35 @@ import { useNavigate } from 'react-router-dom';
 import { ServiceForm } from '../../components/Service';
 import { createService } from '../../services';
 import { ServiceCreateRequest, ServiceUpdateRequest } from '../../types/service.types';
-import { toast } from 'react-toastify';
+import { useToast } from '../../hooks/useToast';
 
 const ServiceCreatePage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const { showSuccess, showError } = useToast();
 
   const handleSubmit = async (data: ServiceCreateRequest | ServiceUpdateRequest) => {
     // Type guard để đảm bảo data là ServiceCreateRequest
     if (!data.name || !data.serviceTypeId) {
-      toast.error('Dữ liệu không hợp lệ');
+      showError('Lỗi', 'Dữ liệu không hợp lệ');
       return;
     }
     
     try {
       setLoading(true);
       await createService(data as ServiceCreateRequest);
-      toast.success('Tạo dịch vụ thành công!');
-      navigate('/services');
+      showSuccess('Thành công', 'Tạo dịch vụ thành công!');
+      navigate('/dashboard/services');
     } catch (error) {
       console.error('Failed to create service:', error);
-      toast.error('Tạo dịch vụ thất bại. Vui lòng thử lại.');
+      showError('Lỗi', 'Tạo dịch vụ thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    navigate('/services');
+    navigate('/dashboard/services');
   };
 
   return (

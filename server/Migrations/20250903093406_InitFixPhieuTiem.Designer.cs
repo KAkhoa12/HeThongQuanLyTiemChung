@@ -12,8 +12,8 @@ using server.Models;
 namespace server.Migrations
 {
     [DbContext(typeof(HeThongQuanLyTiemChungContext))]
-    [Migration("20250822154146_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250903093406_InitFixPhieuTiem")]
+    partial class InitFixPhieuTiem
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -256,6 +256,9 @@ namespace server.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("chuyenMon");
 
+                    b.Property<string>("DiaDiemMaDiaDiem")
+                        .HasColumnType("varchar(100)");
+
                     b.Property<bool?>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("isActive");
@@ -263,6 +266,12 @@ namespace server.Migrations
                     b.Property<bool?>("IsDelete")
                         .HasColumnType("bit")
                         .HasColumnName("isDelete");
+
+                    b.Property<string>("MaDiaDiem")
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("maDiaDiem");
 
                     b.Property<string>("MaNguoiDung")
                         .IsRequired()
@@ -286,6 +295,10 @@ namespace server.Migrations
 
                     b.HasKey("MaBacSi")
                         .HasName("PK__BacSi__F48AA2377FD9FA0E");
+
+                    b.HasIndex("DiaDiemMaDiaDiem");
+
+                    b.HasIndex("MaDiaDiem");
 
                     b.HasIndex(new[] { "MaNguoiDung" }, "UQ__BacSi__446439EBDE1365ED")
                         .IsUnique();
@@ -345,6 +358,62 @@ namespace server.Migrations
                     b.HasIndex("MaPhieuNhap");
 
                     b.ToTable("ChiTietNhap", (string)null);
+                });
+
+            modelBuilder.Entity("server.Models.ChiTietPhieuTiem", b =>
+                {
+                    b.Property<string>("MaChiTietPhieuTiem")
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("maChiTietPhieuTiem");
+
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("isActive");
+
+                    b.Property<bool?>("IsDelete")
+                        .HasColumnType("bit")
+                        .HasColumnName("isDelete");
+
+                    b.Property<string>("MaPhieuTiem")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("maPhieuTiem");
+
+                    b.Property<string>("MaVaccine")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("maVaccine");
+
+                    b.Property<int>("MuiTiemThucTe")
+                        .HasColumnType("int")
+                        .HasColumnName("muiTiemThucTe");
+
+                    b.Property<DateTime?>("NgayCapNhat")
+                        .HasColumnType("datetime")
+                        .HasColumnName("ngayCapNhat");
+
+                    b.Property<DateTime?>("NgayTao")
+                        .HasColumnType("datetime")
+                        .HasColumnName("ngayTao");
+
+                    b.Property<int>("ThuTu")
+                        .HasColumnType("int")
+                        .HasColumnName("thuTu");
+
+                    b.HasKey("MaChiTietPhieuTiem")
+                        .HasName("PK__ChiTietP__NewKey");
+
+                    b.HasIndex("MaPhieuTiem");
+
+                    b.HasIndex("MaVaccine");
+
+                    b.ToTable("ChiTietPhieuTiem", (string)null);
                 });
 
             modelBuilder.Entity("server.Models.ChiTietThanhLy", b =>
@@ -620,6 +689,10 @@ namespace server.Migrations
                         .HasColumnType("int")
                         .HasColumnName("soMuiChuan");
 
+                    b.Property<int?>("ThuTu")
+                        .HasColumnType("int")
+                        .HasColumnName("thuTu");
+
                     b.HasKey("MaDichVuVaccine")
                         .HasName("PK__DichVuVa__EC4E1E7164275528");
 
@@ -718,6 +791,12 @@ namespace server.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("isDelete");
 
+                    b.Property<string>("MaDichVu")
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("MaDichVu");
+
                     b.Property<string>("MaDonHang")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -725,20 +804,9 @@ namespace server.Migrations
                         .HasColumnType("varchar(100)")
                         .HasColumnName("maDonHang");
 
-                    b.Property<string>("MaVaccine")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("maVaccine");
-
                     b.Property<DateTime?>("NgayCapNhat")
                         .HasColumnType("datetime")
                         .HasColumnName("ngayCapNhat");
-
-                    b.Property<DateTime?>("NgayTao")
-                        .HasColumnType("datetime")
-                        .HasColumnName("ngayTao");
 
                     b.Property<int>("SoMuiChuan")
                         .HasColumnType("int")
@@ -751,9 +819,9 @@ namespace server.Migrations
                     b.HasKey("MaDonHangChiTiet")
                         .HasName("PK__DonHangC__7212B475698B2C68");
 
-                    b.HasIndex("MaDonHang");
+                    b.HasIndex("MaDichVu");
 
-                    b.HasIndex("MaVaccine");
+                    b.HasIndex("MaDonHang");
 
                     b.ToTable("DonHangChiTiet", (string)null);
                 });
@@ -826,6 +894,11 @@ namespace server.Migrations
                         .HasColumnType("varchar(100)")
                         .HasColumnName("maKhuyenMai");
 
+                    b.Property<string>("Code")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("code");
+
                     b.Property<decimal?>("DieuKienToiThieu")
                         .HasColumnType("decimal(12, 2)")
                         .HasColumnName("dieuKienToiThieu");
@@ -833,6 +906,10 @@ namespace server.Migrations
                     b.Property<decimal?>("GiaTriGiam")
                         .HasColumnType("decimal(12, 2)")
                         .HasColumnName("giaTriGiam");
+
+                    b.Property<decimal?>("GiaTriToiThieu")
+                        .HasColumnType("decimal(12, 2)")
+                        .HasColumnName("giaTriToiThieu");
 
                     b.Property<decimal?>("GiamToiDa")
                         .HasColumnType("decimal(12, 2)")
@@ -921,30 +998,19 @@ namespace server.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("isDelete");
 
+                    b.Property<string>("MaDiaDiem")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("maDiaDiem");
+
                     b.Property<string>("MaDonHang")
                         .IsRequired()
                         .HasMaxLength(100)
                         .IsUnicode(false)
                         .HasColumnType("varchar(100)")
                         .HasColumnName("maDonHang");
-
-                    b.Property<string>("MaLichLamViec")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("maLichLamViec");
-
-                    b.Property<string>("MaVaccine")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("maVaccine");
-
-                    b.Property<int>("MuiThu")
-                        .HasColumnType("int")
-                        .HasColumnName("muiThu");
 
                     b.Property<DateTime?>("NgayCapNhat")
                         .HasColumnType("datetime")
@@ -966,11 +1032,9 @@ namespace server.Migrations
                     b.HasKey("MaLichHen")
                         .HasName("PK__LichHen__FBFE3223EFA716D4");
 
+                    b.HasIndex("MaDiaDiem");
+
                     b.HasIndex("MaDonHang");
-
-                    b.HasIndex("MaLichLamViec");
-
-                    b.HasIndex("MaVaccine");
 
                     b.ToTable("LichHen", (string)null);
                 });
@@ -1275,6 +1339,11 @@ namespace server.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("email");
+
+                    b.Property<string>("GioiTinh")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("gioiTinh");
 
                     b.Property<bool?>("IsActive")
                         .HasColumnType("bit")
@@ -1601,12 +1670,6 @@ namespace server.Migrations
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("ghiChu");
 
-                    b.Property<string>("GioHenTiem")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasColumnName("gioHenTiem");
-
                     b.Property<bool?>("IsActive")
                         .HasColumnType("bit")
                         .HasColumnName("isActive");
@@ -1619,13 +1682,6 @@ namespace server.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("lyDoTuChoi");
-
-                    b.Property<string>("MaBacSi")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("maBacSi");
 
                     b.Property<string>("MaDichVu")
                         .IsRequired()
@@ -1649,10 +1705,6 @@ namespace server.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("ngayDangKy");
 
-                    b.Property<DateTime>("NgayHenTiem")
-                        .HasColumnType("datetime")
-                        .HasColumnName("ngayHenTiem");
-
                     b.Property<DateTime?>("NgayTao")
                         .HasColumnType("datetime")
                         .HasColumnName("ngayTao");
@@ -1665,8 +1717,6 @@ namespace server.Migrations
 
                     b.HasKey("MaPhieuDangKy")
                         .HasName("PK__PhieuDan__NewKey");
-
-                    b.HasIndex("MaBacSi");
 
                     b.HasIndex("MaDichVu");
 
@@ -1803,34 +1853,21 @@ namespace server.Migrations
                         .HasColumnType("varchar(100)")
                         .HasColumnName("maBacSi");
 
-                    b.Property<string>("MaLichHen")
-                        .IsRequired()
+                    b.Property<string>("MaDichVu")
                         .HasMaxLength(100)
                         .IsUnicode(false)
                         .HasColumnType("varchar(100)")
-                        .HasColumnName("maLichHen");
+                        .HasColumnName("maDichVu");
 
-                    b.Property<string>("MaLo")
-                        .IsRequired()
+                    b.Property<string>("MaNguoiDung")
                         .HasMaxLength(100)
                         .IsUnicode(false)
                         .HasColumnType("varchar(100)")
-                        .HasColumnName("maLo");
-
-                    b.Property<string>("MaVaccine")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("maVaccine");
+                        .HasColumnName("maNguoiDung");
 
                     b.Property<string>("MoTaPhanUng")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("moTaPhanUng");
-
-                    b.Property<int?>("MuiThuThucTe")
-                        .HasColumnType("int")
-                        .HasColumnName("muiThuThucTe");
 
                     b.Property<DateTime?>("NgayCapNhat")
                         .HasColumnType("datetime")
@@ -1849,16 +1886,19 @@ namespace server.Migrations
                         .HasColumnType("nvarchar(20)")
                         .HasColumnName("phanUng");
 
+                    b.Property<string>("TrangThai")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("trangThai");
+
                     b.HasKey("MaPhieuTiem")
                         .HasName("PK__PhieuTie__4BEEAEF35F4FAF1E");
 
                     b.HasIndex("MaBacSi");
 
-                    b.HasIndex("MaLichHen");
+                    b.HasIndex("MaDichVu");
 
-                    b.HasIndex("MaLo");
-
-                    b.HasIndex("MaVaccine");
+                    b.HasIndex("MaNguoiDung");
 
                     b.ToTable("PhieuTiem", (string)null);
                 });
@@ -2408,11 +2448,22 @@ namespace server.Migrations
 
             modelBuilder.Entity("server.Models.BacSi", b =>
                 {
+                    b.HasOne("server.Models.DiaDiem", null)
+                        .WithMany("BacSis")
+                        .HasForeignKey("DiaDiemMaDiaDiem");
+
+                    b.HasOne("server.Models.DiaDiem", "MaDiaDiemNavigation")
+                        .WithMany()
+                        .HasForeignKey("MaDiaDiem")
+                        .HasConstraintName("FK__BacSi__maDiaDiem__NewConstraint");
+
                     b.HasOne("server.Models.NguoiDung", "MaNguoiDungNavigation")
                         .WithOne("BacSi")
                         .HasForeignKey("server.Models.BacSi", "MaNguoiDung")
                         .IsRequired()
                         .HasConstraintName("FK__BacSi__maNguoiDu__5CD6CB2B");
+
+                    b.Navigation("MaDiaDiemNavigation");
 
                     b.Navigation("MaNguoiDungNavigation");
                 });
@@ -2432,6 +2483,25 @@ namespace server.Migrations
                     b.Navigation("MaLoNavigation");
 
                     b.Navigation("MaPhieuNhapNavigation");
+                });
+
+            modelBuilder.Entity("server.Models.ChiTietPhieuTiem", b =>
+                {
+                    b.HasOne("server.Models.PhieuTiem", "MaPhieuTiemNavigation")
+                        .WithMany("ChiTietPhieuTiems")
+                        .HasForeignKey("MaPhieuTiem")
+                        .IsRequired()
+                        .HasConstraintName("FK__ChiTietPh__maPhi__NewConstraint1");
+
+                    b.HasOne("server.Models.Vaccine", "MaVaccineNavigation")
+                        .WithMany()
+                        .HasForeignKey("MaVaccine")
+                        .IsRequired()
+                        .HasConstraintName("FK__ChiTietPh__maVac__NewConstraint2");
+
+                    b.Navigation("MaPhieuTiemNavigation");
+
+                    b.Navigation("MaVaccineNavigation");
                 });
 
             modelBuilder.Entity("server.Models.ChiTietThanhLy", b =>
@@ -2517,21 +2587,19 @@ namespace server.Migrations
 
             modelBuilder.Entity("server.Models.DonHangChiTiet", b =>
                 {
+                    b.HasOne("server.Models.DichVu", "MaDichVuNavigation")
+                        .WithMany()
+                        .HasForeignKey("MaDichVu");
+
                     b.HasOne("server.Models.DonHang", "MaDonHangNavigation")
                         .WithMany("DonHangChiTiets")
                         .HasForeignKey("MaDonHang")
                         .IsRequired()
                         .HasConstraintName("FK__DonHangCh__maDon__3C34F16F");
 
-                    b.HasOne("server.Models.Vaccine", "MaVaccineNavigation")
-                        .WithMany("DonHangChiTiets")
-                        .HasForeignKey("MaVaccine")
-                        .IsRequired()
-                        .HasConstraintName("FK__DonHangCh__maVac__3D2915A8");
+                    b.Navigation("MaDichVuNavigation");
 
                     b.Navigation("MaDonHangNavigation");
-
-                    b.Navigation("MaVaccineNavigation");
                 });
 
             modelBuilder.Entity("server.Models.DonHangKhuyenMai", b =>
@@ -2565,29 +2633,22 @@ namespace server.Migrations
 
             modelBuilder.Entity("server.Models.LichHen", b =>
                 {
+                    b.HasOne("server.Models.DiaDiem", "MaDiaDiemNavigation")
+                        .WithMany("LichHens")
+                        .HasForeignKey("MaDiaDiem")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK__LichHen__maDiaDiem__NewConstraint");
+
                     b.HasOne("server.Models.DonHang", "MaDonHangNavigation")
                         .WithMany("LichHens")
                         .HasForeignKey("MaDonHang")
                         .IsRequired()
                         .HasConstraintName("FK__LichHen__maDonHa__503BEA1C");
 
-                    b.HasOne("server.Models.LichLamViec", "MaLichLamViecNavigation")
-                        .WithMany("LichHens")
-                        .HasForeignKey("MaLichLamViec")
-                        .IsRequired()
-                        .HasConstraintName("FK__LichHen__maLichL__51300E55");
-
-                    b.HasOne("server.Models.Vaccine", "MaVaccineNavigation")
-                        .WithMany("LichHens")
-                        .HasForeignKey("MaVaccine")
-                        .IsRequired()
-                        .HasConstraintName("FK__LichHen__maVacci__5224328E");
+                    b.Navigation("MaDiaDiemNavigation");
 
                     b.Navigation("MaDonHangNavigation");
-
-                    b.Navigation("MaLichLamViecNavigation");
-
-                    b.Navigation("MaVaccineNavigation");
                 });
 
             modelBuilder.Entity("server.Models.LichLamViec", b =>
@@ -2709,25 +2770,17 @@ namespace server.Migrations
 
             modelBuilder.Entity("server.Models.PhieuDangKyLichTiem", b =>
                 {
-                    b.HasOne("server.Models.BacSi", "MaBacSiNavigation")
-                        .WithMany()
-                        .HasForeignKey("MaBacSi")
-                        .IsRequired()
-                        .HasConstraintName("FK__PhieuDan__maBac__NewConstraint3");
-
                     b.HasOne("server.Models.DichVu", "MaDichVuNavigation")
                         .WithMany()
                         .HasForeignKey("MaDichVu")
                         .IsRequired()
-                        .HasConstraintName("FK__PhieuDan__maDic__NewConstraint2");
+                        .HasConstraintName("FK__PhieuDan__maDichVu__NewConstraint2");
 
                     b.HasOne("server.Models.NguoiDung", "MaKhachHangNavigation")
                         .WithMany()
                         .HasForeignKey("MaKhachHang")
                         .IsRequired()
                         .HasConstraintName("FK__PhieuDan__maKha__NewConstraint1");
-
-                    b.Navigation("MaBacSiNavigation");
 
                     b.Navigation("MaDichVuNavigation");
 
@@ -2768,31 +2821,21 @@ namespace server.Migrations
                         .HasForeignKey("MaBacSi")
                         .HasConstraintName("FK__PhieuTiem__maBac__5AB9788F");
 
-                    b.HasOne("server.Models.LichHen", "MaLichHenNavigation")
-                        .WithMany("PhieuTiems")
-                        .HasForeignKey("MaLichHen")
-                        .IsRequired()
-                        .HasConstraintName("FK__PhieuTiem__maLic__57DD0BE4");
+                    b.HasOne("server.Models.DichVu", "MaDichVuNavigation")
+                        .WithMany()
+                        .HasForeignKey("MaDichVu")
+                        .HasConstraintName("FK__PhieuTiem__maDic__NewConstraint");
 
-                    b.HasOne("server.Models.LoVaccine", "MaLoNavigation")
-                        .WithMany("PhieuTiems")
-                        .HasForeignKey("MaLo")
-                        .IsRequired()
-                        .HasConstraintName("FK__PhieuTiem__maLo__59C55456");
-
-                    b.HasOne("server.Models.Vaccine", "MaVaccineNavigation")
-                        .WithMany("PhieuTiems")
-                        .HasForeignKey("MaVaccine")
-                        .IsRequired()
-                        .HasConstraintName("FK__PhieuTiem__maVac__58D1301D");
+                    b.HasOne("server.Models.NguoiDung", "MaNguoiDungNavigation")
+                        .WithMany()
+                        .HasForeignKey("MaNguoiDung")
+                        .HasConstraintName("FK__PhieuTiem__maNguoiDung__NewConstraint");
 
                     b.Navigation("MaBacSiNavigation");
 
-                    b.Navigation("MaLichHenNavigation");
+                    b.Navigation("MaDichVuNavigation");
 
-                    b.Navigation("MaLoNavigation");
-
-                    b.Navigation("MaVaccineNavigation");
+                    b.Navigation("MaNguoiDungNavigation");
                 });
 
             modelBuilder.Entity("server.Models.PhieuXuat", b =>
@@ -2899,7 +2942,11 @@ namespace server.Migrations
                 {
                     b.Navigation("AnhDiaDiems");
 
+                    b.Navigation("BacSis");
+
                     b.Navigation("DonHangs");
+
+                    b.Navigation("LichHens");
 
                     b.Navigation("LichLamViecs");
 
@@ -2935,14 +2982,7 @@ namespace server.Migrations
 
             modelBuilder.Entity("server.Models.LichHen", b =>
                 {
-                    b.Navigation("PhieuTiems");
-
                     b.Navigation("YeuCauDoiLiches");
-                });
-
-            modelBuilder.Entity("server.Models.LichLamViec", b =>
-                {
-                    b.Navigation("LichHens");
                 });
 
             modelBuilder.Entity("server.Models.LoVaccine", b =>
@@ -2952,8 +2992,6 @@ namespace server.Migrations
                     b.Navigation("ChiTietThanhLies");
 
                     b.Navigation("ChiTietXuats");
-
-                    b.Navigation("PhieuTiems");
 
                     b.Navigation("TonKhoLos");
                 });
@@ -3022,6 +3060,11 @@ namespace server.Migrations
                     b.Navigation("ChiTietThanhLies");
                 });
 
+            modelBuilder.Entity("server.Models.PhieuTiem", b =>
+                {
+                    b.Navigation("ChiTietPhieuTiems");
+                });
+
             modelBuilder.Entity("server.Models.PhieuXuat", b =>
                 {
                     b.Navigation("ChiTietXuats");
@@ -3040,15 +3083,9 @@ namespace server.Migrations
 
                     b.Navigation("DichVuVaccines");
 
-                    b.Navigation("DonHangChiTiets");
-
-                    b.Navigation("LichHens");
-
                     b.Navigation("LichTiemChuans");
 
                     b.Navigation("LoVaccines");
-
-                    b.Navigation("PhieuTiems");
                 });
 
             modelBuilder.Entity("server.Models.VaiTro", b =>

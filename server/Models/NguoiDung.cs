@@ -21,8 +21,6 @@ public partial class NguoiDung
 
     public string? DiaChi { get; set; }
 
-    public string? GioiTinh { get; set; }
-
     public bool? IsDelete { get; set; }
 
     public bool? IsActive { get; set; }
@@ -33,9 +31,13 @@ public partial class NguoiDung
 
     public string? MaAnh { get; set; }
 
+    public string? GioiTinh { get; set; }
+
     public virtual BacSi? BacSi { get; set; }
 
     public virtual ICollection<DonHang> DonHangs { get; set; } = new List<DonHang>();
+
+    public virtual ICollection<KeHoachTiem> KeHoachTiems { get; set; } = new List<KeHoachTiem>();
 
     public virtual NguonAnh? MaAnhNavigation { get; set; }
 
@@ -44,6 +46,10 @@ public partial class NguoiDung
     public virtual ICollection<NguoiDungQuyen> NguoiDungQuyens { get; set; } = new List<NguoiDungQuyen>();
 
     public virtual ICollection<PhienDangNhap> PhienDangNhaps { get; set; } = new List<PhienDangNhap>();
+
+    public virtual ICollection<PhieuDangKyLichTiem> PhieuDangKyLichTiems { get; set; } = new List<PhieuDangKyLichTiem>();
+
+    public virtual ICollection<PhieuTiem> PhieuTiems { get; set; } = new List<PhieuTiem>();
 
     public virtual QuanLy? QuanLy { get; set; }
 

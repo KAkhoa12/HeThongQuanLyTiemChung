@@ -8,19 +8,19 @@ import {
   convertCartToOrder,
   OrderResponse,
   MoMoPaymentResponse,
+  CheckOrderEligibilityRequest,
+  CheckOrderEligibilityResponse,
+  checkOrderEligibility,
 } from '../../services/order.service';
-import { createDonHangKhuyenMai } from '../../services/donHangKhuyenMai.service';
 import {
   getMyProfile,
-  updateProfile,
-  updateHealthInfo,
 } from '../../services/user.service';
-import { UserCompleteProfileDto, HealthInfoDto } from '../../types/user.types';
+import { UserCompleteProfileDto } from '../../types/user.types';
 import {
-  validateKhuyenMaiCode,
   KhuyenMaiDto,
 } from '../../services/khuyenMai.service';
 import { useValidateKhuyenMaiCode } from '../../hooks';
+import EligibilityErrorModal from '../../components/Checkout/EligibilityErrorModal';
 interface CartItem {
   service: Service;
   quantity: number;
@@ -64,6 +64,10 @@ const CheckoutPage: React.FC = () => {
   );
   const [discountAmount, setDiscountAmount] = useState(0);
   const [isApplyingPromotion, setIsApplyingPromotion] = useState(false);
+  
+  // ✅ Eligibility check states
+  const [eligibilityModalOpen, setEligibilityModalOpen] = useState(false);
+  const [eligibilityData, setEligibilityData] = useState<CheckOrderEligibilityResponse | null>(null);
 
   const navigate = useNavigate();
   const {
@@ -97,6 +101,7 @@ const CheckoutPage: React.FC = () => {
       showError('Lỗi', errorValidatePromotion);
     }
   }, [statusValidatePromotion, errorValidatePromotion, showError]);
+
 
   const loadCartFromStorage = () => {
     try {
@@ -204,7 +209,6 @@ const CheckoutPage: React.FC = () => {
       if (dataValidatePromotion) {
         // Calculate discount amount
         let discountAmount = 0;
-        let finalAmount = totalPrice;
 
         if (dataValidatePromotion.loaiGiam === 'PERCENTAGE') {
           // Percentage discount
@@ -243,8 +247,6 @@ const CheckoutPage: React.FC = () => {
           discountAmount = totalPrice;
         }
 
-        finalAmount = totalPrice - discountAmount;
-
         setAppliedPromotion(dataValidatePromotion);
         setDiscountAmount(dataValidatePromotion.giaTriGiam || 0);
         showSuccess(
@@ -270,6 +272,31 @@ const CheckoutPage: React.FC = () => {
     setDiscountAmount(0);
     setPromotionCode('');
     showWarning('Thông báo', 'Đã xóa mã khuyến mãi');
+  };
+
+  // ✅ Function để kiểm tra eligibility - sử dụng direct API call
+  const checkEligibility = async (): Promise<CheckOrderEligibilityResponse | null> => {
+    try {
+      const eligibilityRequest: CheckOrderEligibilityRequest = {
+        items: cartItems.map(item => ({
+          serviceId: item.service.id,
+          quantity: item.quantity,
+          unitPrice: item.service.price || 0
+        }))
+      };
+
+      console.log('Calling eligibility check with request:', eligibilityRequest);
+      
+      // Call the API directly instead of using the hook
+      const result = await checkOrderEligibility(eligibilityRequest);
+      console.log('Eligibility result:', result);
+      
+      return result;
+    } catch (error) {
+      console.error('Error checking eligibility:', error);
+      showError('Lỗi', 'Không thể kiểm tra điều kiện đặt hàng');
+      return null;
+    }
   };
 
   const validateCustomerInfo = (): boolean => {
@@ -339,12 +366,28 @@ const CheckoutPage: React.FC = () => {
     setSubmitting(true);
 
     try {
+      // ✅ Bước 0: Kiểm tra eligibility trước khi tạo đơn hàng
+      const eligibilityResult = await checkEligibility();
+      console.log('Eligibility result:', eligibilityResult);
+      if (!eligibilityResult) {
+        setSubmitting(false);
+        return;
+      }
+
+      // Nếu có lỗi eligibility, hiển thị modal và dừng lại
+      if (!eligibilityResult.isEligible) {
+        setEligibilityData(eligibilityResult);
+        setEligibilityModalOpen(true);
+        setSubmitting(false);
+        return;
+      }
       // Bước 1: Tạo đơn hàng
       const orderData = convertCartToOrder(cartItems, customerInfo);
       const orderResponse = await createOrder(orderData);
       setOrderCreated(orderResponse);
 
       // Bước 2: Nếu thanh toán MoMo, tạo thanh toán
+      console.log('Payment method:', paymentInfo.paymentMethod);
       if (paymentInfo.paymentMethod === 'momo') {
         const paymentData = {
           orderId: orderResponse.orderId, // Sử dụng orderId (maDonHang) thay vì orderCode
@@ -359,12 +402,19 @@ const CheckoutPage: React.FC = () => {
           discountAmount: discountAmount,
         };
 
+        console.log('Creating MoMo payment with data:', paymentData);
         const paymentResponse = await createMoMoPayment(paymentData);
+        console.log('MoMo payment response:', paymentResponse);
         setPaymentCreated(paymentResponse);
 
         // Chuyển hướng đến trang thanh toán MoMo
         if (paymentResponse.paymentUrl) {
+          console.log('Redirecting to MoMo payment URL:', paymentResponse.paymentUrl);
           window.location.href = paymentResponse.paymentUrl;
+          return;
+        } else {
+          console.error('No payment URL received from MoMo:', paymentResponse);
+          showError('Lỗi', 'Không thể tạo liên kết thanh toán MoMo. Vui lòng thử lại.');
           return;
         }
       }
@@ -1050,6 +1100,13 @@ const CheckoutPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* ✅ Eligibility Error Modal */}
+      <EligibilityErrorModal
+        isOpen={eligibilityModalOpen}
+        onClose={() => setEligibilityModalOpen(false)}
+        eligibilityData={eligibilityData}
+      />
     </div>
   );
 };

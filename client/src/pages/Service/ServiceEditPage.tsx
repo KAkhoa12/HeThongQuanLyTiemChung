@@ -32,7 +32,7 @@ const ServiceEditPage: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch service details:', error);
       toast.error('Không thể tải thông tin dịch vụ');
-      navigate('/services');
+      navigate('/dashboard/services');
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ const ServiceEditPage: React.FC = () => {
       setSubmitting(true);
       await updateService(id!, data);
       toast.success('Cập nhật dịch vụ thành công!');
-      navigate(`/services/${id}`);
+      navigate(`/dashboard/services/${id}`);
     } catch (error) {
       console.error('Failed to update service:', error);
       toast.error('Cập nhật dịch vụ thất bại. Vui lòng thử lại.');
@@ -53,7 +53,7 @@ const ServiceEditPage: React.FC = () => {
   };
 
   const handleCancel = () => {
-    navigate(`/services/${id}`);
+    navigate(`/dashboard/services/${id}`);
   };
 
   if (loading) {
@@ -65,7 +65,7 @@ const ServiceEditPage: React.FC = () => {
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Không tìm thấy dịch vụ</h2>
         <button
-          onClick={() => navigate('/services')}
+          onClick={() => navigate('/dashboard/services')}
           className="text-blue-600 hover:text-blue-800 underline"
         >
           Quay lại danh sách dịch vụ

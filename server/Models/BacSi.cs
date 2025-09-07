@@ -13,8 +13,6 @@ public partial class BacSi
 
     public string? SoGiayPhep { get; set; }
 
-    public string? MaDiaDiem { get; set; }
-
     public bool? IsDelete { get; set; }
 
     public bool? IsActive { get; set; }
@@ -23,11 +21,13 @@ public partial class BacSi
 
     public DateTime? NgayCapNhat { get; set; }
 
+    public string? MaDiaDiem { get; set; }
+
     public virtual ICollection<LichLamViec> LichLamViecs { get; set; } = new List<LichLamViec>();
 
-    public virtual NguoiDung MaNguoiDungNavigation { get; set; } = null!;
-
     public virtual DiaDiem? MaDiaDiemNavigation { get; set; }
+
+    public virtual NguoiDung MaNguoiDungNavigation { get; set; } = null!;
 
     public virtual ICollection<PhieuTiem> PhieuTiems { get; set; } = new List<PhieuTiem>();
 }

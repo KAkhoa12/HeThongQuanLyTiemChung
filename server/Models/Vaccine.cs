@@ -29,11 +29,13 @@ public partial class Vaccine
 
     public virtual ICollection<AnhVaccine> AnhVaccines { get; set; } = new List<AnhVaccine>();
 
+    public virtual ICollection<ChiTietPhieuTiem> ChiTietPhieuTiems { get; set; } = new List<ChiTietPhieuTiem>();
+
     public virtual ICollection<DichVuVaccine> DichVuVaccines { get; set; } = new List<DichVuVaccine>();
+
+    public virtual ICollection<KeHoachTiem> KeHoachTiems { get; set; } = new List<KeHoachTiem>();
 
     public virtual ICollection<LichTiemChuan> LichTiemChuans { get; set; } = new List<LichTiemChuan>();
 
     public virtual ICollection<LoVaccine> LoVaccines { get; set; } = new List<LoVaccine>();
-
-    public virtual ICollection<PhieuTiem> PhieuTiems { get; set; } = new List<PhieuTiem>();
 }

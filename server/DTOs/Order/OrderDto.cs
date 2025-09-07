@@ -64,4 +64,9 @@ namespace server.DTOs.Order
     public record UpdateOrderDiscountDto(
         decimal DiscountAmount
     );
+
+    // ✅ DTO để kiểm tra điều kiện mua đơn hàng
+    public record CheckOrderEligibilityDto(
+        List<OrderItemDto> Items
+    );
 } 

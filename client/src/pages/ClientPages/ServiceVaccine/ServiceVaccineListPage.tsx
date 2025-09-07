@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { getAllServicesNoPage, getAllServiceTypesNoPage } from '../../../services/service.service';
+import { useNavigate } from 'react-router-dom';
+import { getAllServicesNoPage, getAllServiceTypesNoPage, getServiceConditionsByService } from '../../../services/service.service';
 import serviceVaccineService, {
   ServiceVaccineDto,
 } from '../../../services/serviceVaccine.service';
 import { Service, ServiceType } from '../../../types/service.types';
 import { useCart } from '../../../hooks/useCart';
+import { useAuth } from '../../../hooks/useAuth';
 import ServiceDetailModal from '../../../components/Service/ServiceDetailModal';
 import { useToast } from '../../../hooks/useToast';
+import vaccineService from '../../../services/vaccine.service';
 
 interface ServiceWithVaccines extends Service {
   vaccines: ServiceVaccineDto[];
+  vaccineSchedules?: any[];
+  conditions?: any[];
 }
 
 const ServiceVaccineListPage: React.FC = () => {
@@ -22,7 +27,9 @@ const ServiceVaccineListPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
   const { showSuccess, showError } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchServicesWithVaccines();
@@ -54,19 +61,72 @@ const ServiceVaccineListPage: React.FC = () => {
               service.id,
             );
             console.log(`Vaccines for service ${service.id}:`, vaccines);
-            return {
-              ...service,
-              vaccines: vaccines || [],
-            };
+            
+                         // First, get service conditions to determine minimum age
+             let conditions: any[] = [];
+             try {
+               const serviceConditions = await getServiceConditionsByService(service.id);
+               conditions = serviceConditions || [];
+             } catch (error) {
+               console.error(`Failed to fetch conditions for service ${service.id}:`, error);
+               conditions = [];
+             }
+             
+             // Fetch vaccine schedules for each vaccine with age filtering
+             let vaccineSchedules: any[] = [];
+             if (vaccines && vaccines.length > 0) {
+               // Calculate minimum age from service conditions
+               let minAgeInMonths: number | undefined = undefined;
+               if (conditions && conditions.length > 0) {
+                 const validAges = conditions
+                   .map((condition: any) => condition.minAgeInMonths || condition.MinAgeInMonths)
+                   .filter((age: any) => age !== null && age !== undefined && age >= 0);
+                 
+                 if (validAges.length > 0) {
+                   minAgeInMonths = Math.min(...validAges);
+                 }
+               }
+               
+               console.log(`Service ${service.id} - minAgeInMonths:`, minAgeInMonths);
+               
+               const schedulesPromises = vaccines.map(async (vaccine) => {
+                 try {
+                   const schedules = await vaccineService.getVaccineSchedulesByVaccine(vaccine.maVaccine, minAgeInMonths);
+                   return {
+                     vaccineId: vaccine.maVaccine,
+                     vaccineName: vaccine.tenVaccine,
+                     schedules: schedules?.lichTiemChuans || []
+                   };
+                 } catch (error) {
+                   console.error(`Failed to fetch schedules for vaccine ${vaccine.maVaccine}:`, error);
+                   return {
+                     vaccineId: vaccine.maVaccine,
+                     vaccineName: vaccine.tenVaccine,
+                     schedules: []
+                   };
+                 }
+               });
+               
+               vaccineSchedules = await Promise.all(schedulesPromises);
+             }
+             
+             return {
+               ...service,
+               vaccines: vaccines || [],
+               vaccineSchedules: vaccineSchedules || [],
+               conditions: conditions || [],
+             };
           } catch (error) {
             console.error(
               `Failed to fetch vaccines for service ${service.id}:`,
               error,
             );
-            return {
-              ...service,
-              vaccines: [],
-            };
+                         return {
+               ...service,
+               vaccines: [],
+               vaccineSchedules: [],
+               conditions: [],
+             };
           }
         }),
       );
@@ -110,11 +170,24 @@ const ServiceVaccineListPage: React.FC = () => {
     return serviceType ? serviceType.name : 'Khác';
   };
 
-  const handleAddToCart = (service: Service) => {
-    addToCart(service);
+  const handleBuyService = (service: Service) => {
+    // Kiểm tra đăng nhập
+    if (!isAuthenticated) {
+      showError('Lỗi', 'Vui lòng đăng nhập để mua dịch vụ!');
+      navigate('/auth/signin');
+      return;
+    }
+
+    // Thêm dịch vụ vào giỏ hàng (sẽ thay thế dịch vụ cũ)
+    const success = addToCart(service);
     
-    // Show success toast notification
-    showSuccess('Thành công', `Đã thêm "${service.name}" vào giỏ hàng!`);
+    if (success) {
+      showSuccess('Thành công', `Đã thêm "${service.name}" vào giỏ hàng!`);
+      // Chuyển đến trang giỏ hàng
+      navigate('/cart');
+    } else {
+      showError('Lỗi', 'Không thể thêm dịch vụ vào giỏ hàng!');
+    }
   };
 
   const handleShowDetail = (service: ServiceWithVaccines) => {
@@ -126,6 +199,7 @@ const ServiceVaccineListPage: React.FC = () => {
     setIsModalOpen(false);
     setSelectedService(null);
   };
+
 
   if (loading) {
     return (
@@ -249,45 +323,37 @@ const ServiceVaccineListPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Vaccines Section */}
-                  <div className="mb-6">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                      <span className="text-blue-600 mr-2">🦠</span>
-                      Dịch vụ đính kèm
-                    </h4>
-
-                    {service.vaccines.length === 0 ? (
-                      <div className="text-center py-4 bg-gray-50 rounded-lg">
-                        <p className="text-gray-500 text-sm">
-                          Chưa có dịch vụ đính kèm nào
-                        </p>
-                      </div>
-                    ) : (
-                      <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 pl-4">
-                        {service.vaccines.slice(0, 5).map((vaccine) => (
-                          <li key={vaccine.maVaccine}>
-                            Vaccine: {vaccine.tenVaccine} - Số mũi: {vaccine.soMuiChuan}
-                          </li>
-                        ))}
-                        {service.vaccines.length > 5 && (
-                          <li className="text-blue-600 cursor-pointer font-medium">
-                            ...Xem thêm
-                          </li>
-                        )}
-                      </ul>
-                    )}
-                  </div>
-                  <div className="flex space-x-3">
-                    <button 
-                      onClick={() => handleAddToCart(service)}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
-                    >
-                      <span className="mr-2">🛒</span>
-                      Mua dịch vụ
-                    </button>
+                                     {/* Service Conditions Section */}
+                   {service.conditions && service.conditions.length > 0 && (
+                     <div className="mb-6">
+                       <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                         <span className="text-orange-600 mr-2">📋</span>
+                         Điều kiện dịch vụ
+                       </h4>
+                       <div className="space-y-2">
+                         {service.conditions.map((condition: any) => (
+                           <div key={condition.conditionId} className="bg-orange-50 rounded-lg p-3 border-l-4 border-orange-400">
+                             <div className="font-medium text-orange-800 mb-1">
+                               Tuổi tháng tối thiểu: {condition.minAgeInMonths} tháng
+                             </div>
+                             <div className="font-medium text-orange-800 mb-1">
+                               Tuổi tháng tối đa: {condition.maxAgeInMonths} tháng
+                             </div>
+                             <div className="text-sm text-orange-700">
+                               Ghi chú: {condition.note}
+                             </div>
+                             <div className="text-sm text-orange-700">
+                               Giới tính: {condition.gender == null ? 'Tất cả' : condition.gender }
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
+                  <div className="flex justify-center">
                     <button 
                       onClick={() => handleShowDetail(service)}
-                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
+                      className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
                     >
                       <span className="mr-2">ℹ️</span>
                       Chi tiết
@@ -314,24 +380,27 @@ const ServiceVaccineListPage: React.FC = () => {
             <div className="text-center">
               <div className="text-4xl font-bold text-green-600 mb-2">
                 {services.reduce(
-                  (total, service) => total + service.vaccines.length,
+                  (total, service) => total + (service.vaccineSchedules && service.vaccineSchedules.length > 0 ? service.vaccineSchedules.reduce((sTotal, vs) => sTotal + (vs.schedules && vs.schedules.length > 0 ? vs.schedules.length : 0), 0) : 0),
                   0,
                 )}
               </div>
-              <div className="text-gray-600">Liên kết dịch vụ-vaccine</div>
+              <div className="text-gray-600">Lịch tiêm chuẩn</div>
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-purple-600 mb-2">
-                {services.length}
-              </div>
-              <div className="text-gray-600">Dịch vụ hoạt động</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-orange-600 mb-2">
-                100%
-              </div>
-              <div className="text-gray-600">Chất lượng đảm bảo</div>
-            </div>
+                         <div className="text-center">
+               <div className="text-4xl font-bold text-purple-600 mb-2">
+                 {services.reduce(
+                   (total, service) => total + (service.conditions && service.conditions.length > 0 ? service.conditions.length : 0),
+                   0,
+                 )}
+               </div>
+               <div className="text-gray-600">Điều kiện dịch vụ</div>
+             </div>
+                         <div className="text-center">
+               <div className="text-4xl font-bold text-orange-600 mb-2">
+                 {services.length}
+               </div>
+               <div className="text-gray-600">Dịch vụ hoạt động</div>
+             </div>
           </div>
         </div>
 
@@ -357,15 +426,17 @@ const ServiceVaccineListPage: React.FC = () => {
                  </div>
        </div>
 
-       {/* Service Detail Modal */}
-       <ServiceDetailModal
-         service={selectedService}
-         isOpen={isModalOpen}
-         onClose={handleCloseModal}
-         onAddToCart={handleAddToCart}
-       />
-     </div>
-   );
- };
+               {/* Service Detail Modal */}
+        <ServiceDetailModal
+          service={selectedService as any}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onAddToCart={handleBuyService}
+        />
+
+        {/* Vaccine Detail Modal */}
+      </div>
+    );
+  };
 
 export default ServiceVaccineListPage;

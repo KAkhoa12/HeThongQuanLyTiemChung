@@ -7,10 +7,10 @@ namespace server.DTOs.Kho
         DateTime? NgayNhap,
         decimal? TongTien,
         string? TrangThai,
-        DateTime? NgayTao,
         DateTime? NgayCapNhat,
         string? TenNhaCungCap = null,
-        string? TenQuanLy = null
+        string? TenQuanLy = null,
+        string? TenDiaDiem = null
     );
 
     public record PhieuNhapDetailDto(
@@ -20,19 +20,21 @@ namespace server.DTOs.Kho
         DateTime? NgayNhap,
         decimal? TongTien,
         string? TrangThai,
-        DateTime? NgayTao,
         DateTime? NgayCapNhat,
         string? TenNhaCungCap = null,
         string? TenQuanLy = null,
-        List<ChiTietNhapDto> ChiTietNhaps = null
+        string? TenDiaDiem = null,
+        List<ChiTietNhapDto>? ChiTietNhaps = null
     );
 
-    public record PhieuNhapCreateDto(
-        string? MaNhaCungCap,
-        string? MaQuanLy,
-        DateTime? NgayNhap,
-        List<ChiTietNhapCreateDto> ChiTietNhaps
-    );
+    public class PhieuNhapCreateDto
+    {
+        public string? MaNhaCungCap { get; set; }
+        public string? MaQuanLy { get; set; }
+        public string? MaDiaDiem { get; set; }
+        public DateTime? NgayNhap { get; set; }
+        public List<ChiTietNhapCreateDto> ChiTietNhaps { get; set; } = new List<ChiTietNhapCreateDto>();
+    }
 
     public record PhieuNhapUpdateDto(
         string? MaNhaCungCap = null,
@@ -52,9 +54,11 @@ namespace server.DTOs.Kho
         string? TenNhaCungCap = null
     );
 
-    public record ChiTietNhapCreateDto(
-        string MaLo,
-        int SoLuong,
-        decimal Gia
-    );
-} 
+    public class ChiTietNhapCreateDto
+    {
+        public string MaLo { get; set; } = string.Empty;
+        public int SoLuong { get; set; }
+        public decimal Gia { get; set; }
+    }
+
+}

@@ -2,8 +2,7 @@ import authService from './auth.service';
 import API_CONFIG from '../config/api.config';
 
 class ApiService {
-  async get<T>(endpoint: string, params: Record<string, any> = {}): Promise<T> {  
-    console.log("API GET:", endpoint, "params:", params);
+  async get<T>(endpoint: string, params: Record<string, any> = {}): Promise<T> {
     return this.request<T>('GET', endpoint, params);
   }
 

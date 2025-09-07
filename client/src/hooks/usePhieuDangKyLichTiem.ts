@@ -35,7 +35,7 @@ export const usePhieuDangKyLichTiemByUser = () => {
 
 // Hook để tạo phiếu đăng ký từ đơn hàng
 export const useCreatePhieuDangKyLichTiemFromOrder = () => {
-  return useApiWithParams<PhieuDangKyLichTiem, CreateAppointmentFromOrderDto>(
+  return useApiWithParams<string[], CreateAppointmentFromOrderDto>(
     async (data) => phieuDangKyLichTiemService.createFromOrder(data),
     null
   );

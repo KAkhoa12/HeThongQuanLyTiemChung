@@ -52,4 +52,50 @@ export function useUpdateVaccineStatus() {
 
 export function useVaccineUsage() {
   return useApiWithParams<any, string>(vaccineService.getVaccineUsage, null);
+}
+
+// ========== LICH TIEM CHUAN HOOKS ==========
+
+export function useVaccineSchedules() {
+  return useApiWithParams<any, { page: number; pageSize: number }>(
+    ({ page, pageSize }) => vaccineService.getVaccineSchedules(page, pageSize),
+    null
+  );
+}
+
+export function useVaccineSchedule() {
+  return useApiWithParams<any, string>(vaccineService.getVaccineScheduleById, null);
+}
+
+export function useVaccineSchedulesByVaccine() {
+  return useApiWithParams<any, { vaccineId: string; minAgeInMonths?: number }>(
+    ({ vaccineId, minAgeInMonths }) => vaccineService.getVaccineSchedulesByVaccine(vaccineId, minAgeInMonths), 
+    null
+  );
+}
+
+export function useCreateVaccineSchedule() {
+  return useApiWithParams<any, any>(vaccineService.createVaccineSchedule, null);
+}
+
+export function useCreateVaccineSchedulesBatch() {
+  return useApiWithParams<any, any>(vaccineService.createVaccineSchedulesBatch, null);
+}
+
+export function useUpdateVaccineSchedule() {
+  return useApiWithParams<any, { id: string; data: any }>(
+    ({ id, data }) => vaccineService.updateVaccineSchedule(id, data),
+    null
+  );
+}
+
+export function useDeleteVaccineSchedule() {
+  return useApiWithParams<any, string>(vaccineService.deleteVaccineSchedule, null);
+}
+
+export function useVaccineSchedulesByAgeAndVaccine() {
+  return useApiWithParams<any[], { vaccineId: string; ageInMonths: number }>(
+    ({ vaccineId, ageInMonths }) => vaccineService.getVaccineSchedulesByAgeAndVaccine(vaccineId, ageInMonths),
+    null
+  );
 } 

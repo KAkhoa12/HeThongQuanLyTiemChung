@@ -17,6 +17,14 @@ export const usePhieuTiemByUser = () => {
   );
 };
 
+// Hook lấy danh sách đợt tiêm sắp tới
+export const useUpcomingVaccinations = () => {
+  return useApiWithParams<PhieuTiemResponse, { page: number; pageSize: number }>(
+    async (params) => phieuTiemService.getUpcomingVaccinations(params.page, params.pageSize),
+    null
+  );
+};
+
 // Hook tạo phiếu tiêm mới
 export const useCreatePhieuTiem = () => {
   return useApiWithParams<string, PhieuTiemCreateDto>(

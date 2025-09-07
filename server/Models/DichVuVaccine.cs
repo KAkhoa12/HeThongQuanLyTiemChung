@@ -13,8 +13,6 @@ public partial class DichVuVaccine
 
     public int SoMuiChuan { get; set; }
 
-    public int? ThuTu { get; set; }
-
     public string? GhiChu { get; set; }
 
     public bool? IsDelete { get; set; }
@@ -24,6 +22,8 @@ public partial class DichVuVaccine
     public DateTime? NgayTao { get; set; }
 
     public DateTime? NgayCapNhat { get; set; }
+
+    public int? ThuTu { get; set; }
 
     public virtual DichVu MaDichVuNavigation { get; set; } = null!;
 

@@ -49,6 +49,21 @@ const menuItems = [
         permissions: ['PhieuDangKyLichTiem'],
       },
       {
+        title: 'Duyệt phiếu đăng ký',
+        path: '/dashboard/vaccination/approval',
+        permissions: ['PhieuDangKyLichTiem'],
+      },
+      {
+        title: 'Quản lý tiêm chủng (Bác sĩ)',
+        path: '/dashboard/vaccination/doctor-management',
+        permissions: ['PhieuTiem'],
+      },
+      {
+        title: 'Đợt tiêm sắp tới',
+        path: '/dashboard/vaccination/upcoming',
+        permissions: ["PhieuTiem"],
+      },
+      {
         title: 'Lịch sử tiêm',
         path: '/dashboard/vaccination/history',
         permissions: [],
@@ -133,6 +148,47 @@ const menuItems = [
       },
     ],
   },
+  {
+    id: 'inventory',
+    title: 'Kho',
+    path: '/dashboard/inventory',
+    icon: 'ri-store-2-line',
+    permissions: ['TonKhoLo'],
+    subItems: [
+      {
+        title: 'Các lô tồn kho',
+        path: '/dashboard/inventory/ton-kho',
+        permissions: ['TonKhoLo'],
+      },
+      {
+        title: 'Phiếu nhập',
+        path: '/dashboard/inventory/phieu-nhap',
+        permissions: ['PhieuNhap'],
+      },
+      {
+        title: 'Phiếu xuất',
+        path: '/dashboard/inventory/phieu-xuat',
+        permissions: ['PhieuXuat'],
+      },
+      {
+        title: 'Thanh lý vaccine',
+        path: '/dashboard/inventory/thanh-ly',
+        permissions: ['PhieuThanhLy'],
+      },
+      {
+        title: 'Duyệt phiếu',
+        path: '/dashboard/inventory/approval',
+        permissions: ['PhieuNhap', 'PhieuXuat', 'PhieuThanhLy'],
+      },
+    ],
+  },
+  {
+    id: 'nha-cung-cap',
+    title: 'Nhà cung cấp',
+    path: '/dashboard/nha-cung-cap',
+    icon: 'ri-truck-line',
+    permissions: ['NhaCungCap'],
+  },
 ];
 
 const personalMenuItems = [
@@ -144,11 +200,20 @@ const personalMenuItems = [
     permissions: [],
   },
   {
+    id: 'vaccination-schedule',
+    title: 'Lịch tiêm chủng của tôi',
+    path: '/vaccination-schedule',
+    icon: 'ri-calendar-schedule-line',
+    permissions: [],
+    roles: ['USER'],
+  },
+  {
     id: 'profile',
-    title: 'Profile',
+    title: 'Thông tin cá nhân',
     path: '/dashboard/profile',
     icon: 'ri-user-settings-line',
     permissions: [],
+    
   },
   {
     id: 'permissions',
@@ -178,6 +243,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const trigger = useRef<any>(null);
   const sidebar = useRef<any>(null);
 
+  // State để kiểm soát việc đóng mở sidebar
+  const [isExpanded, setIsExpanded] = useState(false);
+
   // Helper function to check if menu item should be visible
   const isMenuItemVisible = (item: any) => {
     if (item.permissions.length === 0) return true;
@@ -190,10 +258,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     return hasAnyPermission(subItem.permissions);
   };
 
-  const storedSidebarExpanded = localStorage.getItem('sidebar-expanded');
-  const [sidebarExpanded, setSidebarExpanded] = useState(
-    storedSidebarExpanded === null ? false : storedSidebarExpanded === 'true',
-  );
+  // Sử dụng state local thay vì localStorage để kiểm soát tốt hơn
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   // close on click outside
   useEffect(() => {
@@ -221,46 +287,51 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     return () => document.removeEventListener('keydown', keyHandler);
   });
 
+  // Cập nhật sidebarExpanded khi isExpanded thay đổi
   useEffect(() => {
-    localStorage.setItem('sidebar-expanded', sidebarExpanded.toString());
-    if (sidebarExpanded) {
+    setSidebarExpanded(isExpanded);
+    if (isExpanded) {
       document.querySelector('body')?.classList.add('sidebar-expanded');
     } else {
       document.querySelector('body')?.classList.remove('sidebar-expanded');
     }
-  }, [sidebarExpanded]);
+  }, [isExpanded]);
 
   return (
     <aside
       ref={sidebar}
-      className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${
+      className={`absolute left-0 top-0 z-9999 flex h-screen flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } ${
+        isExpanded ? 'w-72.5' : 'w-20'
       }`}
     >
       <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
-        <NavLink to="/">
+        <NavLink to="/" className={`transition-all duration-300 ${!isExpanded && 'hidden'}`}>
           <img src={Logo} alt="Logo" className="bg-white rounded-md" />
         </NavLink>
-        {/* Mobile Menu Button */}
+        
+        {/* Toggle Sidebar Button - hiển thị trên tất cả màn hình */}
         <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-700 hover:bg-gray-600 text-white transition-colors duration-200 flex-none lg:hidden"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-700 hover:bg-gray-600 text-white transition-colors duration-200 flex-none"
           aria-label="Toggle Sidebar"
+          title={isExpanded ? "Thu gọn sidebar" : "Mở rộng sidebar"}
         >
-          <i className="ri-menu-line"></i>
+          <i className={`ri-arrow-left-s-line transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}></i>
         </button>
       </div>
 
       <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
         {/* <!-- Sidebar Menu --> */}
-        <nav className="mt-3 py-4 px-4 lg:mt-5 lg:px-6">
+        <nav className={` py-4 px-4 lg:px-6 ${isExpanded ? 'mt-3' : 'mt-0'}`}>
           {/* <!-- Menu Group --> */}
           <div>
-            <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
+            <h3 className={`mb-4 ml-4 text-sm font-semibold text-bodydark2 transition-all duration-300 ${!isExpanded && 'hidden'}`}>
               THÔNG TIN QUẢN LÝ
             </h3>
 
-            <ul className="mb-6 flex flex-col gap-1.5">
+            <ul className={`mb-6 flex flex-col gap-1.5 `}>
               {/* Show loading spinner while checking permissions */}
               {isLoading ? (
                 <li className="flex items-center justify-center py-4">
@@ -290,27 +361,29 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                   (pathname === item.path ||
                                     pathname.includes(item.id)) &&
                                   'bg-graydark dark:bg-meta-4'
-                                }`}
+                                } ${!isExpanded && 'justify-center items-center'}`}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  sidebarExpanded
+                                  isExpanded
                                     ? handleClick()
-                                    : setSidebarExpanded(true);
+                                    : setIsExpanded(true);
                                 }}
                               >
                                 <i className={item.icon}></i>
-                                {item.title}
+                                <span className={`transition-all duration-300 ${!isExpanded && 'hidden'}`}>
+                                  {item.title}
+                                </span>
                                 <i
-                                  className={`ri-arrow-right-s-line absolute right-4 top-1/2 -translate-y-1/2 ${
+                                  className={`ri-arrow-right-s-line absolute right-4 top-1/2 -translate-y-1/2 transition-all duration-300 ${
                                     open && 'rotate-180'
-                                  }`}
+                                  } ${isExpanded ? 'opacity-100' : 'opacity-0'}`}
                                 ></i>
                               </NavLink>
                               {/* <!-- Dropdown Menu Start --> */}
                               <div
-                                className={`translate transform overflow-hidden ${
+                                className={`translate transform overflow-hidden transition-all duration-300 ${
                                   !open && 'hidden'
-                                }`}
+                                } ${!isExpanded && 'hidden'}`}
                               >
                                 <ul className="mt-4 mb-5.5 flex flex-col gap-2.5 pl-6">
                                   {item.subItems.map((subItem, index) => {
@@ -318,7 +391,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                     if (!isSubItemVisible(subItem)) return null;
 
                                     return (
-                                      <li key={index}>
+                                      <li key={index} className={`${!isExpanded && 'justify-center items-center'}`}>
                                         <NavLink
                                           to={subItem.path}
                                           className={({ isActive }) =>
@@ -326,7 +399,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                             (isActive && '!text-white')
                                           }
                                         >
-                                          {subItem.title}
+                                          <span className={`transition-all duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}>
+                                            {subItem.title}
+                                          </span>
                                         </NavLink>
                                       </li>
                                     );
@@ -349,10 +424,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           pathname.includes(item.id) &&
                           'bg-graydark dark:bg-meta-4'
-                        }`}
+                        } ${!isExpanded && 'justify-center items-center'}`}
                       >
                         <i className={item.icon}></i>
-                        {item.title}
+                        <span className={`transition-all duration-300 ${!isExpanded && 'hidden'}`}>
+                          {item.title}
+                        </span>
                       </NavLink>
                     </li>
                   );
@@ -362,7 +439,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           </div>
 
           <div>
-            <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
+            <h3 className={`mb-4 ml-4 text-sm font-semibold text-bodydark2 transition-all duration-300 ${!isExpanded && 'hidden'}`}>
               CÁ NHÂN
             </h3>
             <ul className="mb-6 flex flex-col gap-1.5">
@@ -383,23 +460,25 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                       {(handleClick, open) => {
                         return (
                           <React.Fragment>
-                            <NavLink
-                              to="#"
-                              className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                                (pathname === item.path ||
-                                  pathname.includes(item.id)) &&
-                                'bg-graydark dark:bg-meta-4'
-                              }`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handleClick();
-                              }}
-                            >
-                              <i className={item.icon}></i>
-                              {item.title}
-                              <i className={`ri-arrow-right-s-line absolute right-4 top-1/2 -translate-y-1/2 ${
+                                                          <NavLink
+                                to="#"
+                                className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                                  (pathname === item.path ||
+                                    pathname.includes(item.id)) &&
+                                  'bg-graydark dark:bg-meta-4'
+                                } ${!isExpanded && 'justify-center items-center'}`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleClick();
+                                }}
+                              >
+                                <i className={item.icon}></i>
+                                <span className={`transition-all duration-300 ${!isExpanded && 'hidden'}`}>
+                                  {item.title}
+                                </span>
+                                <i className={`ri-arrow-right-s-line absolute right-4 top-1/2 -translate-y-1/2 transition-all duration-300 ${
                                     open && 'rotate-180'
-                                  }`}
+                                  } ${!isExpanded && 'hidden'}`}
                                 ></i>
                             </NavLink>
                             <div
@@ -440,10 +519,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                       className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                         pathname.includes(item.id) &&
                         'bg-graydark dark:bg-meta-4'
-                      }`}
+                      } ${!isExpanded && 'justify-center items-center'}`}
                     >
                       <i className={item.icon}></i>
-                      {item.title}
+                      <span className={`transition-all duration-300 ${!isExpanded && 'hidden'}`}>
+                        {item.title}
+                      </span>
                     </NavLink>
                   </li>
                 );

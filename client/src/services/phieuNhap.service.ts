@@ -23,17 +23,18 @@ export interface PhieuNhapDetailDto {
   trangThai?: string;
   ngayTao?: string;
   ngayCapNhat?: string;
+  tenDiaDiem?: string;
   tenNhaCungCap?: string;
   tenQuanLy?: string;
   chiTietNhaps?: ChiTietNhapDto[];
 }
 
 export interface ChiTietNhapDto {
-  maChiTietNhap: string;
+  maChiTiet: string;
   maPhieuNhap: string;
   maLo: string;
   soLuong?: number;
-  giaNhap?: number;
+  gia?: number;
   soLo?: string;
   tenVaccine?: string;
   tenNhaCungCap?: string;
@@ -49,7 +50,7 @@ export interface PhieuNhapCreateDto {
 export interface ChiTietNhapCreateDto {
   maLo: string;
   soLuong: number;
-  giaNhap: number;
+  gia: number;
 }
 
 export interface PhieuNhapUpdateDto {

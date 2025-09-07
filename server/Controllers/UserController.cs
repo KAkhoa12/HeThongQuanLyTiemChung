@@ -143,7 +143,7 @@ public class UserController : ControllerBase
         }
         catch (Exception ex)
         {
-            return ApiResponse.Error($"Lỗi khi lấy thông tin profile: {ex.Message}", 500);
+            return ApiResponse.Error($"Lỗi khi lấy thông tin profile: {ex}");
         }
     }
 

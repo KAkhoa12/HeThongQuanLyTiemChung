@@ -9,8 +9,6 @@ public partial class PhieuNhap
 
     public string? MaNhaCungCap { get; set; }
 
-    public string? MaQuanLy { get; set; }
-
     public DateTime? NgayNhap { get; set; }
 
     public decimal? TongTien { get; set; }
@@ -24,6 +22,8 @@ public partial class PhieuNhap
     public DateTime? NgayTao { get; set; }
 
     public DateTime? NgayCapNhat { get; set; }
+
+    public string? MaQuanLy { get; set; }
 
     public virtual ICollection<ChiTietNhap> ChiTietNhaps { get; set; } = new List<ChiTietNhap>();
 

@@ -40,7 +40,12 @@ namespace server.DTOs.Kho
         int? SoLuong,
         string? LyDo,
         string? SoLo = null,
-        string? TenVaccine = null
+        string? TenVaccine = null,
+        bool? IsDelete = null,
+        bool? IsActive = null,
+        DateTime? NgayTao = null,
+        DateTime? NgayCapNhat = null,
+        DateOnly? NgayHetHan = null
     );
 
     public record ChiTietThanhLyCreateDto(
@@ -48,4 +53,5 @@ namespace server.DTOs.Kho
         int SoLuong,
         string? LyDo
     );
-} 
+
+}

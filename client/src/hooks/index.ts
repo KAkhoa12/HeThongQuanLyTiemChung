@@ -1,10 +1,28 @@
 // Export tất cả hooks
 export { useApi, useApiWithParams } from './useApi';
+export { useCheckOrderEligibility } from './useCheckOrderEligibility';
 export { useAuth } from './useAuth';
 export { useAuthInit } from './useAuthInit';
-export { useService } from './useService';
 export { useServiceVaccines } from './useServiceVaccine';
-export { useVaccine } from './useVaccine';
+export { 
+  useVaccines,
+  useVaccine,
+  useActiveVaccines,
+  useManufacturers,
+  useCreateVaccine,
+  useUpdateVaccine,
+  useDeleteVaccine,
+  useUpdateVaccineStatus,
+  useVaccineUsage,
+  useVaccineSchedules,
+  useVaccineSchedule,
+  useVaccineSchedulesByVaccine,
+  useCreateVaccineSchedule,
+  useCreateVaccineSchedulesBatch,
+  useUpdateVaccineSchedule,
+  useDeleteVaccineSchedule,
+  useVaccineSchedulesByAgeAndVaccine
+} from './useVaccine';
 export { useToast } from './useToast';
 export { default as useColorMode } from './useColorMode';
 export { default as useLocalStorage } from './useLocalStorage';
@@ -19,7 +37,6 @@ export { useLocations, useAllLocations, useLocation } from './useLocations';
 
 // Appointment Hooks
 export { useAppointments } from './useAppointments';
-export { useAppointment } from './useAppointment';
 export { useCreateAppointment } from './useCreateAppointment';
 export { useCreateAppointmentFromOrder } from './useCreateAppointmentFromOrder';
 export { useUpdateAppointment } from './useUpdateAppointment';
@@ -116,3 +133,114 @@ export {
   useUsers,
   useUser
 } from './useUser';
+
+// Service Hooks
+export {
+  useServices,
+  useService,
+  useCreateService,
+  useUpdateService,
+  useDeleteService,
+  useServiceConditions,
+  useServiceCondition,
+  useServiceConditionsByService,
+  useCreateServiceCondition,
+  useCreateServiceConditionsBatch,
+  useUpdateServiceCondition,
+  useDeleteServiceCondition,
+  useCheckEligibility
+} from './useService';
+
+// Inventory Management Hooks
+export {
+  usePhieuNhaps,
+  usePhieuNhap,
+  useCreatePhieuNhap,
+  useUpdatePhieuNhap,
+  useDeletePhieuNhap,
+  useConfirmPhieuNhap
+} from './usePhieuNhap';
+
+export {
+  usePhieuXuats,
+  usePhieuXuat,
+  useCreatePhieuXuat,
+  useUpdatePhieuXuat,
+  useDeletePhieuXuat,
+  useConfirmPhieuXuat
+} from './usePhieuXuat';
+
+export {
+  usePhieuThanhLies,
+  usePhieuThanhLy,
+  useCreatePhieuThanhLy,
+  useUpdatePhieuThanhLy,
+  useDeletePhieuThanhLy,
+  useConfirmPhieuThanhLy
+} from './usePhieuThanhLy';
+
+export * from './useTonKhoAdvanced';
+
+export {
+  useChiTietNhaps,
+  useChiTietNhap,
+  useCreateChiTietNhap,
+  useUpdateChiTietNhap,
+  useDeleteChiTietNhap,
+  useChiTietNhapsByPhieuNhap
+} from './useChiTietNhap';
+
+export {
+  useChiTietXuats,
+  useChiTietXuat,
+  useCreateChiTietXuat,
+  useUpdateChiTietXuat,
+  useDeleteChiTietXuat,
+  useChiTietXuatsByPhieuXuat
+} from './useChiTietXuat';
+
+export {
+  useChiTietThanhLies,
+  useChiTietThanhLy,
+  useCreateChiTietThanhLy,
+  useUpdateChiTietThanhLy,
+  useDeleteChiTietThanhLy,
+  useChiTietThanhLiesByPhieuThanhLy,
+  useVaccinesExpiringSoon
+} from './useChiTietThanhLy';
+
+// LoVaccine Hooks
+export {
+  useLoVaccines,
+  useLoVaccine,
+  useCreateLoVaccine,
+  useUpdateLoVaccine,
+  useDeleteLoVaccine,
+  useLoVaccinesByVaccine,
+  useActiveLoVaccines
+} from './useLoVaccine';
+
+// TonKhoLo Hooks
+export {
+  useTonKhoLos,
+  useTonKhoLo,
+  useCreateTonKhoLo,
+  useUpdateTonKhoLo,
+  useDeleteTonKhoLo,
+  useTonKhoLosByLoVaccine,
+  useTonKhoLosByLocation,
+  useTonKhoSummary,
+  useUpdateTonKhoQuantity
+} from './useTonKhoLo';
+
+// NhaCungCap Hooks
+export {
+  useNhaCungCaps,
+  useNhaCungCap,
+  useCreateNhaCungCap,
+  useUpdateNhaCungCap,
+  useDeleteNhaCungCap,
+  useAddImageNhaCungCap,
+  useUpdateImageNhaCungCap,
+  useDeleteImageNhaCungCap
+} from './useNhaCungCap';
