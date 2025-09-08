@@ -1,19 +1,19 @@
 import { useApiWithParams } from './useApi';
-import { getAllOrders, getOrderById, updateOrderStatus, OrderDetail } from '../services/order.service';
+import { getAllOrders, getOrderById, updateOrderStatus, OrderDetail, InvoiceListParams, InvoiceListResponse } from '../services/order.service';
 
 // Hook để lấy danh sách đơn hàng
 export const useOrders = () => {
-  const { data, loading, error, execute, reset } = useApiWithParams(getAllOrders, null);
+  const { data, loading, error, execute, reset } = useApiWithParams<InvoiceListResponse, InvoiceListParams>(getAllOrders, null);
   
-  // Xử lý data từ API mới (không có pagination từ backend)
-  const orders = data || [];
+  // Xử lý data từ API với pagination
+  const response = data || { data: [], totalCount: 0, page: 1, pageSize: 10, totalPages: 1 };
   
   return {
-    orders: Array.isArray(orders) ? orders : [],
-    totalCount: Array.isArray(orders) ? orders.length : 0,
-    page: 1,
-    pageSize: 10,
-    totalPages: 1,
+    orders: Array.isArray(response.data) ? response.data : [],
+    totalCount: response.totalCount || 0,
+    page: response.page || 1,
+    pageSize: response.pageSize || 10,
+    totalPages: response.totalPages || 1,
     loading,
     error,
     execute,

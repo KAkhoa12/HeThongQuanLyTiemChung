@@ -66,13 +66,15 @@ namespace server.DTOs.NguoiDung
         string? DiaChi,
         string? GioiTinh,
         string? MaAnh,
+        bool? IsActive,
         BacSiUpdateDto? BacSiInfo
     );
 
     // DTO cho cập nhật thông tin bác sĩ
     public record BacSiUpdateDto(
         string? ChuyenMon,
-        string? SoGiayPhep
+        string? SoGiayPhep,
+        string? MaDiaDiem
     );
 
     // DTOs cho thông tin sức khỏe
@@ -104,7 +106,8 @@ namespace server.DTOs.NguoiDung
     public record BacSiInfoDto(
         string MaBacSi,
         string? ChuyenMon,
-        string? SoGiayPhep
+        string? SoGiayPhep,
+        string? MaDiaDiem
     );
 
     // DTO cho thông tin quản lý
@@ -137,6 +140,7 @@ namespace server.DTOs.NguoiDung
         string MaVaiTro,
         DateTime? NgayTao,
         string? MaAnh,
+        bool? IsActive,
         object? Info // Thông tin theo vai trò: BacSiInfoDto, QuanLyInfoDto, hoặc UserInfoDto
     );
 }

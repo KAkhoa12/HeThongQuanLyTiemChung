@@ -475,7 +475,7 @@ public class CreatePhieuTiemDto
     public string? TrangThai { get; set; }
     public string? PhanUng { get; set; }
     public string? MoTaPhanUng { get; set; }
-    public List<ChiTietPhieuTiemDto> ChiTietPhieuTiems { get; set; } = new List<ChiTietPhieuTiemDto>();
+    public List<ChiTietPhieuTiemForCreateDto> ChiTietPhieuTiems { get; set; } = new List<ChiTietPhieuTiemForCreateDto>();
 }
 
 

@@ -4,10 +4,9 @@ import {
   FaEye,
   FaSearch,
   FaFilter,
-  FaDownload,
-  FaCalendarPlus,
 } from 'react-icons/fa';
-import { useAuthInit, useInvoice } from '../../hooks';
+import { useAuthInit } from '../../../hooks/useAuthInit';
+import { useInvoice } from '../../../hooks/useInvoice';
 
 const InvoiceListPage: React.FC = () => {
   const {
@@ -15,19 +14,15 @@ const InvoiceListPage: React.FC = () => {
     loading,
     currentPage,
     totalPages,
+    totalCount,
     searchTerm,
     statusFilter,
     setSearchTerm,
     setStatusFilter,
     setCurrentPage,
     resetFilters,
-    fetchInvoices,
   } = useInvoice();
   const { user } = useAuthInit();
-  const handleSearch = () => {
-    setCurrentPage(1);
-    fetchInvoices();
-  };
 
   const handleStatusFilter = (status: string) => {
     setStatusFilter(status);
@@ -36,27 +31,28 @@ const InvoiceListPage: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const statusMap: { [key: string]: { text: string; className: string } } = {
-      PENDING: {
-        text: 'Chờ xử lý',
-        className: 'bg-yellow-100 text-yellow-800',
+      COMPLETED: {
+        text: 'Đã hoàn thành',
+        className: 'bg-green-100 text-green-800',
       },
-      CONFIRMED: {
-        text: 'Đã xác nhận',
-        className: 'bg-blue-100 text-blue-800',
+      PAID: { 
+        text: 'Đã thanh toán', 
+        className: 'bg-green-100 text-green-800' 
       },
-      SHIPPING: {
-        text: 'Đang giao',
-        className: 'bg-purple-100 text-purple-800',
-      },
-      DELIVERED: { text: 'Đã giao', className: 'bg-green-100 text-green-800' },
-      CANCELLED: { text: 'Đã hủy', className: 'bg-red-100 text-red-800' },
-      PAID: { text: 'Đã thanh toán', className: 'bg-green-100 text-green-800' },
       PAYMENT_PENDING: {
         text: 'Chờ thanh toán',
         className: 'bg-orange-100 text-orange-800',
       },
-      PAYMENT_FAILED: {
-        text: 'Thanh toán thất bại',
+      PENDING: {
+        text: 'Chờ xử lý',
+        className: 'bg-yellow-100 text-yellow-800',
+      },
+      PROCESSING: {
+        text: 'Đang xử lý',
+        className: 'bg-blue-100 text-blue-800',
+      },
+      FAILED: {
+        text: 'Đã thất bại',
         className: 'bg-red-100 text-red-800',
       },
     };
@@ -122,13 +118,16 @@ const InvoiceListPage: React.FC = () => {
       </div>
 
       {/* Search and Filter */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="relative">
           <input
             type="text"
             placeholder="Tìm kiếm hóa đơn..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full rounded-lg border border-stroke bg-white py-2 pl-10 pr-4 outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:border-strokedark dark:bg-meta-4 dark:focus:border-primary"
           />
           <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -140,29 +139,16 @@ const InvoiceListPage: React.FC = () => {
           className="rounded-lg border border-stroke bg-white py-2 px-4 outline-none focus:border-primary focus:ring-1 focus:ring-primary dark:border-strokedark dark:bg-meta-4 dark:focus:border-primary"
         >
           <option value="all">Tất cả trạng thái</option>
-          <option value="PENDING">Chờ xử lý</option>
-          <option value="CONFIRMED">Đã xác nhận</option>
-          <option value="SHIPPING">Đang giao</option>
-          <option value="DELIVERED">Đã giao</option>
-          <option value="CANCELLED">Đã hủy</option>
+          <option value="COMPLETED">Đã hoàn thành</option>
           <option value="PAID">Đã thanh toán</option>
           <option value="PAYMENT_PENDING">Chờ thanh toán</option>
-          <option value="PAYMENT_FAILED">Thanh toán thất bại</option>
+          <option value="PENDING">Chờ xử lý</option>
+          <option value="PROCESSING">Đang xử lý</option>
+          <option value="FAILED">Đã thất bại</option>
         </select>
 
         <button
-          onClick={handleSearch}
-          className="inline-flex items-center justify-center rounded-md bg-primary py-2 px-6 text-center font-medium text-white hover:bg-opacity-90"
-        >
-          <FaSearch className="mr-2" />
-          Tìm kiếm
-        </button>
-
-        <button
-          onClick={() => {
-            resetFilters();
-            fetchInvoices();
-          }}
+          onClick={resetFilters}
           className="inline-flex items-center justify-center rounded-md bg-gray-500 py-2 px-6 text-center font-medium text-white hover:bg-opacity-90"
         >
           <FaFilter className="mr-2" />
@@ -267,15 +253,6 @@ const InvoiceListPage: React.FC = () => {
                         >
                           <FaEye className="h-5 w-5" />
                         </Link>
-                        {invoice.trangThaiDon === 'PAID' && (
-                          <Link
-                            to={`/appointment/register-from-invoice/${invoice.maDonHang}`}
-                            className="hover:text-green-600"
-                            title="Đăng ký lịch tiêm"
-                          >
-                            <FaCalendarPlus className="h-5 w-5" />
-                          </Link>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -288,7 +265,10 @@ const InvoiceListPage: React.FC = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-center">
+        <div className="mt-6 flex flex-col items-center justify-center space-y-4">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Hiển thị {invoices.length} trong tổng số {totalCount} hóa đơn
+          </div>
           <div className="flex space-x-2">
             <button
               onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}

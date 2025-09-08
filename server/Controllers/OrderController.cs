@@ -4,6 +4,7 @@ using server.DTOs.Order;
 using server.Filters;
 using server.Helpers;
 using server.Models;
+using server.Types;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -53,7 +54,7 @@ public class OrderController : ControllerBase
                 NgayDat = DateTime.Now,
                 TongTienGoc = totalAmount,
                 TongTienThanhToan = totalAmount,
-                TrangThaiDon = "PENDING",
+                TrangThaiDon = DonHangTypes.PENDING,
                 GhiChu = $"Khách hàng: {dto.CustomerName}, SĐT: {dto.CustomerPhone}, Email: {dto.CustomerEmail}, Địa chỉ: {dto.CustomerAddress}",
                 IsActive = true,
                 IsDelete = false,
@@ -86,7 +87,7 @@ public class OrderController : ControllerBase
                 order.MaDonHang,
                 orderCode,
                 totalAmount,
-                order.TrangThaiDon ?? "PENDING",
+                order.TrangThaiDon ?? DonHangTypes.PENDING,
                 order.NgayTao ?? DateTime.Now
             );
 
@@ -194,7 +195,7 @@ public class OrderController : ControllerBase
         order.NgayCapNhat = DateTime.UtcNow;
 
         await _ctx.SaveChangesAsync(ct);
-        return ApiResponse.Success("Cập nhật trạng thái đơn hàng thành công", null);
+        return ApiResponse.Success("Cập nhật trạng thái đơn hàng thành công", new { });
     }
 
     /* ---------- 4. Cập nhật số tiền giảm trong đơn hàng ---------- */
@@ -246,13 +247,18 @@ public class OrderController : ControllerBase
         order.NgayCapNhat = DateTime.UtcNow;
 
         await _ctx.SaveChangesAsync(ct);
-        return ApiResponse.Success("Xóa đơn hàng thành công", null);
+        return ApiResponse.Success("Xóa đơn hàng thành công", new { });
     }
 
     /* ---------- 5. Lấy danh sách đơn hàng của người dùng đã đăng nhập ---------- */
     [HttpGet("my-orders")]
     [ConfigAuthorize]
-    public async Task<IActionResult> GetMyOrders(CancellationToken ct)
+    public async Task<IActionResult> GetMyOrders(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? status = null,
+        [FromQuery] string? search = null,
+        CancellationToken ct = default)
     {
         // Lấy thông tin người dùng đã đăng nhập
         var userId = User.FindFirst("userId")?.Value;
@@ -261,13 +267,44 @@ public class OrderController : ControllerBase
             return ApiResponse.Error("Người dùng chưa đăng nhập", 401);
         }
 
-        // Sử dụng Select để tránh circular reference
-        var orders = await _ctx.DonHangs
-            .Where(d => d.IsDelete != true && d.MaNguoiDung == userId)
+        // Base query
+        var query = _ctx.DonHangs
+            .Where(d => d.IsDelete != true && d.MaNguoiDung == userId);
+
+        // Apply search filter
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(d => d.MaDonHang.Contains(search) || 
+                                   (d.GhiChu != null && d.GhiChu.Contains(search)));
+        }
+
+        // Apply status filter
+        if (!string.IsNullOrEmpty(status) && status != "all")
+        {
+            query = query.Where(d => d.TrangThaiDon == status);
+        }
+
+        // Get total count
+        var totalCount = await query.CountAsync(ct);
+
+        // Custom sorting: COMPLETED -> PAID -> PAYMENT_PENDING -> PENDING -> PROCESSING -> FAILED
+        // Then by date (newest first)
+        var ordersQuery = query
             .OrderByDescending(d => d.NgayTao)
+            .ThenBy(d => d.TrangThaiDon == DonHangTypes.COMPLETED ? 1 :
+                        d.TrangThaiDon == DonHangTypes.PAID ? 2 :
+                        d.TrangThaiDon == DonHangTypes.PAYMENT_PENDING ? 3 :
+                        d.TrangThaiDon == DonHangTypes.PENDING ? 4 :
+                        d.TrangThaiDon == DonHangTypes.PROCESSING ? 5 :
+                        d.TrangThaiDon == DonHangTypes.FAILED ? 6 : 7)
             // ✅ Thêm include cho thông tin khuyến mãi
             .Include(d => d.DonHangKhuyenMais.Where(dhkm => dhkm.IsDelete != true))
-                .ThenInclude(dhkm => dhkm.MaKhuyenMaiNavigation)
+                .ThenInclude(dhkm => dhkm.MaKhuyenMaiNavigation);
+
+        // Apply pagination
+        var orders = await ordersQuery
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(d => new
             {
                 d.MaDonHang,
@@ -294,13 +331,13 @@ public class OrderController : ControllerBase
                         dct.ThanhTien,
                         dct.IsActive,
                         dct.IsDelete,
-                        MaDichVuNavigation = new
+                        MaDichVuNavigation = dct.MaDichVuNavigation != null ? new
                         {
                             dct.MaDichVuNavigation.MaDichVu,
                             dct.MaDichVuNavigation.Ten,
                             dct.MaDichVuNavigation.MoTa,
                             dct.MaDichVuNavigation.Gia
-                        }
+                        } : null
                     }).ToList(),
                 MaDiaDiemYeuThichNavigation = d.MaDiaDiemYeuThichNavigation != null ? new
                 {
@@ -328,7 +365,20 @@ public class OrderController : ControllerBase
             })
             .ToListAsync(ct);
 
-        return ApiResponse.Success("Lấy danh sách đơn hàng thành công", orders);
+        // Calculate pagination info
+        var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+        // Create paginated response
+        var paginatedResponse = new
+        {
+            data = orders,
+            totalCount = totalCount,
+            page = page,
+            pageSize = pageSize,
+            totalPages = totalPages
+        };
+
+        return ApiResponse.Success("Lấy danh sách đơn hàng thành công", paginatedResponse);
     }
 
     /* ---------- 6. Kiểm tra điều kiện mua đơn hàng ---------- */
@@ -467,12 +517,11 @@ public class OrderController : ControllerBase
             }
         }
 
-        // Kiểm tra xem người dùng đã đăng ký dịch vụ này chưa
         var existingRegistration = await _ctx.PhieuDangKyLichTiems
             .Where(p => p.MaKhachHang == user.MaNguoiDung && 
                        p.MaDichVu == serviceId && 
                        p.IsDelete != true &&
-                       (p.TrangThai == "PENDING" || p.TrangThai == "APPROVED"))
+                       (p.TrangThai == KeHoachTiemTypes.PENDING || p.TrangThai == KeHoachTiemTypes.APPROVED))
             .FirstOrDefaultAsync(ct);
 
         if (existingRegistration != null)
@@ -497,21 +546,21 @@ public class OrderController : ControllerBase
             .Include(d => d.DonHangChiTiets)
             .Where(d => d.MaNguoiDung == user.MaNguoiDung && 
                        d.IsDelete != true &&
-                       (d.TrangThaiDon == "PENDING" || 
-                        d.TrangThaiDon == "PAYMENT_PENDING" || 
-                        d.TrangThaiDon == "PAID" || 
-                        d.TrangThaiDon == "CONFIRMED" ||
-                        d.TrangThaiDon == "PROCESSING") &&
+                       (d.TrangThaiDon == DonHangTypes.PENDING || 
+                        d.TrangThaiDon == DonHangTypes.PAYMENT_PENDING || 
+                        d.TrangThaiDon == DonHangTypes.PAID || 
+                        d.TrangThaiDon == DonHangTypes.COMPLETED ||
+                        d.TrangThaiDon == DonHangTypes.PROCESSING) &&
                        d.DonHangChiTiets.Any(dct => dct.MaDichVu == serviceId && dct.IsDelete != true))
             .FirstOrDefaultAsync(ct);
 
         if (existingOrder != null)
         {
-            if (existingOrder.TrangThaiDon == "PENDING" || existingOrder.TrangThaiDon == "PAYMENT_PENDING")
+            if (existingOrder.TrangThaiDon == DonHangTypes.PENDING || existingOrder.TrangThaiDon == DonHangTypes.PAYMENT_PENDING)
             {
                 warnings.Add($"Bạn đã có đơn hàng đang chờ xử lý cho dịch vụ {service.Ten} (Trạng thái: {existingOrder.TrangThaiDon})");
             }
-            else if (existingOrder.TrangThaiDon == "PAID" || existingOrder.TrangThaiDon == "CONFIRMED" || existingOrder.TrangThaiDon == "PROCESSING")
+            else if (existingOrder.TrangThaiDon == DonHangTypes.PAID || existingOrder.TrangThaiDon == DonHangTypes.COMPLETED || existingOrder.TrangThaiDon == DonHangTypes.PROCESSING)
             {
                 errors.Add($"Bạn đã có đơn hàng đã thanh toán cho dịch vụ {service.Ten} (Trạng thái: {existingOrder.TrangThaiDon}). Vui lòng chờ xử lý hoặc liên hệ hỗ trợ.");
             }

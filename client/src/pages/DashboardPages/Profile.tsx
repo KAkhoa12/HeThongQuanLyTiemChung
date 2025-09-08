@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../store/useAuthStore';
-import { getMyProfile, updateProfile, updateHealthInfo, uploadAvatar } from '../services/user.service';
-import { useToast } from '../hooks/useToast';
-import Breadcrumb from '../components/Breadcrumbs/Breadcrumb';
-import CoverOne from '../images/cover/cover-01.png';
-import userSix from '../images/user/user-06.png';
-import type { UserCompleteProfileDto, UserProfileUpdateDto, HealthInfoUpdateDto, RoleInfo } from '../types/user.types';
+import { useAuthStore } from '../../store/useAuthStore';
+import { getMyProfile, updateProfile, updateHealthInfo, uploadAvatar } from '../../services/user.service';
+import { useToast } from '../../hooks/useToast';
+import { useAllLocations } from '../../hooks/useLocations';
+import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
+import CoverOne from '../../images/cover/cover-01.png';
+import userSix from '../../images/user/user-06.png';
+import type { UserCompleteProfileDto, UserProfileUpdateDto, HealthInfoUpdateDto } from '../../types/user.types';
 
 const Profile = () => {
   const { user } = useAuthStore();
@@ -22,10 +23,18 @@ const Profile = () => {
   const [healthData, setHealthData] = useState<HealthInfoUpdateDto>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
+  
+  // Hook for getting locations
+  const { data: locations, execute: fetchLocations } = useAllLocations();
 
   // Load profile data
   useEffect(() => {
     loadProfile();
+  }, []);
+
+  // Load locations
+  useEffect(() => {
+    fetchLocations();
   }, []);
 
   const loadProfile = async () => {
@@ -41,7 +50,8 @@ const Profile = () => {
         maAnh: data.maAnh,
         bacSiInfo: data.info && 'maBacSi' in data.info ? {
           chuyenMon: data.info.chuyenMon,
-          soGiayPhep: data.info.soGiayPhep
+          soGiayPhep: data.info.soGiayPhep,
+          maDiaDiem: data.info.maDiaDiem
         } : undefined
       });
       
@@ -326,39 +336,50 @@ const Profile = () => {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Chuyên môn
                       </label>
-                      {editMode ? (
-                        <input
-                          type="text"
-                          value={formData.bacSiInfo?.chuyenMon || ''}
-                          onChange={(e) => setFormData(prev => ({ 
-                            ...prev, 
-                            bacSiInfo: { ...prev.bacSiInfo, chuyenMon: e.target.value }
-                          }))}
-                          className="w-full px-3 py-2 border border-gray-300 rounded focus:border-primary outline-none"
-                        />
-                      ) : (
-                                                 <p className="text-gray-900 dark:text-white">{profile.info.chuyenMon || 'Chưa cập nhật'}</p>
-                      )}
+                      <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded">
+                        {profile.info.chuyenMon || 'Chưa cập nhật'}
+                      </p>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Số giấy phép
                       </label>
+                      <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded">
+                        {profile.info.soGiayPhep || 'Chưa cập nhật'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Địa điểm làm việc
+                      </label>
                       {editMode ? (
-                        <input
-                          type="text"
-                          value={formData.bacSiInfo?.soGiayPhep || ''}
+                        <select
+                          value={formData.bacSiInfo?.maDiaDiem || ''}
                           onChange={(e) => setFormData(prev => ({ 
                             ...prev, 
-                            bacSiInfo: { ...prev.bacSiInfo, soGiayPhep: e.target.value }
+                            bacSiInfo: { ...prev.bacSiInfo, maDiaDiem: e.target.value }
                           }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded focus:border-primary outline-none"
-                        />
+                        >
+                          <option value="">Chọn địa điểm làm việc</option>
+                          {locations?.map((location) => (
+                            <option key={location.id} value={location.id}>
+                              {location.name}
+                            </option>
+                          ))}
+                        </select>
                       ) : (
-                                                 <p className="text-gray-900 dark:text-white">{profile.info.soGiayPhep || 'Chưa cập nhật'}</p>
+                        <p className="text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded">
+                          {profile.info.tenDiaDiem || 'Chưa cập nhật'}
+                        </p>
                       )}
                     </div>
+                  </div>
+                  <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    <i className="ri-information-line mr-1"></i>
+                    Thông tin bác sĩ chỉ có thể được cập nhật bởi quản trị viên
                   </div>
                 </div>
               )}

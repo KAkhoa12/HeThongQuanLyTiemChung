@@ -18,7 +18,175 @@ public class UserController : ControllerBase
     {
         _ctx = ctx;
     }
+    /* ---------- 0. Thêm mới bác sĩ ---------- */
+    [HttpPost("doctor")]
+    public async Task<IActionResult> CreateDoctor([FromBody] CreateDoctorDto dto, CancellationToken ct = default)
+    {
+        try
+        {
+            // Kiểm tra email đã tồn tại
+            var existingUser = await _ctx.NguoiDungs
+                .FirstOrDefaultAsync(n => n.Email == dto.Email && n.IsDelete != true, ct);
+            
+            if (existingUser != null)
+            {
+                return ApiResponse.Error("Email đã được sử dụng");
+            }
 
+            // Kiểm tra số điện thoại đã tồn tại
+            var existingPhone = await _ctx.NguoiDungs
+                .FirstOrDefaultAsync(n => n.SoDienThoai == dto.SoDienThoai && n.IsDelete != true, ct);
+            
+            if (existingPhone != null)
+            {
+                return ApiResponse.Error("Số điện thoại đã được sử dụng");
+            }
+
+            // Kiểm tra vai trò có tồn tại
+            var vaiTro = await _ctx.VaiTros
+                .FirstOrDefaultAsync(v => v.MaVaiTro == dto.MaVaiTro && v.IsDelete != true, ct);
+            
+            if (vaiTro == null)
+            {
+                return ApiResponse.Error("Vai trò không tồn tại");
+            }
+
+            // Kiểm tra địa điểm có tồn tại
+            var diaDiem = await _ctx.DiaDiems
+                .FirstOrDefaultAsync(d => d.MaDiaDiem == dto.MaDiaDiem && d.IsDelete != true, ct);
+            
+            if (diaDiem == null)
+            {
+                return ApiResponse.Error("Địa điểm không tồn tại");
+            }
+
+            // Tạo người dùng mới
+            var newUser = new NguoiDung
+            {
+                MaNguoiDung = Guid.NewGuid().ToString("N"),
+                Ten = dto.Ten,
+                Email = dto.Email,
+                SoDienThoai = dto.SoDienThoai,
+                MatKhau = BCrypt.Net.BCrypt.HashPassword(dto.MatKhau),
+                NgaySinh = dto.NgaySinh,
+                GioiTinh = dto.GioiTinh,
+                DiaChi = dto.DiaChi,
+                MaVaiTro = dto.MaVaiTro,
+                IsActive = true,
+                IsDelete = false,
+                NgayTao = DateTime.UtcNow,
+                NgayCapNhat = DateTime.UtcNow
+            };
+
+            _ctx.NguoiDungs.Add(newUser);
+
+            // Tạo thông tin bác sĩ
+            var newDoctor = new BacSi
+            {
+                MaBacSi = Guid.NewGuid().ToString("N"),
+                MaNguoiDung = newUser.MaNguoiDung,
+                ChuyenMon = dto.ChuyenMon,
+                SoGiayPhep = dto.SoGiayPhep,
+                MaDiaDiem = dto.MaDiaDiem,
+                IsActive = true,
+                IsDelete = false,
+                NgayTao = DateTime.UtcNow,
+                NgayCapNhat = DateTime.UtcNow
+            };
+
+            _ctx.BacSis.Add(newDoctor);
+
+            await _ctx.SaveChangesAsync(ct);
+
+            return ApiResponse.Success("Tạo bác sĩ thành công", new { 
+                maNguoiDung = newUser.MaNguoiDung,
+                maBacSi = newDoctor.MaBacSi 
+            });
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.Error("Lỗi server khi tạo bác sĩ");
+        }
+    }
+
+    /* ---------- 0.1. Thêm mới quản lý ---------- */
+    [HttpPost("manager")]
+    public async Task<IActionResult> CreateManager([FromBody] CreateManagerDto dto, CancellationToken ct = default)
+    {
+        try
+        {
+            // Kiểm tra email đã tồn tại
+            var existingUser = await _ctx.NguoiDungs
+                .FirstOrDefaultAsync(n => n.Email == dto.Email && n.IsDelete != true, ct);
+            
+            if (existingUser != null)
+            {
+                return ApiResponse.Error("Email đã được sử dụng");
+            }
+
+            // Kiểm tra số điện thoại đã tồn tại
+            var existingPhone = await _ctx.NguoiDungs
+                .FirstOrDefaultAsync(n => n.SoDienThoai == dto.SoDienThoai && n.IsDelete != true, ct);
+            
+            if (existingPhone != null)
+            {
+                return ApiResponse.Error("Số điện thoại đã được sử dụng");
+            }
+
+            // Kiểm tra vai trò có tồn tại
+            var vaiTro = await _ctx.VaiTros
+                .FirstOrDefaultAsync(v => v.MaVaiTro == dto.MaVaiTro && v.IsDelete != true, ct);
+            
+            if (vaiTro == null)
+            {
+                return ApiResponse.Error("Vai trò không tồn tại");
+            }
+
+            // Tạo người dùng mới
+            var newUser = new NguoiDung
+            {
+                MaNguoiDung = Guid.NewGuid().ToString("N"),
+                Ten = dto.Ten,
+                Email = dto.Email,
+                SoDienThoai = dto.SoDienThoai,
+                MatKhau = BCrypt.Net.BCrypt.HashPassword(dto.MatKhau),
+                NgaySinh = dto.NgaySinh,
+                GioiTinh = dto.GioiTinh,
+                DiaChi = dto.DiaChi,
+                MaVaiTro = dto.MaVaiTro,
+                IsActive = true,
+                IsDelete = false,
+                NgayTao = DateTime.UtcNow,
+                NgayCapNhat = DateTime.UtcNow
+            };
+
+            _ctx.NguoiDungs.Add(newUser);
+
+            // Tạo thông tin quản lý
+            var newManager = new QuanLy
+            {
+                MaQuanLy = Guid.NewGuid().ToString("N"),
+                MaNguoiDung = newUser.MaNguoiDung,
+                IsActive = true,
+                IsDelete = false,
+                NgayTao = DateTime.UtcNow,
+                NgayCapNhat = DateTime.UtcNow
+            };
+
+            _ctx.QuanLies.Add(newManager);
+
+            await _ctx.SaveChangesAsync(ct);
+
+            return ApiResponse.Success("Tạo quản lý thành công", new { 
+                maNguoiDung = newUser.MaNguoiDung,
+                maQuanLy = newManager.MaQuanLy 
+            });
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.Error("Lỗi server khi tạo quản lý");
+        }
+    }
     /* ---------- 1. Lấy thông tin profile của người dùng đã đăng nhập ---------- */
     [HttpGet("profile")]
     [ConfigAuthorize]
@@ -111,7 +279,8 @@ public class UserController : ControllerBase
                         roleInfo = new BacSiInfoDto(
                             user.BacSi.MaBacSi,
                             user.BacSi.ChuyenMon,
-                            user.BacSi.SoGiayPhep
+                            user.BacSi.SoGiayPhep,
+                            user.BacSi.MaDiaDiem
                         );
                     }
                     break;
@@ -136,6 +305,7 @@ public class UserController : ControllerBase
                 user.MaVaiTro,
                 user.NgayTao,
                 user.MaAnh,
+                user.IsActive,
                 roleInfo
             );
 
@@ -427,6 +597,8 @@ public class UserController : ControllerBase
         {
             var user = await _ctx.NguoiDungs
                 .Include(n => n.MaVaiTroNavigation)
+                .Include(n => n.BacSi)
+                .Include(n => n.QuanLy)
                 .FirstOrDefaultAsync(n => n.MaNguoiDung == id && n.IsDelete != true, ct);
 
             if (user == null)
@@ -502,7 +674,8 @@ public class UserController : ControllerBase
                         roleInfo = new BacSiInfoDto(
                             user.BacSi.MaBacSi,
                             user.BacSi.ChuyenMon,
-                            user.BacSi.SoGiayPhep
+                            user.BacSi.SoGiayPhep,
+                            user.BacSi.MaDiaDiem
                         );
                     }
                     break;
@@ -527,6 +700,7 @@ public class UserController : ControllerBase
                 user.MaVaiTro,
                 user.NgayTao,
                 user.MaAnh,
+                user.IsActive,
                 roleInfo
             );
 
@@ -537,10 +711,146 @@ public class UserController : ControllerBase
             return ApiResponse.Error($"Lỗi khi lấy thông tin người dùng: {ex.Message}", 500);
         }
     }
+
+    /* ---------- 7. Cập nhật thông tin người dùng theo ID (cho admin) ---------- */
+    [HttpPut("{id}")]
+    [ConfigAuthorize]
+    public async Task<IActionResult> UpdateUserById(
+        string id,
+        [FromBody] UserProfileUpdateDto dto,
+        CancellationToken ct)
+    {
+        try
+        {
+            var user = await _ctx.NguoiDungs
+                .Include(n => n.BacSi)
+                .Include(n => n.QuanLy)
+                .FirstOrDefaultAsync(n => n.MaNguoiDung == id && n.IsDelete != true, ct);
+
+            if (user == null)
+            {
+                return ApiResponse.Error("Không tìm thấy người dùng", 404);
+            }
+
+            // Cập nhật thông tin cơ bản
+            if (!string.IsNullOrEmpty(dto.Ten))
+                user.Ten = dto.Ten;
+            
+            if (!string.IsNullOrEmpty(dto.SoDienThoai))
+                user.SoDienThoai = dto.SoDienThoai;
+            
+            if (dto.NgaySinh.HasValue)
+                user.NgaySinh = dto.NgaySinh;
+            
+            if (!string.IsNullOrEmpty(dto.DiaChi))
+                user.DiaChi = dto.DiaChi;
+
+            if (dto.IsActive.HasValue)
+                user.IsActive = dto.IsActive.Value;
+
+            // Cập nhật ảnh đại diện nếu có
+            if (!string.IsNullOrEmpty(dto.MaAnh))
+                user.MaAnh = dto.MaAnh;
+
+            user.NgayCapNhat = DateTime.UtcNow;
+
+            // Cập nhật thông tin theo vai trò
+            switch (user.MaVaiTro)
+            {
+                case "VT002": // DOCTOR
+                    if (user.BacSi != null && dto.BacSiInfo != null)
+                    {
+                        user.BacSi.ChuyenMon = dto.BacSiInfo.ChuyenMon ?? user.BacSi.ChuyenMon;
+                        user.BacSi.SoGiayPhep = dto.BacSiInfo.SoGiayPhep ?? user.BacSi.SoGiayPhep;
+                        user.BacSi.MaDiaDiem = dto.BacSiInfo.MaDiaDiem ?? user.BacSi.MaDiaDiem;
+                        user.BacSi.NgayCapNhat = DateTime.UtcNow;
+                    }
+                    break;
+                    
+                case "VT003": // MANAGER
+                    // Manager có thể có thông tin bác sĩ (nếu trước đó là bác sĩ)
+                    if (user.BacSi != null && dto.BacSiInfo != null)
+                    {
+                        user.BacSi.ChuyenMon = dto.BacSiInfo.ChuyenMon ?? user.BacSi.ChuyenMon;
+                        user.BacSi.SoGiayPhep = dto.BacSiInfo.SoGiayPhep ?? user.BacSi.SoGiayPhep;
+                        user.BacSi.MaDiaDiem = dto.BacSiInfo.MaDiaDiem ?? user.BacSi.MaDiaDiem;
+                        user.BacSi.NgayCapNhat = DateTime.UtcNow;
+                    }
+                    // Manager không có thông tin riêng trong bảng QuanLy, chỉ là vai trò
+                    break;
+                    
+                case "VT001": // USER
+                default:
+                    // User thường chỉ cập nhật thông tin cơ bản
+                    break;
+            }
+
+            await _ctx.SaveChangesAsync(ct);
+
+            return ApiResponse.Success("Cập nhật thông tin người dùng thành công", null);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.Error($"Lỗi khi cập nhật thông tin người dùng: {ex.Message}", 500);
+        }
+    }
+
+    /* ---------- 8. Xóa người dùng theo ID (cho admin) ---------- */
+    [HttpDelete("{id}")]
+    [ConfigAuthorize]
+    public async Task<IActionResult> DeleteUserById(string id, CancellationToken ct)
+    {
+        try
+        {
+            var user = await _ctx.NguoiDungs
+                .FirstOrDefaultAsync(n => n.MaNguoiDung == id && n.IsDelete != true, ct);
+
+            if (user == null)
+            {
+                return ApiResponse.Error("Không tìm thấy người dùng", 404);
+            }
+
+            // Soft delete
+            user.IsDelete = true;
+            user.NgayCapNhat = DateTime.UtcNow;
+
+            await _ctx.SaveChangesAsync(ct);
+
+            return ApiResponse.Success("Xóa người dùng thành công", null);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.Error($"Lỗi khi xóa người dùng: {ex.Message}", 500);
+        }
+    }
 }
 
 // DTO cho đổi mật khẩu
 public record ChangePasswordDto(
     string OldPassword,
     string NewPassword
+);
+
+public record CreateDoctorDto(
+    string Ten,
+    string Email,
+    string SoDienThoai,
+    string MatKhau,
+    string MaVaiTro,
+    string MaDiaDiem,
+    string ChuyenMon,
+    string SoGiayPhep,
+    DateOnly NgaySinh,
+    string GioiTinh,
+    string DiaChi
+);
+public record CreateManagerDto(
+    string Ten,
+    string Email,
+    string SoDienThoai,
+    string MatKhau,
+    string MaVaiTro,
+    DateOnly NgaySinh,
+    string GioiTinh,
+    string DiaChi
 );

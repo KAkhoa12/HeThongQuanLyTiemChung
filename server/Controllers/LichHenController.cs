@@ -30,6 +30,7 @@ public class LichHenController : ControllerBase
         [FromQuery] string? status = null,
         [FromQuery] DateTime? fromDate = null,
         [FromQuery] DateTime? toDate = null,
+        [FromQuery] string? userId = null,
         CancellationToken ct = default)
     {
         try
@@ -67,6 +68,12 @@ public class LichHenController : ControllerBase
             if (toDate.HasValue)
             {
                 query = query.Where(lh => lh.NgayHen <= toDate.Value);
+            }
+
+            // Filter by user ID
+            if (!string.IsNullOrEmpty(userId))
+            {
+                query = query.Where(lh => lh.MaDonHangNavigation.MaNguoiDung == userId);
             }
 
             query = query.OrderBy(lh => lh.NgayHen);
@@ -276,6 +283,41 @@ public class LichHenController : ControllerBase
         }
     }
 
+    /* ---------- 6. Cập nhật trạng thái lịch hẹn theo đơn hàng ---------- */
+    [HttpPut("update-status-by-order")]
+    public async Task<IActionResult> UpdateStatusByOrder([FromBody] UpdateLichHenStatusByOrderDto dto, CancellationToken ct = default)
+    {
+        try
+        {
+            // Lấy tất cả lịch hẹn của đơn hàng có trạng thái NOTIFICATION
+            var lichHens = await _context.LichHens
+                .Where(lh => lh.MaDonHang == dto.OrderId && lh.TrangThai == "NOTIFICATION")
+                .ToListAsync(ct);
+
+            if (!lichHens.Any())
+            {
+                return ApiResponse.Error("Không tìm thấy lịch hẹn NOTIFICATION cho đơn hàng này");
+            }
+
+            // Cập nhật trạng thái cho tất cả lịch hẹn
+            foreach (var lichHen in lichHens)
+            {
+                lichHen.TrangThai = dto.Status;
+                lichHen.NgayCapNhat = DateTime.UtcNow;
+            }
+
+            _context.LichHens.UpdateRange(lichHens);
+            await _context.SaveChangesAsync(ct);
+
+            return ApiResponse.Success($"Cập nhật trạng thái {lichHens.Count} lịch hẹn thành công - Trạng thái: {dto.Status}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi cập nhật trạng thái lịch hẹn theo đơn hàng");
+            return ApiResponse.Error("Lỗi server khi cập nhật trạng thái lịch hẹn");
+        }
+    }
+
     /* ---------- 7. Xóa lịch hẹn ---------- */
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id, CancellationToken ct = default)
@@ -316,5 +358,12 @@ public class CreateLichHenDto
     public string OrderId { get; set; } = null!;
     public string LocationId { get; set; } = null!;
     public DateTime AppointmentDate { get; set; }
+    public string? Note { get; set; }
+}
+
+public class UpdateLichHenStatusByOrderDto
+{
+    public string OrderId { get; set; } = null!;
+    public string Status { get; set; } = null!; // NOTIFICATION, COMPLETED, MISSED, CANCELLED
     public string? Note { get; set; }
 }

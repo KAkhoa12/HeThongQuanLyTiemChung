@@ -17,6 +17,7 @@ export interface PhieuDangKyLichTiem {
   soDienThoaiKhachHang?: string;
   emailKhachHang?: string;
   tenDichVu?: string;
+  tenDiaDiem?: string;
   maDonHangDisplay?: string;
 }
 
@@ -39,6 +40,8 @@ export type DateOnly = string;
 
 export interface UpdatePhieuDangKyLichTiemDto {
   ghiChu?: string;
+  maDiaDiem?: string;
+  ngayDangKy?: string;
 }
 
 export interface ApproveAppointmentDto {

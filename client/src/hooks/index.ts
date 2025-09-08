@@ -246,3 +246,12 @@ export {
   useUpdateImageNhaCungCap,
   useDeleteImageNhaCungCap
 } from './useNhaCungCap';
+
+// Statistics hooks
+export {
+  useRevenueByLocation,
+  useInventoryByLocation,
+  useVaccineDetailsByLocation,
+  useOverviewStatistics,
+  useMonthlyRevenue
+} from './useStatistics';

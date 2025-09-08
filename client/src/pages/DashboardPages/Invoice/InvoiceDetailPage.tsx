@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaPrint, FaDownload, FaEdit, FaCheck, FaTimes } from 'react-icons/fa';
-import { useInvoice } from '../../hooks';
+import { useInvoice } from '../../../hooks/useInvoice';
 
 
 

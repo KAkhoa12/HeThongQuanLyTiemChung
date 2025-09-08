@@ -7,6 +7,7 @@ public partial class PhieuDangKyLichTiemVM
     public string MaPhieuDangKy { get; set; } = null!;
     public string MaKhachHang { get; set; } = null!;
     public string MaDichVu { get; set; } = null!;
+    public string? MaDiaDiem { get; set; }
     public string? NgayDangKy { get; set; }
     public string TrangThai { get; set; } = null!;
     public string? LyDoTuChoi { get; set; }
@@ -21,5 +22,6 @@ public partial class PhieuDangKyLichTiemVM
     public string? SoDienThoaiKhachHang { get; set; }
     public string? EmailKhachHang { get; set; }
     public string? TenDichVu { get; set; }
-    public string? MaDonHangDisplay { get; set; }
+    public string? TenDiaDiem { get; set; }
+    public string? MaDonHangDisplay{ get; set; }
 } 

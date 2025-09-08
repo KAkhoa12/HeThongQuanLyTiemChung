@@ -33,9 +33,9 @@ public class CreatePhieuDangKyLichTiemDto
 
 public class UpdatePhieuDangKyLichTiemDto
 {
-
-
     public string? GhiChu { get; set; }
+    public string? MaDiaDiem { get; set; }
+    public string? NgayDangKy { get; set; }
 }
 
 public class DuyetPhieuDto

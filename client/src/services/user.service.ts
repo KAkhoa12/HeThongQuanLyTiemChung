@@ -1,102 +1,78 @@
 import apiService from './api.service';
-import type {
-  UserCompleteProfileDto,
-  UserProfileUpdateDto,
-  HealthInfoUpdateDto,
-  ChangePasswordDto,
-  UserDto
-} from '../types/user.types';
+import { UserCompleteProfileDto, UserProfileUpdateDto, HealthInfoUpdateDto } from '../types/user.types';
 
-// Interface cho response pagination
-export interface UserListResponse {
-  totalCount: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  data: UserDto[];
-}
-
-// Interface cho params
-export interface UserListParams {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  roleId?: string;
-}
-
-// Interface cho upload ảnh
-export interface UploadImageResponse {
-  maAnh: string;
-  urlAnh: string;
-  altText?: string;
-  maNhan?: string;
-  tenNhan?: string;
-  ngayTao: string;
-}
-
-interface UserService {
-  getMyProfile(): Promise<UserCompleteProfileDto>;
-  updateProfile(data: UserProfileUpdateDto): Promise<void>;
-  updateHealthInfo(data: HealthInfoUpdateDto): Promise<void>;
-  changePassword(data: ChangePasswordDto): Promise<void>;
-  getUserById(id: string): Promise<UserCompleteProfileDto>;
-  getUsers(params?: UserListParams): Promise<UserListResponse>;
-  uploadAvatar(file: File): Promise<UploadImageResponse>;
-}
-
-class UserServiceImpl implements UserService {
+/**
+ * Get all users with pagination (for admin)
+ */
+export const getAllUsers = async (page: number = 1, pageSize: number = 10, search?: string, roleId?: string) => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    pageSize: pageSize.toString()
+  });
   
-  /* ---------- 1. Lấy thông tin profile của người dùng đã đăng nhập ---------- */
-  async getMyProfile(): Promise<UserCompleteProfileDto> {
-    return await apiService.get<UserCompleteProfileDto>('/api/users/profile');
-  }
+  if (search) params.append('search', search);
+  if (roleId) params.append('roleId', roleId);
+  
+  return await apiService.get(`/api/users?${params.toString()}`);
+};
 
-  /* ---------- 2. Cập nhật thông tin cá nhân ---------- */
-  async updateProfile(data: UserProfileUpdateDto): Promise<void> {
-    return await apiService.update<void>('/api/users/profile', data);
-  }
+/**
+ * Get user by ID
+ */
+export const getUserById = async (id: string) => {
+  return await apiService.get(`/api/users/${id}`);
+};
 
-  /* ---------- 3. Cập nhật thông tin sức khỏe ---------- */
-  async updateHealthInfo(data: HealthInfoUpdateDto): Promise<void> {
-    return await apiService.update<void>('/api/users/health-info', data);
-  }
+/**
+ * Create new user
+ */
+export const createUserDoctor = async (userData: any) => {
+  return await apiService.create('/api/users/doctor', userData);
+};
+export const createUserManager = async (userData: any) => {
+  return await apiService.create('/api/users/manager', userData);
+};
 
-  /* ---------- 4. Đổi mật khẩu ---------- */
-  async changePassword(data: ChangePasswordDto): Promise<void> {
-    return await apiService.update<void>('/api/users/change-password', data);
-  }
+/**
+ * Update user
+ */
+export const updateUser = async (id: string, userData: any) => {
+  return await apiService.update(`/api/users/${id}`, userData);
+};
 
-  /* ---------- 5. Lấy thông tin người dùng theo ID (cho admin) ---------- */
-  async getUserById(id: string): Promise<UserCompleteProfileDto> {
-    return await apiService.get<UserCompleteProfileDto>(`/api/users/${id}`);
-  }
+/**
+ * Delete user
+ */
+export const deleteUser = async (id: string) => {
+  return await apiService.delete(`/api/users/${id}`);
+};
 
-  /* ---------- 6. Lấy danh sách tất cả người dùng (cho admin) ---------- */
-  async getUsers(params?: UserListParams): Promise<UserListResponse> {
-    return await apiService.get<UserListResponse>('/api/users', params);
-  }
+/**
+ * Get my profile
+ */
+export const getMyProfile = async (): Promise<UserCompleteProfileDto> => {
+  return await apiService.get('/api/users/profile');
+};
 
-  /* ---------- 7. Upload ảnh đại diện ---------- */
-  async uploadAvatar(file: File): Promise<UploadImageResponse> {
-    const formData = new FormData();
-    formData.append('files', file);
-    formData.append('maNhan', 'AVATAR');
-    formData.append('altText', 'Avatar người dùng');
+/**
+ * Update profile
+ */
+export const updateProfile = async (data: UserProfileUpdateDto): Promise<void> => {
+  return await apiService.update('/api/users/profile', data);
+};
 
-    const response = await apiService.create<UploadImageResponse[]>('/api/images/upload', formData);
-    return response[0]; // Trả về ảnh đầu tiên
-  }
-}
+/**
+ * Update health info
+ */
+export const updateHealthInfo = async (data: HealthInfoUpdateDto): Promise<void> => {
+  return await apiService.update('/api/users/health-info', data);
+};
 
-// Export instance
-const userService = new UserServiceImpl();
-export default userService;
-
-// Export functions
-export const getMyProfile = () => userService.getMyProfile();
-export const updateProfile = (data: UserProfileUpdateDto) => userService.updateProfile(data);
-export const updateHealthInfo = (data: HealthInfoUpdateDto) => userService.updateHealthInfo(data);
-export const changePassword = (data: ChangePasswordDto) => userService.changePassword(data);
-export const getUserById = (id: string) => userService.getUserById(id);
-export const getUsers = (params?: UserListParams) => userService.getUsers(params);
-export const uploadAvatar = (file: File) => userService.uploadAvatar(file); 
+/**
+ * Upload avatar
+ */
+export const uploadAvatar = async (file: File): Promise<{ maAnh: string }> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return await apiService.create('/api/users/upload-avatar', formData);
+};

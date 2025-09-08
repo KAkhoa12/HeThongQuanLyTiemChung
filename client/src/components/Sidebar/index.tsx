@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import SidebarLinkGroup from './SidebarLinkGroup';
 import Logo from '../../images/icon/logo.png';
 import { usePermissions } from '../../hooks/usePermissions';
+import { useAuthInit } from '../../hooks/useAuthInit';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -11,6 +12,13 @@ interface SidebarProps {
 
 // Menu configuration with permissions
 const menuItems = [
+  {
+    id: 'thong-ke-bao-cao',
+    title: 'Thống kê báo cáo',
+    path: '/dashboard/thong-ke-bao-cao',
+    icon: 'ri-bar-chart-line',
+    roles: ['MANAGER'],
+  },
   {
     id: 'staff',
     title: 'Nhân viên',
@@ -42,31 +50,24 @@ const menuItems = [
     path: '/dashboard/vaccination',
     icon: 'ri-syringe-line',
     permissions: ['PhieuDangKyLichTiem'],
+    roles: ['DOCTOR','MANAGER'],
     subItems: [
       {
         title: 'Phiếu đăng ký tiêm chủng',
         path: '/dashboard/vaccination/registration',
         permissions: ['PhieuDangKyLichTiem'],
+        roles: ['DOCTOR','MANAGER'],
       },
       {
-        title: 'Duyệt phiếu đăng ký',
-        path: '/dashboard/vaccination/approval',
-        permissions: ['PhieuDangKyLichTiem'],
-      },
+        title: 'Lịch hẹn tiêm',
+        path: '/dashboard/vaccination/appointments',
+        permissions: ['LichHen'],
+        roles: ['DOCTOR','MANAGER'],
+      },  
       {
-        title: 'Quản lý tiêm chủng (Bác sĩ)',
-        path: '/dashboard/vaccination/doctor-management',
-        permissions: ['PhieuTiem'],
-      },
-      {
-        title: 'Đợt tiêm sắp tới',
-        path: '/dashboard/vaccination/upcoming',
-        permissions: ["PhieuTiem"],
-      },
-      {
-        title: 'Lịch sử tiêm',
-        path: '/dashboard/vaccination/history',
-        permissions: [],
+        title: 'Lịch tiêm chủng',
+        path: '/dashboard/vaccination/schedule',
+        roles: ['DOCTOR','MANAGER'],
       },
     ],
   },
@@ -111,10 +112,11 @@ const menuItems = [
   },
   {
     id: 'appointments',
-    title: 'Quản lý Lịch hẹn',
+    title: 'Lịch hẹn của tôi',
     path: '/dashboard/appointments',
     icon: 'ri-calendar-check-line',
     permissions: ['LichHen'],
+    roles: ['USER'],
   },
   {
     id: 'images',
@@ -153,17 +155,17 @@ const menuItems = [
     title: 'Kho',
     path: '/dashboard/inventory',
     icon: 'ri-store-2-line',
-    permissions: ['TonKhoLo'],
+    permissions: ['LoVaccine'],
     subItems: [
       {
         title: 'Các lô tồn kho',
         path: '/dashboard/inventory/ton-kho',
-        permissions: ['TonKhoLo'],
+        permissions: ['LoVaccine'],
       },
       {
         title: 'Phiếu nhập',
         path: '/dashboard/inventory/phieu-nhap',
-        permissions: ['PhieuNhap'],
+        permissions: ['PhieuNhap',"TonKhoLo"],
       },
       {
         title: 'Phiếu xuất',
@@ -202,8 +204,16 @@ const personalMenuItems = [
   {
     id: 'vaccination-schedule',
     title: 'Lịch tiêm chủng của tôi',
-    path: '/vaccination-schedule',
+    path: '/dashboard/vaccination-schedule',
     icon: 'ri-calendar-schedule-line',
+    permissions: [],
+    roles: ['USER'],
+  },
+  {
+    id: 'vaccination-registration',
+    title: 'Đăng ký lịch tiêm chủng',
+    path: '/dashboard/vaccination-registration',
+    icon: 'ri-calendar-check-line',
     permissions: [],
     roles: ['USER'],
   },
@@ -239,6 +249,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const location = useLocation();
   const { pathname } = location;
   const { hasAnyPermission, isLoading } = usePermissions();
+  const { user } = useAuthInit();
 
   const trigger = useRef<any>(null);
   const sidebar = useRef<any>(null);
@@ -248,18 +259,36 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   // Helper function to check if menu item should be visible
   const isMenuItemVisible = (item: any) => {
-    if (item.permissions.length === 0) return true;
-    return hasAnyPermission(item.permissions);
+    // Check permissions first
+    if (item.permissions && item.permissions.length > 0) {
+      if (!hasAnyPermission(item.permissions)) return false;
+    }
+    
+    // Check roles if specified
+    if (item.roles && item.roles.length > 0) {
+      if (!user || !item.roles.includes(user.role)) return false;
+    }
+    
+    return true;
   };
 
   // Helper function to check if sub item should be visible
   const isSubItemVisible = (subItem: any) => {
-    if (!subItem.permissions || subItem.permissions.length === 0) return true;
-    return hasAnyPermission(subItem.permissions);
+    // Check permissions first
+    if (subItem.permissions && subItem.permissions.length > 0) {
+      if (!hasAnyPermission(subItem.permissions)) return false;
+    }
+    
+    // Check roles if specified
+    if (subItem.roles && subItem.roles.length > 0) {
+      if (!user || !subItem.roles.includes(user.role)) return false;
+    }
+    
+    return true;
   };
 
   // Sử dụng state local thay vì localStorage để kiểm soát tốt hơn
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  // const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   // close on click outside
   useEffect(() => {
@@ -289,7 +318,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
   // Cập nhật sidebarExpanded khi isExpanded thay đổi
   useEffect(() => {
-    setSidebarExpanded(isExpanded);
+    // setSidebarExpanded(isExpanded);
     if (isExpanded) {
       document.querySelector('body')?.classList.add('sidebar-expanded');
     } else {

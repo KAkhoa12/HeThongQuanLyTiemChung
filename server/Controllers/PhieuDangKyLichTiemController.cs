@@ -6,6 +6,7 @@ using server.ModelViews;
 using server.Helpers;
 using server.DTOs.Pagination;
 using server.DTOs.PhieuDangKyLichTiem;
+using server.Types;
 
 namespace server.Controllers;
 
@@ -52,7 +53,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
                             SoDienThoaiKhachHang = kh.SoDienThoai,
                             EmailKhachHang = kh.Email,
                             TenDichVu = dv.Ten,
-                            MaDonHangDisplay = p.MaDichVu
+                            MaDonHangDisplay = p.MaDonHang
                         };
 
             var paged = await query.ToPagedAsync(page!.Value, pageSize!.Value, ct);
@@ -102,7 +103,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
                                         SoDienThoaiKhachHang = kh.SoDienThoai,
                                         EmailKhachHang = kh.Email,
                                         TenDichVu = dv.Ten,
-                                        MaDonHangDisplay = p.MaDichVu
+                                        MaDonHangDisplay = p.MaDonHang
                                     }).FirstOrDefaultAsync(ct);
 
             if (phieuDangKy == null)
@@ -181,39 +182,8 @@ public class PhieuDangKyLichTiemController : ControllerBase
 
                 _context.PhieuDangKyLichTiems.Add(phieuDangKy);
 
-                // Tạo kế hoạch tiêm cho từng vaccine trong dịch vụ
-                var dichVu = chiTiet.MaDichVuNavigation;
-                if (dichVu?.DichVuVaccines?.Any() == true)
-                {
-                    foreach (var dichVuVaccine in dichVu.DichVuVaccines.OrderBy(dvv => dvv.ThuTu))
-                    {
-                        // Lấy lịch tiêm chuẩn của vaccine
-                        var lichTiemChuans = await _context.LichTiemChuans
-                            .Where(ltc => ltc.MaVaccine == dichVuVaccine.MaVaccine && ltc.IsActive == true)
-                            .OrderBy(ltc => ltc.MuiThu)
-                            .ToListAsync(ct);
-
-                        foreach (var lichTiemChuan in lichTiemChuans)
-                        {
-                            // Tính ngày dự kiến cho mũi tiêm
-                            var ngayDuKien = CalculateExpectedDate(lichTiemChuan, customerAgeInMonths);
-
-                            var keHoachTiem = new KeHoachTiem
-                            {
-                                MaKeHoachTiem = Guid.NewGuid().ToString("N"),
-                                MaNguoiDung = customerId,
-                                MaDichVu = chiTiet.MaDichVu,
-                                MaDonHang = createDto.OrderId,
-                                MaVaccine = dichVuVaccine.MaVaccine,
-                                MuiThu = lichTiemChuan.MuiThu,
-                                NgayDuKien = ngayDuKien,
-                                TrangThai = "PENDING"
-                            };
-
-                            _context.KeHoachTiems.Add(keHoachTiem);
-                        }
-                    }
-                }
+                // KHÔNG tạo kế hoạch tiêm ngay lúc này
+                // Kế hoạch tiêm sẽ được tạo khi phiếu đăng ký được duyệt
 
                 createdAppointments.Add(phieuDangKy.MaPhieuDangKy);
             }
@@ -250,7 +220,245 @@ public class PhieuDangKyLichTiemController : ControllerBase
         return DateOnly.FromDateTime(baseDate);
     }
 
-    private async Task CreateAppointmentSchedule(KeHoachTiem keHoachTiem, PhieuDangKyLichTiem phieuDangKy, CancellationToken ct)
+    private async Task CreateNotificationAppointment(PhieuDangKyLichTiem phieuDangKy, CancellationToken ct)
+    {
+        try
+        {
+            _logger.LogInformation("Bắt đầu tạo lịch hẹn thông báo cho phiếu {MaPhieuDangKy}", phieuDangKy.MaPhieuDangKy);
+            
+            // Tạo lịch hẹn thông báo với ngày hẹn là ngày đăng ký
+            var lichHen = new LichHen
+            {
+                MaLichHen = Guid.NewGuid().ToString("N"),
+                MaDonHang = phieuDangKy.MaDonHang,
+                MaDiaDiem = phieuDangKy.MaDiaDiem,
+                NgayHen = phieuDangKy.NgayDangKy, // Sử dụng ngày đăng ký làm ngày hẹn
+                TrangThai = LichHenTypes.NOTIFICATION, // Trạng thái NOTIFICATION
+                GhiChu = $"Thông báo duyệt phiếu đăng ký lịch tiêm - {phieuDangKy.MaPhieuDangKy}",
+                IsActive = true,
+                IsDelete = false,
+                NgayTao = DateTime.UtcNow,
+                NgayCapNhat = DateTime.UtcNow
+            };
+
+            _context.LichHens.Add(lichHen);
+            
+            _logger.LogInformation("Đã thêm lịch hẹn thông báo vào context: MaLichHen={MaLichHen}, MaDonHang={MaDonHang}, NgayHen={NgayHen}, TrangThai={TrangThai}", 
+                lichHen.MaLichHen, lichHen.MaDonHang, lichHen.NgayHen, lichHen.TrangThai);
+            
+            // Log thêm thông tin về context state
+            var entry = _context.Entry(lichHen);
+            _logger.LogInformation("Entity state của lịch hẹn: {State}", entry.State);
+            
+            await Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi tạo lịch hẹn thông báo cho phiếu đăng ký {MaPhieuDangKy}", phieuDangKy.MaPhieuDangKy);
+            throw;
+        }
+    }
+
+    private async Task CreateDetailedVaccinationPlan(PhieuDangKyLichTiem phieuDangKy, CancellationToken ct)
+    {
+        try
+        {
+            // B1: Lấy thông tin dịch vụ và điều kiện dịch vụ
+            var dichVu = await _context.DichVus
+                .Include(dv => dv.DichVuVaccines)
+                .ThenInclude(dvv => dvv.MaVaccineNavigation)
+                .Include(dv => dv.DieuKienDichVus)
+                .FirstOrDefaultAsync(dv => dv.MaDichVu == phieuDangKy.MaDichVu, ct);
+
+            if (dichVu?.DichVuVaccines?.Any() != true)
+            {
+                _logger.LogWarning("Không tìm thấy vaccine trong dịch vụ {MaDichVu}", phieuDangKy.MaDichVu);
+                return;
+            }
+
+            // Lấy điều kiện dịch vụ (tuổi tối thiểu và tối đa)
+            var dieuKienDichVu = dichVu.DieuKienDichVus?.FirstOrDefault();
+            if (dieuKienDichVu == null)
+            {
+                _logger.LogWarning("Không tìm thấy điều kiện dịch vụ cho {MaDichVu}", phieuDangKy.MaDichVu);
+                return;
+            }
+
+            var minAgeForService = dieuKienDichVu.TuoiThangToiThieu ?? 0;
+            var maxAgeForService = dieuKienDichVu.TuoiThangToiDa ?? 24;
+
+            // Lấy tuổi hiện tại của người dùng
+            var customer = await _context.NguoiDungs.FindAsync(phieuDangKy.MaKhachHang);
+            var customerAgeInMonths = 0;
+            if (customer?.NgaySinh != null)
+            {
+                var birthDate = customer.NgaySinh.Value.ToDateTime(TimeOnly.MinValue);
+                var ageInDays = (DateTime.UtcNow - birthDate).TotalDays;
+                customerAgeInMonths = (int)(ageInDays / 30.44);
+            }
+
+            _logger.LogInformation("Dịch vụ {maDichVu} có điều kiện: tuổi từ {minAge} đến {maxAge} tháng", 
+                phieuDangKy.MaDichVu, minAgeForService, maxAgeForService);
+            _logger.LogInformation("Tuổi hiện tại của khách hàng: {customerAge} tháng", customerAgeInMonths);
+
+            // B2: Lấy TẤT CẢ lịch tiêm chuẩn của các vaccine trong dịch vụ
+            var vaccineIds = dichVu.DichVuVaccines.Select(dvv => dvv.MaVaccine).ToList();
+            
+            var allLichTiemChuans = await _context.LichTiemChuans
+                .Where(ltc => vaccineIds.Contains(ltc.MaVaccine) 
+                           && ltc.IsActive == true)
+                .OrderBy(ltc => ltc.TuoiThangToiThieu)
+                .ThenBy(ltc => ltc.MuiThu)
+                .ToListAsync(ct);
+
+            _logger.LogInformation("Tìm thấy {scheduleCount} lịch tiêm chuẩn phù hợp với điều kiện dịch vụ", allLichTiemChuans.Count);
+
+            // B3: Gom nhóm tuổi từ thấp đến cao
+            var ageGroups = allLichTiemChuans
+                .GroupBy(ltc => new { ltc.TuoiThangToiThieu, ltc.TuoiThangToiDa })
+                .OrderBy(g => g.Key.TuoiThangToiThieu)
+                .ToList();
+
+            _logger.LogInformation("Tìm thấy {ageGroupCount} nhóm tuổi: {ageGroups}", 
+                ageGroups.Count, 
+                string.Join(", ", ageGroups.Select(g => $"{g.Key.TuoiThangToiThieu}-{g.Key.TuoiThangToiDa}")));
+
+            var currentDate = DateTime.UtcNow;
+
+            // B4: Xử lý từng nhóm tuổi riêng biệt
+            var muiCounter = 1; // Bộ đếm mũi tiêm toàn cục
+            
+            foreach (var ageGroup in ageGroups)
+            {
+                var groupLichTiemChuans = ageGroup.ToList();
+                var ageRange = $"{ageGroup.Key.TuoiThangToiThieu}-{ageGroup.Key.TuoiThangToiDa}";
+                
+                // Xử lý logic lọc nhóm tuổi
+                bool shouldProcessAgeGroup = false;
+                
+                if (customerAgeInMonths == 0)
+                {
+                    // Nếu không tính được tuổi, xử lý tất cả nhóm tuổi
+                    shouldProcessAgeGroup = true;
+                    _logger.LogInformation("Không tính được tuổi người dùng, xử lý tất cả nhóm tuổi");
+                }
+                else
+                {
+                    // Lấy TẤT CẢ nhóm tuổi từ tuổi hiện tại của người dùng trở lên
+                    // Ví dụ: người dùng 1 tháng → lấy nhóm 0-5, 5-9, 9-12, 12-24
+                    // Ví dụ: người dùng 6 tháng → lấy nhóm 5-9, 9-12, 12-24
+                    var minAge = ageGroup.Key.TuoiThangToiThieu ?? 0;
+                    var maxAge = ageGroup.Key.TuoiThangToiDa ?? int.MaxValue;
+                    
+                    // Lấy nhóm tuổi nếu:
+                    // 1. Người dùng nằm trong khoảng tuổi của nhóm, HOẶC
+                    // 2. Tuổi tối thiểu của nhóm >= tuổi hiện tại của người dùng
+                    shouldProcessAgeGroup = (customerAgeInMonths >= minAge && customerAgeInMonths <= maxAge) || 
+                                          (minAge >= customerAgeInMonths);
+                    
+                    if (!shouldProcessAgeGroup)
+                    {
+                        _logger.LogInformation("Bỏ qua nhóm tuổi {ageRange} vì người dùng chưa đủ tuổi (hiện tại {customerAge} tháng, nhóm yêu cầu tối thiểu {minAge} tháng)", 
+                            ageRange, customerAgeInMonths, minAge);
+                        continue;
+                    }
+                }
+                
+                if (!shouldProcessAgeGroup) continue;
+                
+                _logger.LogInformation("Xử lý nhóm tuổi {ageRange} với {scheduleCount} lịch tiêm chuẩn", 
+                    ageRange, groupLichTiemChuans.Count);
+
+                // Debug: Log chi tiết các lịch tiêm chuẩn trong nhóm tuổi
+                foreach (var ltc in groupLichTiemChuans)
+                {
+                    _logger.LogInformation("Lịch tiêm chuẩn: Vaccine {maVaccine}, Mũi {muiThu}, Tuổi {tuoiThangToiThieu}-{tuoiThangToiDa}", 
+                        ltc.MaVaccine, ltc.MuiThu, ltc.TuoiThangToiThieu, ltc.TuoiThangToiDa);
+                }
+
+                // Lấy số mũi tối đa trong nhóm tuổi này
+                var maxMuiInAgeGroup = groupLichTiemChuans.Max(ltc => ltc.MuiThu);
+                
+                _logger.LogInformation("Nhóm tuổi {ageRange} có tối đa {maxMui} mũi tiêm", 
+                    ageRange, maxMuiInAgeGroup);
+
+                // Tạo kế hoạch tiêm theo từng mũi trong nhóm tuổi này
+                for (int mui = 1; mui <= maxMuiInAgeGroup; mui++)
+                {
+                    // Tìm tất cả vaccine cần tiêm ở mũi này
+                    var vaccinesForThisMui = groupLichTiemChuans
+                        .Where(ltc => ltc.MuiThu >= mui) // Vaccine có số mũi >= mũi hiện tại
+                        .GroupBy(ltc => ltc.MaVaccine) // Nhóm theo vaccine để tránh trùng lặp
+                        .Select(g => g.First()) // Lấy 1 record đại diện cho mỗi vaccine
+                        .ToList();
+
+                    if (vaccinesForThisMui.Any())
+                    {
+                        _logger.LogInformation("Mũi {mui} (toàn cục {muiCounter}): Tiêm {vaccineCount} vaccine trong nhóm tuổi {ageRange}", 
+                            mui, muiCounter, vaccinesForThisMui.Count, ageRange);
+
+                        // Tạo kế hoạch tiêm cho TẤT CẢ vaccine trong mũi này
+                        foreach (var lichTiemChuan in vaccinesForThisMui)
+                        {
+                            var keHoachTiem = new KeHoachTiem
+                            {
+                                MaKeHoachTiem = Guid.NewGuid().ToString("N"),
+                                MaNguoiDung = phieuDangKy.MaKhachHang,
+                                MaDichVu = phieuDangKy.MaDichVu,
+                                MaDonHang = phieuDangKy.MaDonHang,
+                                MaVaccine = lichTiemChuan.MaVaccine,
+                                MuiThu = muiCounter, // Sử dụng bộ đếm mũi tiêm toàn cục
+                                NgayDuKien = null, // Không cập nhật ngày dự kiến
+                                TrangThai = "PENDING"
+                            };
+
+                            _context.KeHoachTiems.Add(keHoachTiem);
+                            
+                            _logger.LogInformation("Tạo kế hoạch tiêm: Vaccine {maVaccine}, Mũi {muiCounter} (nhóm tuổi {ageRange}, mũi {mui})", 
+                                lichTiemChuan.MaVaccine, muiCounter, ageRange, mui);
+                        }
+                        
+                        muiCounter++; // Tăng bộ đếm mũi tiêm toàn cục
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync(ct);
+            _logger.LogInformation("Đã tạo kế hoạch tiêm chi tiết cho phiếu đăng ký {MaPhieuDangKy}", phieuDangKy.MaPhieuDangKy);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi tạo kế hoạch tiêm chi tiết cho phiếu đăng ký {MaPhieuDangKy}", phieuDangKy.MaPhieuDangKy);
+            throw;
+        }
+    }
+
+
+    private DateOnly CalculateExpectedDateForMui(LichTiemChuan lichTiemChuan, DateTime baseDate, int muiThu)
+    {
+        var expectedDate = baseDate;
+        
+        // Nếu là mũi đầu tiên, sử dụng ngày đăng ký
+        if (muiThu == 1)
+        {
+            return DateOnly.FromDateTime(expectedDate);
+        }
+        
+        // Nếu có thông tin về số ngày cách mũi tiêm trước
+        if (lichTiemChuan.SoNgaySauMuiTruoc.HasValue)
+        {
+            expectedDate = expectedDate.AddDays(lichTiemChuan.SoNgaySauMuiTruoc.Value);
+        }
+        else
+        {
+            // Nếu không có thông tin, sử dụng khoảng cách mặc định (30 ngày)
+            expectedDate = expectedDate.AddDays(30 * (muiThu - 1));
+        }
+        
+        return DateOnly.FromDateTime(expectedDate);
+    }
+
+    private async Task  CreateAppointmentSchedule(KeHoachTiem keHoachTiem, PhieuDangKyLichTiem phieuDangKy, CancellationToken ct)
     {
         // Tìm lịch làm việc phù hợp
         var availableSchedules = await _context.LichLamViecs
@@ -351,6 +559,17 @@ public class PhieuDangKyLichTiemController : ControllerBase
             if (!string.IsNullOrEmpty(updateDto.GhiChu))
                 phieuDangKy.GhiChu = updateDto.GhiChu;
 
+            if (!string.IsNullOrEmpty(updateDto.MaDiaDiem))
+                phieuDangKy.MaDiaDiem = updateDto.MaDiaDiem;
+
+            if (!string.IsNullOrEmpty(updateDto.NgayDangKy))
+            {
+                if (DateTime.TryParse(updateDto.NgayDangKy, out DateTime ngayDangKy))
+                {
+                    phieuDangKy.NgayDangKy = ngayDangKy;
+                }
+            }
+
             phieuDangKy.NgayCapNhat = DateTime.Now;
 
             _context.PhieuDangKyLichTiems.Update(phieuDangKy);
@@ -403,27 +622,47 @@ public class PhieuDangKyLichTiemController : ControllerBase
 
             phieuDangKy.NgayCapNhat = DateTime.UtcNow;
 
-            // Nếu trạng thái là "APPROVED", tạo lịch hẹn cho mũi đầu tiên
-            if (approveDto.Status == "Approved")
+            // Nếu trạng thái là "APPROVED", tạo lịch hẹn thông báo và kế hoạch tiêm chi tiết
+            _logger.LogInformation("Kiểm tra trạng thái duyệt: {Status}", approveDto.Status);
+            
+            if (string.Equals(approveDto.Status, "Approved", StringComparison.OrdinalIgnoreCase))
             {
-                // Lấy tất cả kế hoạch tiêm của đơn hàng này
-                var keHoachTiems = await _context.KeHoachTiems
-                    .Where(kht => kht.MaDonHang == phieuDangKy.MaDonHang 
-                                && kht.MaDichVu == phieuDangKy.MaDichVu
-                                && kht.TrangThai == "Pending")
-                    .OrderBy(kht => kht.MuiThu)
-                    .ToListAsync(ct);
-
-                // Tạo lịch hẹn cho mũi đầu tiên
-                var muiDauTien = keHoachTiems.FirstOrDefault(kht => kht.MuiThu == 1);
-                if (muiDauTien != null)
+                _logger.LogInformation("Bắt đầu tạo lịch hẹn thông báo và kế hoạch tiêm cho phiếu {MaPhieuDangKy}", phieuDangKy.MaPhieuDangKy);
+                
+                try
                 {
-                    await CreateAppointmentSchedule(muiDauTien, phieuDangKy, ct);
+                    // Tạo lịch hẹn thông báo trước
+                    await CreateNotificationAppointment(phieuDangKy, ct);
+                    _logger.LogInformation("Đã tạo lịch hẹn thông báo thành công");
+                    
+                    // Sau đó tạo kế hoạch tiêm chi tiết
+                    await CreateDetailedVaccinationPlan(phieuDangKy, ct);
+                    _logger.LogInformation("Đã tạo kế hoạch tiêm chi tiết thành công");
                 }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Lỗi khi tạo lịch hẹn hoặc kế hoạch tiêm cho phiếu {MaPhieuDangKy}", phieuDangKy.MaPhieuDangKy);
+                    throw; // Re-throw để rollback transaction
+                }
+            }
+            else
+            {
+                _logger.LogInformation("Trạng thái không phải Approved, bỏ qua việc tạo lịch hẹn và kế hoạch tiêm");
             }
 
             _context.PhieuDangKyLichTiems.Update(phieuDangKy);
-            await _context.SaveChangesAsync(ct);
+            
+            _logger.LogInformation("Bắt đầu lưu thay đổi vào database...");
+            var saveResult = await _context.SaveChangesAsync(ct);
+            _logger.LogInformation("Đã lưu {Count} thay đổi vào database", saveResult);
+            
+            // Kiểm tra xem lịch hẹn có được tạo không
+            if (string.Equals(approveDto.Status, "Approved", StringComparison.OrdinalIgnoreCase))
+            {
+                var lichHenCount = await _context.LichHens
+                    .CountAsync(lh => lh.MaDonHang == phieuDangKy.MaDonHang && lh.TrangThai == LichHenTypes.NOTIFICATION, ct);
+                _logger.LogInformation("Số lượng lịch hẹn NOTIFICATION cho đơn hàng {MaDonHang}: {Count}", phieuDangKy.MaDonHang, lichHenCount);
+            }
 
             // Lấy thông tin đầy đủ để trả về
             var result = await GetById(id, ct);
@@ -553,7 +792,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
                             SoDienThoaiKhachHang = kh.SoDienThoai,
                             EmailKhachHang = kh.Email,
                             TenDichVu = dv.Ten,
-                            MaDonHangDisplay = p.MaDichVu
+                            MaDonHangDisplay = p.MaDonHang
                         };
 
             var phieuDangKys = await query.ToListAsync(ct);
@@ -590,12 +829,15 @@ public class PhieuDangKyLichTiemController : ControllerBase
             var query = from p in _context.PhieuDangKyLichTiems
                         join kh in _context.NguoiDungs on p.MaKhachHang equals kh.MaNguoiDung
                         join dv in _context.DichVus on p.MaDichVu equals dv.MaDichVu
+                        join dd in _context.DiaDiems on p.MaDiaDiem equals dd.MaDiaDiem into ddGroup
+                        from dd in ddGroup.DefaultIfEmpty()
                         where p.MaKhachHang == maNguoiDung && p.IsDelete != true && p.IsActive == true
                         select new PhieuDangKyLichTiemVM
                         {
                             MaPhieuDangKy = p.MaPhieuDangKy,
                             MaKhachHang = p.MaKhachHang,
                             MaDichVu = p.MaDichVu,
+                            MaDiaDiem = p.MaDiaDiem,
                             NgayDangKy = p.NgayDangKy.ToString("yyyy-MM-dd HH:mm:ss"),
                             TrangThai = p.TrangThai,
                             LyDoTuChoi = p.LyDoTuChoi,
@@ -608,7 +850,8 @@ public class PhieuDangKyLichTiemController : ControllerBase
                             SoDienThoaiKhachHang = kh.SoDienThoai,
                             EmailKhachHang = kh.Email,
                             TenDichVu = dv.Ten,
-                            MaDonHangDisplay = p.MaDichVu
+                            TenDiaDiem = dd != null ? dd.Ten : null,
+                            MaDonHangDisplay = p.MaDonHang
                         };
 
             _logger.LogInformation("Thực hiện query với page: {page}, pageSize: {pageSize}", page, pageSize);
@@ -618,12 +861,7 @@ public class PhieuDangKyLichTiemController : ControllerBase
 
             return ApiResponse.Success(
                 "Lấy danh sách phiếu đăng ký lịch tiêm theo người dùng thành công",
-                new PagedResultDto<PhieuDangKyLichTiemVM>(
-                    paged.TotalCount,
-                    paged.Page,
-                    paged.PageSize,
-                    paged.TotalPages,
-                    paged.Data));
+                paged);
         }
         catch (Exception ex)
         {

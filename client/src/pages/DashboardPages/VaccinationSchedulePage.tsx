@@ -1,63 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { FaCalendarAlt } from 'react-icons/fa';
 import { useLichHens } from '../../hooks/useLichHen';
-import { useAuth } from '../../hooks';
 import { LichHenFilters } from '../../services/lichHen.service';
-import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
+import { useNavigate } from 'react-router-dom';
 
-const AppointmentApprovalPage: React.FC = () => {
-  const { user } = useAuth();
+const VaccinationSchedulePage: React.FC = () => {
+  const navigate = useNavigate();
   
-  // States
-  const [selectedType, setSelectedType] = useState<string>('');
   const [filters, setFilters] = useState<LichHenFilters>({
     page: 1,
     pageSize: 10,
+    trangThai: 'NOTIFICATION', // Chỉ lấy lịch hẹn có trạng thái NOTIFICATION
   });
 
-  // Hooks
   const { data: lichHenData, loading, error, execute } = useLichHens();
 
-  // Debug logging
+  // Gọi API khi component mount
   useEffect(() => {
-    console.log('AppointmentApprovalPage - filters changed:', filters);
-    console.log('AppointmentApprovalPage - selectedType:', selectedType);
-  }, [filters, selectedType]);
+    console.log('VaccinationSchedulePage - calling API with filters:', filters);
+    execute(filters);
+  }, [execute, filters]);
 
-  useEffect(() => {
-    console.log('AppointmentApprovalPage - lichHenData:', lichHenData);
-    console.log('AppointmentApprovalPage - loading:', loading);
-    console.log('AppointmentApprovalPage - error:', error);
-  }, [lichHenData, loading, error]);
-
-  // Cập nhật filters khi có thay đổi
-  useEffect(() => {
-    const newFilters: LichHenFilters = {
-      page: 1,
-      pageSize: 10,
-    };
-
-    if (selectedType) newFilters.trangThai = selectedType;
-    if (user?.maNguoiDung) newFilters.userId = user.maNguoiDung;
-
-    console.log('AppointmentApprovalPage - setting new filters:', newFilters);
-    setFilters(newFilters);
-  }, [selectedType, user?.maNguoiDung]);
-
-  // Gọi API khi filters thay đổi
-  useEffect(() => {
-    if (user?.maNguoiDung) {
-      console.log('AppointmentApprovalPage - calling API with filters:', filters);
-      execute(filters);
-    }
-  }, [execute, filters, user?.maNguoiDung]);
-
-  // Xử lý thay đổi trang
-  const handlePageChange = (newPage: number) => {
-    setFilters(prev => ({ ...prev, page: newPage }));
-  };
-
-  // Format date for display
+  // Format ngày
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('vi-VN', {
       year: 'numeric',
@@ -96,11 +59,39 @@ const AppointmentApprovalPage: React.FC = () => {
     }
   };
 
-  if (!user) {
+  // Xử lý thay đổi trang
+  const handlePageChange = (newPage: number) => {
+    setFilters(prev => ({ ...prev, page: newPage }));
+  };
+
+  // Xử lý nút Tiêm khám
+  const handleVaccination = (lichHen: any) => {
+    console.log('Navigate to vaccination form for:', lichHen);
+    navigate(`/dashboard/vaccination/form/${lichHen.maDonHang}`, {
+      state: { lichHen }
+    });
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg text-gray-600">Vui lòng đăng nhập để xem lịch hẹn</p>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className="flex">
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-red-800">
+              Lỗi khi tải dữ liệu
+            </h3>
+            <div className="mt-2 text-sm text-red-700">
+              {error}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -108,101 +99,54 @@ const AppointmentApprovalPage: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
-        <div className="mb-6">
-        <Breadcrumb pageName="Lịch hẹn của tôi" />
-        </div>
-      <div className="mb-6 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="border-b border-stroke py-4 px-6.5 dark:border-strokedark">
-          <h3 className="font-medium text-black dark:text-white">
-            Bộ lọc
-          </h3>
-        </div>
-        <div className="p-6.5">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {/* Loại lịch hẹn */}
-            <div>
-              <label className="mb-2.5 block text-black dark:text-white">
-                Loại lịch hẹn
-              </label>
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
-              >
-                <option value="">Tất cả loại</option>
-                <option value="NOTIFICATION">Thông báo</option>
-                <option value="COMPLETED">Hoàn thành</option>
-                <option value="MISSED">Bỏ lỡ</option>
-              </select>
-            </div>
-            </div>
-
-          {/* Nút reset */}
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={() => setSelectedType('')}
-              className="rounded bg-gray-500 py-2 px-4 font-medium text-white hover:bg-gray-600"
-            >
-              Reset
-            </button>
-          </div>
-        </div>
-            </div>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-title-md2 font-semibold text-black dark:text-white">
+          Lịch Tiêm Chủng
+        </h2>
+      </div>
 
       {/* Danh sách lịch hẹn */}
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="border-b border-stroke py-4 px-6.5 dark:border-strokedark">
           <h3 className="font-medium text-black dark:text-white">
-            Danh sách Lịch hẹn ({lichHenData?.totalCount || 0})
+            Danh sách Lịch hẹn Tiêm chủng ({lichHenData?.totalCount || 0})
           </h3>
         </div>
         <div className="p-6.5">
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
-          ) : error ? (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">
-                    Lỗi khi tải dữ liệu
-                  </h3>
-                  <div className="mt-2 text-sm text-red-700">
-                    {error}
-              </div>
-            </div>
-          </div>
-        </div>
-          ) : !lichHenData?.data || lichHenData.data.length === 0 ? (
+          {!lichHenData?.data || lichHenData.data.length === 0 ? (
             <div className="text-center py-8">
-              <FaCalendarAlt className="text-4xl mx-auto mb-3 text-gray-300" />
-              <p className="text-gray-500">Không có lịch hẹn nào</p>
+              <p className="text-gray-500">Không có lịch hẹn tiêm chủng nào</p>
             </div>
           ) : (
             <>
               {/* Table */}
-            <div className="overflow-x-auto">
+              <div className="overflow-x-auto">
                 <table className="w-full table-auto">
                   <thead>
                     <tr className="bg-gray-2 text-left dark:bg-meta-4">
                       <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white xl:pl-11">
                         Mã lịch hẹn
-                    </th>
+                      </th>
+                      <th className="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
+                        Khách hàng
+                      </th>
                       <th className="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
                         Địa điểm
-                    </th>
+                      </th>
                       <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
-                      Ngày hẹn
-                    </th>
+                        Ngày hẹn
+                      </th>
                       <th className="min-w-[100px] py-4 px-4 font-medium text-black dark:text-white">
-                      Trạng thái
-                    </th>
+                        Trạng thái
+                      </th>
+                      <th className="min-w-[100px] py-4 px-4 font-medium text-black dark:text-white">
+                        Mã đơn hàng
+                      </th>
                       <th className="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">
-                        Ghi chú
-                    </th>
-                  </tr>
-                </thead>
+                        Thao tác
+                      </th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {lichHenData.data.map((lichHen) => (
                       <tr key={lichHen.maLichHen} className="border-b border-stroke dark:border-strokedark">
@@ -214,30 +158,54 @@ const AppointmentApprovalPage: React.FC = () => {
                         <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                           <div>
                             <p className="text-black dark:text-white">
+                              {lichHen.customerName || 'N/A'}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {lichHen.maDonHang || 'N/A'}
+                            </p>
+                          </div>
+                        </td>
+                        <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                          <div>
+                            <p className="text-black dark:text-white">
                               {lichHen.locationName || 'N/A'}
                             </p>
-                        </div>
-                      </td>
+                            <p className="text-sm text-gray-500">
+                              {lichHen.maDiaDiem || 'N/A'}
+                            </p>
+                          </div>
+                        </td>
                         <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                           <p className="text-black dark:text-white">
                             {formatDate(lichHen.ngayHen)}
                           </p>
-                      </td>
+                        </td>
                         <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                           <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(lichHen.trangThai)}`}>
                             {getStatusName(lichHen.trangThai)}
-                        </span>
-                      </td> 
+                          </span>
+                        </td>
                         <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                           <p className="text-black dark:text-white">
-                            {lichHen.ghiChu || '-'}
+                            {lichHen.maDonHang}
                           </p>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        </td>
+                        <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
+                          <button
+                            onClick={() => handleVaccination(lichHen)}
+                            className="inline-flex items-center justify-center rounded-md bg-primary py-2 px-4 text-center font-medium text-white hover:bg-opacity-90"
+                          >
+                            <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Tiêm khám
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Pagination */}
               {lichHenData.totalPages > 1 && (
@@ -248,13 +216,13 @@ const AppointmentApprovalPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                  <button
+                    <button
                       onClick={() => handlePageChange((filters.page || 1) - 1)}
                       disabled={!filters.page || filters.page <= 1}
                       className="rounded bg-gray-200 py-2 px-3 text-sm font-medium text-gray-700 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
+                    >
                       Trước
-                  </button>
+                    </button>
                     <span className="text-sm text-gray-500">
                       Trang {filters.page || 1} / {lichHenData.totalPages}
                     </span>
@@ -270,10 +238,10 @@ const AppointmentApprovalPage: React.FC = () => {
               )}
             </>
           )}
-              </div>
-            </div>
-          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default AppointmentApprovalPage; 
+export default VaccinationSchedulePage;

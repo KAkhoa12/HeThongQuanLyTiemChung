@@ -10,11 +10,7 @@ import { getOrderById, OrderDetail } from '../../services/order.service';
 import { useApiWithParams } from '../../hooks/useApi';
 import { useLocations } from '../../hooks/useLocations';
 
-// Sử dụng types đã có sẵn
 type Order = OrderDetail;
-
-// Sử dụng interface có sẵn từ location service
-import { LocationDto } from '../../services/location.service';
 
 const AppointmentRegistrationFromInvoice: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
@@ -92,7 +88,7 @@ const AppointmentRegistrationFromInvoice: React.FC = () => {
       
       if (createStatus === 'success') {
         toast.success('Đăng ký lịch tiêm thành công!');
-        navigate('/appointments');
+        navigate('/dashboard/vaccination-registration');
       } else if (createStatus === 'error') {
         toast.error(`Lỗi: ${createError || 'Không thể đăng ký lịch tiêm'}`);
       }
@@ -265,7 +261,7 @@ const AppointmentRegistrationFromInvoice: React.FC = () => {
             <div className="flex justify-end space-x-4 pt-4">
               <button
                 type="button"
-                onClick={() => navigate('/orders')}
+                onClick={() => navigate('/dashboard/vaccination-registration')}
                 className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300"
               >
                 Hủy

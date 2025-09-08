@@ -36,6 +36,20 @@ public class ChiTietPhieuTiemCreateDto
     public int ThuTu { get; set; }
 }
 
+public class ChiTietPhieuTiemForCreateDto
+{
+    [Required(ErrorMessage = "Mã vaccine là bắt buộc")]
+    public string MaVaccine { get; set; } = null!;
+    
+    [Required(ErrorMessage = "Mũi tiêm thực tế là bắt buộc")]
+    [Range(1, int.MaxValue, ErrorMessage = "Mũi tiêm thực tế phải lớn hơn 0")]
+    public int MuiTiemThucTe { get; set; }
+    
+    [Required(ErrorMessage = "Thứ tự là bắt buộc")]
+    [Range(1, int.MaxValue, ErrorMessage = "Thứ tự phải lớn hơn 0")]
+    public int ThuTu { get; set; }
+}
+
 public class ChiTietPhieuTiemUpdateDto
 {
     public string? MaVaccine { get; set; }

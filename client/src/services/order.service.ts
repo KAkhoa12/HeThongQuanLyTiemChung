@@ -104,7 +104,7 @@ export interface OrderDetailItem {
 
 export interface ServiceInfo {
   maDichVu: string;
-  tenDichVu: string;
+  ten: string;
   moTa?: string;
   gia: number;
 }

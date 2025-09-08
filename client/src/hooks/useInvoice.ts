@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useOrders, useOrder, useUpdateOrderStatus } from './useOrders';
-import { OrderDetail } from '../services/order.service';
+import { OrderDetail, InvoiceListParams } from '../services/order.service';
 
 interface UseInvoiceReturn {
   // State
@@ -14,6 +14,7 @@ interface UseInvoiceReturn {
   currentPage: number;
   totalPages: number;
   pageSize: number;
+  totalCount: number;
   
   // Filters
   searchTerm: string;
@@ -31,29 +32,31 @@ interface UseInvoiceReturn {
 }
 
 export const useInvoice = (): UseInvoiceReturn => {
-  const [invoices, setInvoices] = useState<OrderDetail[]>([]);
-  const [currentInvoice, setCurrentInvoice] = useState<OrderDetail | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [updating, setUpdating] = useState(false);
 
   // Sử dụng custom hooks theo đúng pattern
-  const { orders, loading, error, execute: executeGetOrders } = useOrders();
+  const { orders, totalCount, totalPages, loading, error, execute: executeGetOrders } = useOrders();
   const { order: currentOrder, fetchOrder } = useOrder();
   const { updateStatus, loading: updatingStatus } = useUpdateOrderStatus();
 
-  // Lấy danh sách hóa đơn
+  // Lấy danh sách hóa đơn với parameters
   const fetchInvoices = useCallback(async () => {
     try {
-      // Sử dụng custom hook để gọi API
-      await executeGetOrders();
+      const params: InvoiceListParams = {
+        page: currentPage,
+        pageSize: pageSize,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        search: searchTerm || undefined
+      };
+      // Sử dụng custom hook để gọi API với parameters
+      await executeGetOrders(params);
     } catch (error) {
       console.error('Lỗi khi tải danh sách hóa đơn:', error);
     }
-  }, [executeGetOrders]);
+  }, [executeGetOrders, currentPage, pageSize, statusFilter, searchTerm]);
 
   // Lấy chi tiết hóa đơn theo ID
   const fetchInvoiceById = useCallback(async (id: string) => {
@@ -68,21 +71,18 @@ export const useInvoice = (): UseInvoiceReturn => {
   // Cập nhật trạng thái hóa đơn
   const updateInvoiceStatus = useCallback(async (id: string, status: string) => {
     try {
-      setUpdating(true);
       // Sử dụng custom hook để gọi API
       await updateStatus(id, status);
       
       // Refresh data
       await fetchInvoices();
-      if (currentInvoice?.maDonHang === id) {
+      if (currentOrder?.maDonHang === id) {
         await fetchInvoiceById(id);
       }
     } catch (error) {
       console.error('Lỗi khi cập nhật trạng thái:', error);
-    } finally {
-      setUpdating(false);
     }
-  }, [updateStatus, fetchInvoices, fetchInvoiceById, currentInvoice]);
+  }, [updateStatus, fetchInvoices, fetchInvoiceById, currentOrder]);
 
   // Reset filters
   const resetFilters = useCallback(() => {
@@ -91,7 +91,7 @@ export const useInvoice = (): UseInvoiceReturn => {
     setCurrentPage(1);
   }, []);
 
-  // Auto fetch khi thay đổi filters
+  // Auto fetch khi thay đổi filters hoặc pagination
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
@@ -108,6 +108,7 @@ export const useInvoice = (): UseInvoiceReturn => {
     currentPage,
     totalPages,
     pageSize,
+    totalCount,
     
     // Filters
     searchTerm,

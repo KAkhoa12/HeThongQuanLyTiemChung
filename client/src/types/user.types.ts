@@ -5,6 +5,8 @@ export interface BacSiInfoDto {
   maBacSi: string;
   chuyenMon?: string;
   soGiayPhep?: string;
+  maDiaDiem?: string;
+  tenDiaDiem?: string;
 }
 
 // Interface cho thông tin quản lý
@@ -39,6 +41,7 @@ export interface UserCompleteProfileDto {
   maVaiTro: string;
   ngayTao?: string; // DateTime từ backend
   maAnh?: string;
+  isActive?: boolean;
   info?: RoleInfo; // Thông tin theo vai trò
 }
 
@@ -54,6 +57,7 @@ export interface UserProfileUpdateDto {
 export interface BacSiUpdateDto {
   chuyenMon?: string;
   soGiayPhep?: string;
+  maDiaDiem?: string;
 }
 
 export interface HealthInfoDto {
