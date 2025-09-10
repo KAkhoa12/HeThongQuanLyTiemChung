@@ -240,14 +240,9 @@ public class MoMoPaymentController : ControllerBase
             // Gọi API MoMo
             using var httpClient = new HttpClient();
             
-            // Cấu hình timeout từ appsettings
-            var timeoutSeconds = _configuration.GetValue<int>("MoMo:TimeoutSeconds", 300);
-            httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
-            
             var jsonContent = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            _logger.LogInformation($"Gọi API MoMo: {endpoint} với timeout: {timeoutSeconds}s");
             _logger.LogInformation($"Request body: {jsonContent}");
 
             var response = await httpClient.PostAsync(endpoint, content);

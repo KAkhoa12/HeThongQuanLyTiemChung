@@ -255,3 +255,24 @@ export {
   useOverviewStatistics,
   useMonthlyRevenue
 } from './useStatistics';
+
+// KhachHang Hooks
+export {
+  useKhachHangs,
+  useKhachHang,
+  useCreateKhachHang,
+  useUpdateKhachHang,
+  useDeleteKhachHang,
+  useToggleKhachHangStatus
+} from './useKhachHang';
+
+// NhanVien Hooks
+export {
+  useNhanViens,
+  useNhanVien,
+  useCreateNhanVien,
+  useUpdateNhanVien,
+  useDeleteNhanVien,
+  useToggleNhanVienStatus,
+  useChucVu
+} from './useNhanVien';

@@ -429,13 +429,27 @@ public class KeHoachTiemController : ControllerBase
             return ApiResponse.Error("Lỗi server khi lấy kế hoạch tiêm theo khách hàng");
         }
     }
-}
 
-// DTO cho việc cập nhật trạng thái kế hoạch tiêm
-public class UpdateKeHoachTiemStatusDto
-{
-    public string Status { get; set; } = null!; // PENDING, SCHEDULED, COMPLETED, MISSED, CANCELLED
-    public string? Note { get; set; }
+
+
+
+    /* ---------- 8. Kiểm tra xem đơn hàng đã có kế hoạch tiêm chưa ---------- */
+    [HttpGet("check-exists/{orderId}")]
+    public async Task<IActionResult> CheckVaccinationPlanExists(string orderId, CancellationToken ct = default)
+    {
+        try
+        {
+            var hasPlans = await _context.KeHoachTiems
+                .AnyAsync(kht => kht.MaDonHang == orderId, ct);
+
+            return ApiResponse.Success("Kiểm tra kế hoạch tiêm thành công", new { hasPlans });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi khi kiểm tra kế hoạch tiêm cho đơn hàng {OrderId}", orderId);
+            return ApiResponse.Error("Lỗi khi kiểm tra kế hoạch tiêm", 500);
+        }
+    }
 }
 
 // DTO cho việc cập nhật trạng thái kế hoạch tiêm theo mũi thứ
@@ -443,6 +457,12 @@ public class UpdateKeHoachTiemStatusByMuiThuDto
 {
     public string OrderId { get; set; } = null!;
     public int MuiThu { get; set; }
+    public string Status { get; set; } = null!; // PENDING, SCHEDULED, COMPLETED, MISSED, CANCELLED
+    public string? Note { get; set; }
+}
+// DTO cho việc cập nhật trạng thái kế hoạch tiêm
+public class UpdateKeHoachTiemStatusDto
+{
     public string Status { get; set; } = null!; // PENDING, SCHEDULED, COMPLETED, MISSED, CANCELLED
     public string? Note { get; set; }
 }

@@ -40,6 +40,4 @@ public partial class DonHang
     public virtual DiaDiem? MaDiaDiemYeuThichNavigation { get; set; }
 
     public virtual NguoiDung MaNguoiDungNavigation { get; set; } = null!;
-
-    public virtual ICollection<PhieuDangKyLichTiem> PhieuDangKyLichTiems { get; set; } = new List<PhieuDangKyLichTiem>();
 }

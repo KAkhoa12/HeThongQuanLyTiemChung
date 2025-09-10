@@ -36,6 +36,9 @@ const ServiceTypeEditPage = lazy(() => import('../pages/Service/ServiceTypeEditP
 // Service Vaccine (Client)
 const ServiceVaccineListPage = lazy(() => import('../pages/ClientPages/ServiceVaccine/ServiceVaccineListPage'));
 
+// Vaccine Search (Client)
+const VaccineSearchPage = lazy(() => import('../pages/ClientPages/VaccineSearch'));
+
 // Location Management
 const LocationManagePage = lazy(() => import('../pages/Location/LocationManagePage'));
 
@@ -84,7 +87,7 @@ const VaccinationRegistrationPage = lazy(() => import('../pages/DashboardPages/V
 
 // Appointment Management
 const AppointmentApprovalPage = lazy(() => import('../pages/Appointment/AppointmentApprovalPage'));
-const AppointmentRegistrationFromInvoice = lazy(() => import('../pages/Appointment/AppointmentRegistrationFromInvoice'));
+const AppointmentRegistrationFromInvoice = lazy(() => import('../pages/DashboardPages/AppointmentRegistrationFromInvoice'));
 const DoctorAppointmentManagementPage = lazy(() => import('../pages/Doctor/DoctorAppointmentManagementPage'));
 
 // Vaccination Management (New)
@@ -109,6 +112,18 @@ const DuyetPhieuPage = lazy(() => import('../pages/DashboardPages/Inventory/Appr
 // NhaCungCap Management
 const NhaCungCapPage = lazy(() => import('../pages/DashboardPages/NhaCungCap/NhaCungCapPage'));
 
+// User Management
+const UserPage = lazy(() => import('../pages/DashboardPages/UserManagement/KhachHangPage'));
+const UserCreatePage = lazy(() => import('../pages/DashboardPages/UserManagement/KhachHangCreatePage'));
+const UserEditPage = lazy(() => import('../pages/DashboardPages/UserManagement/KhachHangEditPage'));
+const UserDetailPage = lazy(() => import('../pages/DashboardPages/UserManagement/KhachHangDetailPage'));
+const NhanVienPage = lazy(() => import('../pages/DashboardPages/UserManagement/NhanVienPage'));
+const NhanVienCreatePage = lazy(() => import('../pages/DashboardPages/UserManagement/NhanVienCreatePage'));
+const NhanVienEditPage = lazy(() => import('../pages/DashboardPages/UserManagement/NhanVienEditPage'));
+const NhanVienDetailPage = lazy(() => import('../pages/DashboardPages/UserManagement/NhanVienDetailPage'));
+const AdminCheckoutPage = lazy(() => import('../pages/DashboardPages/UserManagement/AdminCheckoutPage'));
+const CustomerVaccinationPlanDetailPage = lazy(() => import('../pages/DashboardPages/UserManagement/CustomerVaccinationPlanDetailPage'));
+
 
 
 const routes = [
@@ -126,6 +141,15 @@ const routes = [
           <>
             <PageTitle title="Dịch vụ & Vaccine | HuitKIT" />
             <ServiceVaccineListPage />
+          </>
+        )
+      },
+      {
+        path: 'vaccine-search',
+        element: (
+          <>
+            <PageTitle title="Tra cứu Vaccine | HuitKIT" />
+            <VaccineSearchPage />
           </>
         )
       },
@@ -579,16 +603,16 @@ const routes = [
   },
   
 
-  // Appointment Registration from Invoice (Protected)
+  // Appointment Registration Management (Protected)
   {
-    path: '/appointment/register-from-invoice/:orderId',
+    path: '/dashboard/appointment/registration',
     element: <DefaultLayout />,
     children: [
       {
         index: true,
         element: (
       <PrivateRoute>
-        <PageTitle title="Đăng ký Lịch tiêm từ Hóa đơn | HuitKIT" />
+        <PageTitle title="Quản lý đăng ký lịch tiêm | HuitKIT" />
         <AppointmentRegistrationFromInvoice />
       </PrivateRoute>
     )
@@ -712,6 +736,125 @@ const routes = [
           <PermissionRoute requiredPermissions={['NhaCungCap']}>
             <PageTitle title="Quản lý Nhà cung cấp | HuitKIT" />
             <NhaCungCapPage />
+          </PermissionRoute>
+        )
+      }
+    ]
+  },
+
+  // User Management Routes
+  {
+    path: '/dashboard/nguoi-dung',
+    element: <DefaultLayout />,
+    children: [
+      {
+        path: 'khach-hang',
+        element: (
+          <PermissionRoute requiredPermissions={['NguoiDung']}>
+            <PageTitle title="Quản lý Khách hàng | HuitKIT" />
+            <UserPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'khach-hang/create',
+        element: (
+          <PermissionRoute requiredPermissions={['NguoiDung']}>
+            <PageTitle title="Tạo khách hàng mới | HuitKIT" />
+            <UserCreatePage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'khach-hang/:id',
+        element: (
+          <PermissionRoute requiredPermissions={['NguoiDung']}>
+            <PageTitle title="Chi tiết khách hàng | HuitKIT" />
+            <UserDetailPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'khach-hang/:customerId/vaccination-plan/:orderId',
+        element: (
+          <PermissionRoute requiredPermissions={['NguoiDung']}>
+            <PageTitle title="Kế hoạch tiêm chủng | HuitKIT" />
+            <CustomerVaccinationPlanDetailPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'khach-hang/:id/edit',
+        element: (
+          <PermissionRoute requiredPermissions={['NguoiDung']}>
+            <PageTitle title="Chỉnh sửa khách hàng | HuitKIT" />
+            <UserEditPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'khach-hang/:customerId/create-order',
+        element: (
+          <PermissionRoute requiredPermissions={['NguoiDung']}>
+            <PageTitle title="Tạo đơn hàng cho khách hàng | HuitKIT" />
+            <AdminCheckoutPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'nhan-vien',
+        element: (
+          <PermissionRoute requiredPermissions={['NguoiDung']}>
+            <PageTitle title="Quản lý Nhân viên | HuitKIT" />
+            <NhanVienPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'nhan-vien/create',
+        element: (
+          <PermissionRoute requiredPermissions={['NguoiDung']}>
+            <PageTitle title="Tạo nhân viên mới | HuitKIT" />
+            <NhanVienCreatePage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'nhan-vien/:id',
+        element: (
+          <PermissionRoute requiredPermissions={['NguoiDung']}>
+            <PageTitle title="Chi tiết nhân viên | HuitKIT" />
+            <NhanVienDetailPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'nhan-vien/:id/edit',
+        element: (
+          <PermissionRoute requiredPermissions={['NguoiDung']}>
+            <PageTitle title="Chỉnh sửa nhân viên | HuitKIT" />
+              <NhanVienEditPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'bac-si',
+        element: (
+          <PermissionRoute requiredPermissions={['BacSi']}>
+            <PageTitle title="Quản lý Bác sĩ | HuitKIT" />
+            <DoctorListPage />
+          </PermissionRoute>
+        )
+      },
+      {
+        path: 'quan-ly',
+        element: (
+          <PermissionRoute requiredPermissions={['NguoiDung']}>
+            <PageTitle title="Quản lý Quản lý | HuitKIT" />
+            <div className="p-6">
+              <h1 className="text-2xl font-bold mb-4">Quản lý Quản lý</h1>
+              <p className="text-gray-600">Trang quản lý quản lý đang được phát triển...</p>
+            </div>
           </PermissionRoute>
         )
       }

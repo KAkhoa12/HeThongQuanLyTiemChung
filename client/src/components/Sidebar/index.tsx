@@ -21,10 +21,30 @@ const menuItems = [
   },
   {
     id: 'staff',
-    title: 'Nhân viên',
+    title: 'Bác sĩ và quản lý',
     path: '/dashboard/staff',
     icon: 'ri-user-line',
     permissions: ['NguoiDung'],
+    roles: ['DOCTOR','MANAGER'],
+  },
+  {
+    id: 'nguoi-dung',
+    title: 'Nhân sự',
+    path: '/dashboard/nguoi-dung',
+    icon: 'ri-user-settings-line',
+    roles: ['DOCTOR','MANAGER'],
+    subItems: [
+      {
+        title: 'Khách hàng',
+        path: '/dashboard/nguoi-dung/khach-hang',
+        roles: ['DOCTOR','MANAGER'],
+      },
+      {
+        title: 'Nhân viên',
+        path: '/dashboard/nguoi-dung/nhan-vien',
+        roles: ['MANAGER'],
+      },
+    ],
   },
   {
     id: 'doctors',
@@ -213,6 +233,14 @@ const personalMenuItems = [
     id: 'vaccination-registration',
     title: 'Đăng ký lịch tiêm chủng',
     path: '/dashboard/vaccination-registration',
+    icon: 'ri-calendar-check-line',
+    permissions: [],
+    roles: ['USER'],
+  },
+  {
+    id: 'appointment-registration',
+    title: 'Đăng ký khám',
+    path: '/dashboard/appointment/registration',
     icon: 'ri-calendar-check-line',
     permissions: [],
     roles: ['USER'],

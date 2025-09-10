@@ -221,4 +221,24 @@ export {
   type AnhNhaCungCapCreateDto,
   type AnhNhaCungCapUpdateDto,
   type NhaCungCapQueryParams
-} from './nhaCungCap.service'; 
+} from './nhaCungCap.service';
+
+// KhachHang service exports
+export {
+  khachHangService,
+  type KhachHang,
+  type ThongTinNguoiDung,
+  type CreateKhachHangDto,
+  type UpdateKhachHangDto,
+  type KhachHangListParams
+} from './khachHang.service';
+
+// NhanVien service exports
+export {
+  nhanVienService,
+  type NhanVien,
+  type ThongTinNguoiDung as ThongTinNguoiDungNhanVien,
+  type CreateNhanVienDto,
+  type UpdateNhanVienDto,
+  type NhanVienListParams
+} from './nhanVien.service'; 

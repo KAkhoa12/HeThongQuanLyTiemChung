@@ -14,7 +14,8 @@ namespace server.DTOs.Order
         string? EmergencyRelationship,
         string? PreferredLocationId,
         string PaymentMethod,
-        List<OrderItemDto> Items
+        List<OrderItemDto> Items,
+        string? CustomerId = null // Thêm trường này để chỉ định khách hàng cụ thể (cho admin)
     );
 
     public record OrderItemDto(

@@ -55,3 +55,11 @@ export const useKeHoachTiemAll = () => {
     null
   );
 };
+
+// Hook để kiểm tra xem đơn hàng đã có kế hoạch tiêm chưa
+export const useCheckVaccinationPlanExists = () => {
+  return useApiWithParams<{ hasPlans: boolean }, { orderId: string }>(
+    async (params) => keHoachTiemService.checkVaccinationPlanExists(params.orderId),
+    null
+  );
+};

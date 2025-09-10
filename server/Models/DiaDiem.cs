@@ -41,6 +41,8 @@ public partial class DiaDiem
 
     public virtual ICollection<LichLamViec> LichLamViecs { get; set; } = new List<LichLamViec>();
 
+    public virtual ICollection<NhanVien> NhanViens { get; set; } = new List<NhanVien>();
+
     public virtual ICollection<PhieuDangKyLichTiem> PhieuDangKyLichTiems { get; set; } = new List<PhieuDangKyLichTiem>();
 
     public virtual ICollection<PhieuThanhLy> PhieuThanhLies { get; set; } = new List<PhieuThanhLy>();

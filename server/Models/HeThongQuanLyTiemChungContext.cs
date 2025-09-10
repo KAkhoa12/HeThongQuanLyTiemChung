@@ -73,6 +73,8 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
 
     public virtual DbSet<NhanAnh> NhanAnhs { get; set; }
 
+    public virtual DbSet<NhanVien> NhanViens { get; set; }
+
     public virtual DbSet<PhienDangNhap> PhienDangNhaps { get; set; }
 
     public virtual DbSet<PhieuDangKyLichTiem> PhieuDangKyLichTiems { get; set; }
@@ -105,6 +107,7 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
     {
         optionsBuilder.EnableSensitiveDataLogging();
     }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AnhDiaDiem>(entity =>
@@ -592,8 +595,7 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("maDieuKien");
-            entity.Property(e => e.GhiChu)
-                .HasColumnName("ghiChu");
+            entity.Property(e => e.GhiChu).HasColumnName("ghiChu");
             entity.Property(e => e.GioiTinh)
                 .HasMaxLength(10)
                 .IsUnicode(false)
@@ -1278,6 +1280,37 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasColumnName("tenNhan");
         });
 
+        modelBuilder.Entity<NhanVien>(entity =>
+        {
+            entity.HasKey(e => e.MaNhanVien).HasName("PK__NhanVien__BDDEF20D202ED0D8");
+
+            entity.ToTable("NhanVien");
+
+            entity.Property(e => e.MaNhanVien)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("maNhanVien");
+            entity.Property(e => e.ChucVu)
+                .HasMaxLength(200)
+                .HasColumnName("chucVu");
+            entity.Property(e => e.MaDiaDiem)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("maDiaDiem");
+            entity.Property(e => e.MaNguoiDung)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("maNguoiDung");
+
+            entity.HasOne(d => d.MaDiaDiemNavigation).WithMany(p => p.NhanViens)
+                .HasForeignKey(d => d.MaDiaDiem)
+                .HasConstraintName("FK_NhanVien_DiaDiem");
+
+            entity.HasOne(d => d.MaNguoiDungNavigation).WithMany(p => p.NhanViens)
+                .HasForeignKey(d => d.MaNguoiDung)
+                .HasConstraintName("FK_NhanVien_NguoiDung");
+        });
+
         modelBuilder.Entity<PhienDangNhap>(entity =>
         {
             entity.HasKey(e => e.MaPhien).HasName("PK__PhienDan__49A5B118D2384D7A");
@@ -1343,14 +1376,6 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("maDiaDiem");
-            entity.Property(e => e.MaDichVu)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("maDichVu");
-            entity.Property(e => e.MaDonHang)
-                .HasMaxLength(100)
-                .IsUnicode(false)
-                .HasColumnName("maDonHang");
             entity.Property(e => e.MaKhachHang)
                 .HasMaxLength(100)
                 .IsUnicode(false)
@@ -1372,14 +1397,6 @@ public partial class HeThongQuanLyTiemChungContext : DbContext
             entity.HasOne(d => d.MaDiaDiemNavigation).WithMany(p => p.PhieuDangKyLichTiems)
                 .HasForeignKey(d => d.MaDiaDiem)
                 .HasConstraintName("FK_PhieuDangKyLichTiem_DiaDiem");
-
-            entity.HasOne(d => d.MaDichVuNavigation).WithMany(p => p.PhieuDangKyLichTiems)
-                .HasForeignKey(d => d.MaDichVu)
-                .HasConstraintName("FK__PhieuDan__maDichVu__NewConstraint2");
-
-            entity.HasOne(d => d.MaDonHangNavigation).WithMany(p => p.PhieuDangKyLichTiems)
-                .HasForeignKey(d => d.MaDonHang)
-                .HasConstraintName("FK_PhieuDangKyLichTiem_DonHang");
 
             entity.HasOne(d => d.MaKhachHangNavigation).WithMany(p => p.PhieuDangKyLichTiems)
                 .HasForeignKey(d => d.MaKhachHang)

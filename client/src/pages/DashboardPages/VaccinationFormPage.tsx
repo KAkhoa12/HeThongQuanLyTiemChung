@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useKeHoachTiemMinimumPendingByOrder, useKeHoachTiemCheckRemainingPending } from '../../hooks/useKeHoachTiem';
+import { useAllLocations } from '../../hooks/useLocations';
 import { useAuth } from '../../hooks';
 import apiService from '../../services/api.service';
 
@@ -37,11 +38,13 @@ const VaccinationFormPage: React.FC = () => {
   const [hasRemainingPending, setHasRemainingPending] = useState(false);
   const [nextAppointmentData, setNextAppointmentData] = useState({
     ngayHen: '',
-    ghiChu: ''
+    ghiChu: '',
+    maDiaDiem: ''
   });
 
   const { data: keHoachData, loading: keHoachLoading, error: keHoachError, execute } = useKeHoachTiemMinimumPendingByOrder();
   const { data: remainingPendingData, execute: executeCheckRemaining } = useKeHoachTiemCheckRemainingPending();
+  const { data: locationsData, execute: fetchLocations } = useAllLocations();
 
   // Lấy thông tin bác sĩ từ API profile
   useEffect(() => {
@@ -57,7 +60,8 @@ const VaccinationFormPage: React.FC = () => {
     };
 
     fetchDoctorInfo();
-  }, []);
+    fetchLocations();
+  }, [fetchLocations]);
 
   // Lấy dữ liệu kế hoạch tiêm khi component mount
   useEffect(() => {
@@ -190,7 +194,7 @@ const VaccinationFormPage: React.FC = () => {
   };
 
   // Xử lý thay đổi input cho lịch hẹn tiếp theo
-  const handleNextAppointmentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleNextAppointmentChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNextAppointmentData(prev => ({
       ...prev,
@@ -200,20 +204,20 @@ const VaccinationFormPage: React.FC = () => {
 
   // Tạo lịch hẹn cho đợt tiếp theo
   const handleCreateNextAppointment = async () => {
-    if (!orderId || !nextAppointmentData.ngayHen) {
-      alert('Vui lòng nhập đầy đủ thông tin lịch hẹn');
+    if (!orderId || !nextAppointmentData.ngayHen || !nextAppointmentData.maDiaDiem) {
+      alert('Vui lòng nhập đầy đủ thông tin lịch hẹn (ngày hẹn và địa điểm)');
       return;
     }
 
     try {
       setLoading(true);
       
-      // Tạo lịch hẹn mới
+      // Tạo lịch hẹn mới với đúng format DTO
       const lichHenData = {
-        maDonHang: orderId,
-        ngayHen: nextAppointmentData.ngayHen,
-        trangThai: 'NOTIFICATION',
-        ghiChu: nextAppointmentData.ghiChu || `Lịch hẹn tiêm mũi thứ ${remainingPendingData?.nextMuiThu || ''}`
+        OrderId: orderId,
+        LocationId: nextAppointmentData.maDiaDiem,
+        AppointmentDate: new Date(nextAppointmentData.ngayHen).toISOString(),
+        Note: nextAppointmentData.ghiChu || `Lịch hẹn tiêm mũi thứ ${remainingPendingData?.nextMuiThu || ''}`
       };
 
       console.log('Creating next appointment with data:', lichHenData);
@@ -471,17 +475,37 @@ const VaccinationFormPage: React.FC = () => {
               </div>
               <div>
                 <label className="mb-2.5 block text-black dark:text-white">
-                  Ghi chú
+                  Địa điểm tiêm chủng <span className="text-meta-1">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="ghiChu"
-                  value={nextAppointmentData.ghiChu}
+                <select
+                  name="maDiaDiem"
+                  value={nextAppointmentData.maDiaDiem}
                   onChange={handleNextAppointmentChange}
-                  placeholder="Ghi chú cho lịch hẹn tiếp theo"
+                  required
                   className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
-                />
+                >
+                  <option value="">Chọn địa điểm</option>
+                  {locationsData?.map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.name}
+                    </option>
+                  ))}
+                </select>
               </div>
+            </div>
+            
+            <div className="mt-4">
+              <label className="mb-2.5 block text-black dark:text-white">
+                Ghi chú
+              </label>
+              <input
+                type="text"
+                name="ghiChu"
+                value={nextAppointmentData.ghiChu}
+                onChange={handleNextAppointmentChange}
+                placeholder="Ghi chú cho lịch hẹn tiếp theo"
+                className="w-full rounded border-[1.5px] border-stroke bg-transparent py-3 px-5 font-medium outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+              />
             </div>
 
             <div className="mt-6 flex justify-end gap-4">

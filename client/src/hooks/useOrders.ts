@@ -1,5 +1,5 @@
 import { useApiWithParams } from './useApi';
-import { getAllOrders, getOrderById, updateOrderStatus, OrderDetail, InvoiceListParams, InvoiceListResponse } from '../services/order.service';
+import { getAllOrders, getOrderById, updateOrderStatus, getOrdersByUser, InvoiceListParams, InvoiceListResponse } from '../services/order.service';
 
 // Hook để lấy danh sách đơn hàng
 export const useOrders = () => {
@@ -22,7 +22,7 @@ export const useOrders = () => {
 };
 
 // Hook để lấy đơn hàng theo ID
-export const useOrder = (orderId?: string) => {
+export const useOrder = () => {
   const { data, loading, error, execute, reset } = useApiWithParams(getOrderById, null);
   
   const fetchOrder = (id: string) => {
@@ -53,6 +53,32 @@ export const useUpdateOrderStatus = () => {
     loading,
     error,
     updateStatus,
+    reset
+  };
+};
+
+// Hook để lấy đơn hàng theo maNguoiDung (Admin)
+export const useOrdersByUser = () => {
+  const { data, loading, error, execute, reset } = useApiWithParams<InvoiceListResponse, { maNguoiDung: string } & InvoiceListParams>(
+    async ({ maNguoiDung, ...params }) => getOrdersByUser(maNguoiDung, params), null
+  );
+  
+  // Xử lý data từ API với pagination
+  const response = data || { data: [], totalCount: 0, page: 1, pageSize: 10, totalPages: 1 };
+  
+  const fetchOrdersByUser = (maNguoiDung: string, params: InvoiceListParams = {}) => {
+    execute({ maNguoiDung, ...params });
+  };
+  
+  return {
+    orders: Array.isArray(response.data) ? response.data : [],
+    totalCount: response.totalCount || 0,
+    page: response.page || 1,
+    pageSize: response.pageSize || 10,
+    totalPages: response.totalPages || 1,
+    loading,
+    error,
+    fetchOrdersByUser,
     reset
   };
 }; 

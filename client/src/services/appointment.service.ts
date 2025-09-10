@@ -8,6 +8,12 @@ export interface CreateAppointmentFromOrderRequest {
   ghiChu?: string;
 }
 
+export interface CreateVaccinationPlanFromOrderRequest {
+  orderId: string;
+  maDiaDiem: string;
+  ghiChu?: string;
+}
+
 export interface VaccinationStatus {
   customerId: string;
   completedServices: Array<{
@@ -191,6 +197,13 @@ class AppointmentService {
    */
   async getAppointmentById(id: string): Promise<any> {
     return await apiService.get<any>(`/api/appointments/${id}`);
+  }
+
+  /**
+   * Tạo kế hoạch tiêm từ đơn hàng
+   */
+  async createVaccinationPlanFromOrder(data: CreateVaccinationPlanFromOrderRequest): Promise<any> {
+    return await apiService.create<any>('/api/appointments/create-vaccination-plan-from-order', data);
   }
 }
 
@@ -390,5 +403,9 @@ export const appointmentService = new AppointmentService();
 export const keHoachTiemService = new KeHoachTiemService();
 export const lichHenService = new LichHenService();
 export const phieuTiemService = new PhieuTiemService();
+
+// Export individual functions
+export const createVaccinationPlanFromOrder = appointmentService.createVaccinationPlanFromOrder.bind(appointmentService);
+export const getAppointmentById = appointmentService.getAppointmentById.bind(appointmentService);
 
 export default appointmentService;

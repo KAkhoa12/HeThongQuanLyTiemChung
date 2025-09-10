@@ -112,5 +112,10 @@ export const keHoachTiemService = {
   // Cập nhật trạng thái kế hoạch tiêm
   updateStatus: async (id: string, status: string, note?: string): Promise<void> => {
     return await apiService.update(`/api/ke-hoach-tiem/${id}/status`, { status, note });
+  },
+
+  // Kiểm tra xem đơn hàng đã có kế hoạch tiêm chưa
+  checkVaccinationPlanExists: async (orderId: string): Promise<{ hasPlans: boolean }> => {
+    return await apiService.get(`/api/ke-hoach-tiem/check-exists/${orderId}`);
   }
 };

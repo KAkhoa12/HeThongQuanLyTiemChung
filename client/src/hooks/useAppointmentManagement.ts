@@ -1,13 +1,9 @@
-import { 
-  useAppointments, 
-  useAppointmentById, 
-  useCreateAppointmentFromOrder, 
-  useApproveAppointment 
-} from './useAppointment';
+import { useAppointments } from './useAppointments';
+import { useCreateAppointmentFromOrder } from './useCreateAppointmentFromOrder';
+import { useApproveAppointment } from './useApproveAppointment';
 
 export const useAppointmentManagement = () => {
-  const appointments = useAppointments({});
-  const appointment = useAppointmentById(null);
+  const appointments = useAppointments();
   const createAppointmentFromOrder = useCreateAppointmentFromOrder();
   const approveAppointment = useApproveAppointment();
 
@@ -22,13 +18,6 @@ export const useAppointmentManagement = () => {
     errorAppointments: appointments.error,
     fetchAppointments: appointments.execute,
     resetAppointments: appointments.reset,
-
-    // Single appointment
-    appointment: appointment.data,
-    loadingAppointment: appointment.loading,
-    errorAppointment: appointment.error,
-    fetchAppointment: appointment.execute,
-    resetAppointment: appointment.reset,
 
     // Create from order
     createdFromOrder: createAppointmentFromOrder.data,

@@ -100,22 +100,27 @@ const Navigation = () => {
           
           {/* Đăng ký lịch hẹn */}
           {isAuthenticated && user && (
-            <Link to="/appointment-registration" className="text-gray-700 font-medium hover:text-blue-600">
+            <Link to="/dashboard/appointment/registration" className="text-gray-700 font-medium hover:text-blue-600">
               Đăng ký lịch hẹn
             </Link>
           )}
-          
-          {/* Dịch vụ Dropdown */}
           <div className="relative">
             <button 
               className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
               onClick={() => navigate('/services')}
             >
-              Dịch vụ
+             dịch vụ tiêm chủng
             </button>
           </div>
           
-          <a href="#contact" className="text-gray-700 font-medium hover:text-blue-600">Contact</a>
+          <div className="relative">
+            <button 
+              className="text-gray-700 font-medium hover:text-blue-600 flex items-center"
+              onClick={() => navigate('/vaccine-search')}
+            >
+             Tra cứu vaccine
+            </button>
+          </div>
         </nav>
 
         {/* User Profile / Login Button */}

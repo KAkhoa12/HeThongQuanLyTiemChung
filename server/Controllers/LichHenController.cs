@@ -263,7 +263,7 @@ public class LichHenController : ControllerBase
                 MaDonHang = dto.OrderId,
                 MaDiaDiem = dto.LocationId,
                 NgayHen = dto.AppointmentDate,
-                TrangThai = "SCHEDULED",
+                TrangThai = "NOTIFICATION",
                 GhiChu = dto.Note,
                 IsActive = true,
                 IsDelete = false,

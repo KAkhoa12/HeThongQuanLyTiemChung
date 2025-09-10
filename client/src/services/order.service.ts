@@ -8,6 +8,7 @@ export interface OrderCreateRequest {
   customerAddress: string;
   paymentMethod: string;
   preferredLocationId: string;
+  customerId?: string; // Thêm trường này để chỉ định khách hàng cụ thể (cho admin)
   items: OrderItemRequest[];
 }
 
@@ -197,6 +198,13 @@ export const getMyOrders = async (): Promise<OrderDetail[]> => {
  */
 export const getAllOrders = async (params: InvoiceListParams = {}): Promise<InvoiceListResponse> => {
   return await apiService.get('/api/orders/my-orders', params);
+};
+
+/**
+ * Lấy danh sách đơn hàng theo maNguoiDung (Admin)
+ */
+export const getOrdersByUser = async (maNguoiDung: string, params: InvoiceListParams = {}): Promise<InvoiceListResponse> => {
+  return await apiService.get(`/api/orders/by-user/${maNguoiDung}`, params);
 };
 
 /**

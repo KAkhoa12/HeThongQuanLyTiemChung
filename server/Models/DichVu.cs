@@ -35,7 +35,5 @@ public partial class DichVu
 
     public virtual LoaiDichVu? MaLoaiDichVuNavigation { get; set; }
 
-    public virtual ICollection<PhieuDangKyLichTiem> PhieuDangKyLichTiems { get; set; } = new List<PhieuDangKyLichTiem>();
-
     public virtual ICollection<PhieuTiem> PhieuTiems { get; set; } = new List<PhieuTiem>();
 }
